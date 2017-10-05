@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Oct  5 18:30:49 2017
+
+@author: ilaria
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import animation
+
+import ini_obj as ini
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%            
+#%%%%%%%%%%%%%%%%%%%%_________________________________%%%%%%%%%%%%%%%%%%%%%%%%%
+#%%%%%%%%%%%%%%%%%%%%_________A_N_I_M_A_T_I_O_N_______%%%%%%%%%%%%%%%%%%%%%%%%%
+#%%%%%%%%%%%%%%%%%%%%_________________________________%%%%%%%%%%%%%%%%%%%%%%%%%
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+INTERVAL=800
+
+plot_extSet=1
+plot_extReti=2
+plot_intSet=3
+plot_intReti=4
+
+TITLE_extSET="External Setting"
+TITLE_extRET="External Retina"
+
+TITLE_intSET="Goal"
+TITLE_intRET="Internal Retina"
+
+#Right SEQUENCE of figures on the plot
+plotIndex=[0,1,2,3]
+plotIndex[ini.figMov],plotIndex[-1]=plotIndex[-1],plotIndex[ini.figMov] #switch
+plotIndex.append(plotIndex.pop(plotIndex.index(0))) #hand to last position
+
+plotObj=[ini.objHand,ini.ext_objTri,ini.ext_objSqu,ini.ext_objCir]
+plotObj[ini.figMov],plotObj[-1]=plotObj[-1],plotObj[ini.figMov] #switch
+plotObj.append(plotObj.pop(plotObj.index(ini.objHand))) #hand to last position
+
+#******************************************************************************
+#*****************************______METHODS______******************************
+#******************************************************************************
+
+#Define position of plot-windows on the screen
+def plotOnScreen(x,y,w,h): #define position of plot-windows on the screen
+    mngr = plt.get_current_fig_manager()
+    # to put it into the upper left corner for example:
+    mngr.window.setGeometry(x,y,w,h) 
+
+#EXTERNAL_INITIALIZATION
+def ext_initDesk():
+    ini.objDesk.plotDef()
+    ini.objDesk.plotAdd(plot_extSet,TITLE_extSET)  
+    ini.ext_objTri.plotDef()
+    ini.ext_objTri.plotAdd(plot_extSet,TITLE_extSET)
+    ini.ext_objSqu.plotDef()
+    ini.ext_objSqu.plotAdd(plot_extSet,TITLE_extSET)
+    ini.ext_objCir.plotDef()
+    ini.ext_objCir.plotAdd(plot_extSet,TITLE_extSET)
+    ini.objHand.plotDef()
+    ini.objHand.plotAdd(plot_extSet,TITLE_extSET)
+    ini.ext_objReti.plotDef()
+    ini.ext_objReti.plotAdd(plot_extSet,TITLE_extSET)
+    ini.ext_objFovea.plotDef()
+    ini.ext_objFovea.plotAdd(plot_extSet,TITLE_extSET)
+    
+#INTERNAL_INITIALIZATION
+def int_initDesk():
+    ini.objDesk.plotDef()
+    ini.objDesk.plotAdd(plot_intSet,TITLE_intSET)  
+    ini.int_objTri.plotDef()
+    ini.int_objTri.plotAdd(plot_intSet,TITLE_intSET)
+    ini.int_objSqu.plotDef()
+    ini.int_objSqu.plotAdd(plot_intSet,TITLE_intSET)
+    ini.int_objCir.plotDef()
+    ini.int_objCir.plotAdd(plot_intSet,TITLE_intSET)
+    
+    ini.int_objReti.plotDef()
+    ini.int_objReti.plotAdd(plot_intSet,TITLE_intSET)
+    
+    ini.int_objFovea.plotDef()
+    ini.int_objFovea.plotAdd(plot_intSet,TITLE_intSET)
+    
+                                                            #_______EXT_SETTING    
+def animSetExt(position):
+    ini.ext_objFovea.animateFig(ini.ext_foveaList,position,1,TITLE_extSET)
+    ini.ext_objReti.animateFig(ini.ext_retiCoorList,position,1,TITLE_extSET)
+    
+    plotObj[0].animateFig(ini.ext_figPosList[plotIndex[0]],position,plot_extSet,TITLE_extSET)  
+    plotObj[1].animateFig(ini.ext_figPosList[plotIndex[1]],position,plot_extSet,TITLE_extSET)  
+    plotObj[2].animateFig(ini.ext_figPosList[plotIndex[2]],position,plot_extSet,TITLE_extSET)  
+    plotObj[3].animateFig(ini.ext_figPosList[plotIndex[3]],position,plot_extSet,TITLE_extSET)
+
+                                                              #______EXT_RETINA
+def animRetiExt(position2):
+    fig2=plt.figure(2)
+    ax2 = fig2.add_subplot(111,aspect='equal')  
+    ax2.set_title(TITLE_extRET)
+    retiPixPLOT=np.flipud(np.reshape(ini.ext_retiPixALL[position2,:], (ini.ext_pixelsX,ini.ext_pixelsY)))
+    fig2, plt.imshow(retiPixPLOT, interpolation='nearest')
+    plt.grid(True)  
+
+                                                              #_____INT_SETTING
+def animSetInt(position3):
+    ini.int_objFovea.animateFig(ini.int_foveaList,position3,plot_intSet,TITLE_intSET)
+    ini.int_objReti.animateFig(ini.int_retiCoorList,position3,plot_intSet,TITLE_intSET)
+                       
+                                                                #____INT_RETINA                          
+def animRetiInt(position4):
+    fig4=plt.figure(4)
+    ax4 = fig4.add_subplot(111,aspect='equal')  
+    ax4.set_title(TITLE_intRET)
+    retiPixPLOT=np.flipud(np.reshape(ini.int_retiPixALL[position4,:], (ini.int_pixelsX,ini.int_pixelsY)))
+    fig4, plt.imshow(retiPixPLOT, interpolation='nearest')
+    plt.grid(True)  
+
+#******************************************************************************
+#**************************______ANIMATION_RUN______***************************
+#******************************************************************************
+#_______EXT_SETTING
+anim = animation.FuncAnimation(plt.figure(1), animSetExt, frames=len(ini.ext_figPosList[0]),
+                               init_func=ext_initDesk,
+                               repeat=False, interval=INTERVAL)
+plotOnScreen(100,10,500,500) 
+
+#_______EXT_RETINA
+anim2 = animation.FuncAnimation(plt.figure(2), animRetiExt, frames=len(ini.ext_retiPixALL), #ADD INIT DESK?
+                               repeat=False, interval=INTERVAL)
+plotOnScreen(600,10,500,500)  
+
+#_______INT_SETTING
+anim3 = animation.FuncAnimation(plt.figure(3), animSetInt, frames=len(ini.ext_figPosList[0]),
+                               init_func=int_initDesk,
+                               repeat=False, interval=INTERVAL)
+plotOnScreen(100,600,500,500)                      
+
+#_______INT_RETINA
+anim4 = animation.FuncAnimation(plt.figure(4), animRetiInt, frames=len(ini.int_retiPixALL), #ADD INIT DESK?
+                               repeat=False, interval=INTERVAL)
+plotOnScreen(600,600,500,500)    
+                     
+#NOTE THAT WHEN THE hand "GRASPS" THE FIGURE THE RETINA IS STILL ON THE PREVIOUS POSITION
+# OF THE hand ACTION 0 (WHEN THE hand "GRASPS" THE FIGURE), SO IT WON'T MOVE TO THE
+#NEW hand ACTION 1 (WHEN THE hand "RELEASE" THE FIGURE)
