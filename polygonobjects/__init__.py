@@ -5,6 +5,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as ptc
+from shapely.geometry import Polygon as poly #for check pixel/figure intersection
 
 
 class Polygon(object):
@@ -28,8 +29,8 @@ class Polygon(object):
     def plotAdd(self,numFig,title): #add plot to figure
         self.xLim=(-5,15)      
         self.yLim=(-5,15)
-        self.fig=plt.figure(numFig) 
-        self.ax1 = self.fig.add_subplot(111,aspect='equal')       
+        self.fig=plt.figure(1) 
+        self.ax1 = self.fig.add_subplot(2,2,numFig,aspect='equal')       
         self.ax1.set_xlim((self.xLim))
         self.ax1.set_ylim((self.yLim))
         self.ax1.set_title(title)
@@ -84,8 +85,8 @@ class Retina(Polygon):
         #modified, to plot the grid of retina on the setting
         self.xLim=(-5,15)      
         self.yLim=(-5,15)
-        self.fig=plt.figure(numFig) 
-        self.ax1 = self.fig.add_subplot(111,aspect='equal')       
+        self.fig=plt.figure(1) 
+        self.ax1 = self.fig.add_subplot(2,2,numFig,aspect='equal')       
         self.ax1.set_xlim((self.xLim))
         self.ax1.set_ylim((self.yLim))
         self.ax1.set_title(title)
@@ -120,3 +121,33 @@ class Retina(Polygon):
                 pixel_list.append(pixelCoor)
                       
         return pixel_list
+    
+    def pixelLoop(grid,tri,squ,cir,retiPixVec):
+        #COLORS for eye plot
+        green,red,blue,others=1,2,3,0
+        cell=-1 #pixel
+        for pix in (grid): #for every pixel of the retina's grid --->
+            cell+=1
+            
+            #___check if PIXEL is on a FIGURE, then: 
+                                              #   add the value RGB in retinaVector
+                                              #   depending on which is the figure 
+            
+            #----->below..
+            if (poly(tri).intersects(poly(pix)))==True:
+                retiPixVec[0,cell]=green
+            elif (poly(squ).intersects(poly(pix)))==True:
+                retiPixVec[0,cell]=red
+            elif ((cir).intersects(poly(pix))) == True:
+                retiPixVec[0,cell]=blue
+            else:
+                retiPixVec[0,cell]=others #   if pixel doesn't overlapping figures
+            #.....below again :P    
+            #N.B. (poly .... intersects) is a function of "shapely" library; it allows
+            #to check if two figures intersecates in 3 ways:
+            #   1. True if two figures edges are in touch
+            #   2. True if one figure overlap the other
+            #   3. True if one figure is inside the other
+            #So it works even if only one point of the figure in on one of the other.
+            #*we should consider to use it instead of checkPoint and checkPath! ;)
+
