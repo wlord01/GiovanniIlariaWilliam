@@ -8,6 +8,7 @@ Created on Thu Oct  5 18:30:49 2017
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from matplotlib.widgets import Button
 
 import ini_obj as ini
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%            
@@ -40,6 +41,9 @@ plotObj.append(plotObj.pop(plotObj.index(ini.objHand))) #hand to last position
 #******************************************************************************
 #*****************************______METHODS______******************************
 #******************************************************************************
+fig=plt.figure(1)
+ax=fig.add_subplot(111)
+ax.axis('off') 
 
 #Define position of plot-windows on the screen
 def plotOnScreen(x,y,w,h): #define position of plot-windows on the screen
@@ -93,11 +97,10 @@ def animSetExt(position):
 
                                                               #______EXT_RETINA
 def animRetiExt(position2):
-    fig2=plt.figure(2)
-    ax2 = fig2.add_subplot(111,aspect='equal')  
+    ax2 = fig.add_subplot(2,2,2,aspect='equal')  
     ax2.set_title(TITLE_extRET)
     retiPixPLOT=np.flipud(np.reshape(ini.ext_retiPixALL[position2,:], (ini.ext_pixelsX,ini.ext_pixelsY)))
-    fig2, plt.imshow(retiPixPLOT, interpolation='nearest')
+    fig, plt.imshow(retiPixPLOT, interpolation='nearest')
     plt.grid(True)  
 
                                                               #_____INT_SETTING
@@ -107,38 +110,73 @@ def animSetInt(position3):
                        
                                                                 #____INT_RETINA                          
 def animRetiInt(position4):
-    fig4=plt.figure(4)
-    ax4 = fig4.add_subplot(111,aspect='equal')  
+    ax4 = fig.add_subplot(2,2,4,aspect='equal')  
     ax4.set_title(TITLE_intRET)
     retiPixPLOT=np.flipud(np.reshape(ini.int_retiPixALL[position4,:], (ini.int_pixelsX,ini.int_pixelsY)))
-    fig4, plt.imshow(retiPixPLOT, interpolation='nearest')
+    fig, plt.imshow(retiPixPLOT, interpolation='nearest')
     plt.grid(True)  
 
+#******************************************************************************
+#*****************************______WIDGETS______******************************
+#******************************************************************************
+
+#_____________PAUSE
+anim_running = True
+
+def onClick(event):
+    global anim_running
+    if anim_running:
+        anim.event_source.stop()
+        anim2.event_source.stop()
+        anim3.event_source.stop()
+        anim4.event_source.stop()
+        anim5.event_source.stop()
+
+        anim_running = False
+    else:
+        anim.event_source.start()
+        anim2.event_source.start()
+        anim3.event_source.start()
+        anim4.event_source.start()
+        anim5.event_source.start()
+        anim_running = True
+
+button = Button(plt.axes([0.47, 0.025, 0.1, 0.04]), 'Pause', color='y', hovercolor='0.975')
+button.on_clicked(onClick)
+
+#_____________TRIALS_COUNTER
+trials_tit=ax.text(0.45,0.05, "Trial num: ", fontsize=12,
+                    bbox=dict(facecolor='r', edgecolor="none", alpha=0.6))
+trials_num=ax.text(0.45,0, 0, fontsize=18,
+                    bbox=dict(facecolor='r', edgecolor="none", alpha=0.6))
+
+def updateText(num):
+    ax.text(0.45,0, num, fontsize=18,
+            bbox=dict(facecolor='r', edgecolor="none", alpha=0.6))
 #******************************************************************************
 #**************************______ANIMATION_RUN______***************************
 #******************************************************************************
 #_______EXT_SETTING
-anim = animation.FuncAnimation(plt.figure(1), animSetExt, frames=len(ini.ext_figPosList[0]),
+anim = animation.FuncAnimation(fig, animSetExt, frames=len(ini.ext_figPosList[0]),
                                init_func=ext_initDesk,
                                repeat=False, interval=INTERVAL)
-plotOnScreen(100,10,500,500) 
-
 #_______EXT_RETINA
-anim2 = animation.FuncAnimation(plt.figure(2), animRetiExt, frames=len(ini.ext_retiPixALL), #ADD INIT DESK?
+anim2 = animation.FuncAnimation(fig, animRetiExt, frames=len(ini.ext_retiPixALL), #ADD INIT DESK?
                                repeat=False, interval=INTERVAL)
-plotOnScreen(600,10,500,500)  
 
 #_______INT_SETTING
-anim3 = animation.FuncAnimation(plt.figure(3), animSetInt, frames=len(ini.ext_figPosList[0]),
+anim3 = animation.FuncAnimation(fig, animSetInt, frames=len(ini.ext_figPosList[0]),
                                init_func=int_initDesk,
                                repeat=False, interval=INTERVAL)
-plotOnScreen(100,600,500,500)                      
 
 #_______INT_RETINA
-anim4 = animation.FuncAnimation(plt.figure(4), animRetiInt, frames=len(ini.int_retiPixALL), #ADD INIT DESK?
+anim4 = animation.FuncAnimation(fig, animRetiInt, frames=len(ini.int_retiPixALL), #ADD INIT DESK?
                                repeat=False, interval=INTERVAL)
-plotOnScreen(600,600,500,500)    
-                     
+
+#_______COUNTER
+anim5 = animation.FuncAnimation(fig, updateText, frames=len(ini.ext_retiPixALL), #ADD INIT DESK?
+                               repeat=False, interval=INTERVAL)
+plotOnScreen(50,10,1500,1000) 
 #NOTE THAT WHEN THE hand "GRASPS" THE FIGURE THE RETINA IS STILL ON THE PREVIOUS POSITION
 # OF THE hand ACTION 0 (WHEN THE hand "GRASPS" THE FIGURE), SO IT WON'T MOVE TO THE
 #NEW hand ACTION 1 (WHEN THE hand "RELEASE" THE FIGURE)
