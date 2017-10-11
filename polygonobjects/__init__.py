@@ -5,6 +5,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as ptc
+from shapely.geometry import Polygon as poly    #for check pixel/figure intersection
 
 
 class Polygon(object):
@@ -64,7 +65,7 @@ class Hand(Circle):
 
 class Retina(Polygon):
     """Retina"""
-    def __init__(self,xy, row_amount,col_amount): #CONSTRUCTOR
+    def __init__(self,xy, row_amount,col_amount):    #CONSTRUCTOR
         self.xy=xy
         self.color="none"    
         self.col_amount=col_amount #columns of pixels
@@ -73,7 +74,7 @@ class Retina(Polygon):
         self.widthX=(max(self.xy[:,0])-min(self.xy[:,0]))/self.col_amount #resolution(x)
         self.widthY=(max(self.xy[:,1])-min(self.xy[:,1]))/self.row_amount #resolution(y)
         
-    def calcFovea(self): #calculates the center of the polygon retina 
+    def calcFovea(self):    #calculates the center of the polygon retina 
         #VERTICES-from bottom left-ABCD
         x=(max(self.xy[:,0])+min(self.xy[:,0]))/2 #lenght of AB/2
         y=(max(self.xy[:,1])+min(self.xy[:,1]))/2 #lenght of AD/2
@@ -98,7 +99,7 @@ class Retina(Polygon):
         self.ax1.grid(linewidth=1,clip_path=self.figure) 
         plt.show()
         
-    def pixelCalc(self):#calculates the coordinates for every pixel in the retina
+    def pixelCalc(self):    #calculates the coordinates for every pixel in the retina
         #from the bottom left one:
         iniX=min(self.xy[:,0])
         iniY=min(self.xy[:,1]) 
@@ -120,3 +121,30 @@ class Retina(Polygon):
                 pixel_list.append(pixelCoor)
                       
         return pixel_list
+
+    def pixelLoop(grid,tri,squ,cir,retiPixVec):
+        cell=-1    #pixel
+        for pix in (grid):    #for every pixel of the retina's grid --->
+            cell+=1
+            
+            #___check if PIXEL is on a FIGURE, then: 
+                                              #   add the value RGB in retinaVector
+                                              #   depending on which is the figure 
+            
+            #----->below..
+            if (poly(tri).intersects(poly(pix)))==True:
+                retiPixVec[0,cell]=1    # Green
+            elif (poly(squ).intersects(poly(pix)))==True:
+                retiPixVec[0,cell]=2    # Red
+            elif ((cir).intersects(poly(pix))) == True:
+                retiPixVec[0,cell]=3    # Blue
+            else:
+                retiPixVec[0,cell]=0    # No colour/white if pixel doesn't overlapping figures
+            #.....below again :P    
+            #N.B. (poly .... intersects) is a function of "shapely" library; it allows
+            #to check if two figures intersecates in 3 ways:
+            #   1. True if two figures edges are in touch
+            #   2. True if one figure overlap the other
+            #   3. True if one figure is inside the other
+            #So it works even if only one point of the figure in on one of the other.
+            #*we should consider to use it instead of checkPoint and checkPath! ;)
