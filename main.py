@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
-"""Main simulation script"""
+"""
+Main simulation script
+
+Here the main simulation of the system is run. Graphics are plotted for
+the simulation if desired. This should be decided by button-clicks. One
+button for starting/stopping the graphics. One button for showing
+discrete steps in the simulation.
+"""
 
 import numpy as np
 
@@ -36,20 +43,24 @@ def is_inside(fovea_coordinates, polygon):
 
 def sub_goal(fovea_coordinates, polygons):
     """
-    Check if current position of fovea is on a sub-goal
+    Check if current position of fovea is on a sub-goal.
+
+    If the fovea is inside a polygon a sub-goal is found.
     
     # PSEUDO-CODE (NOT FINISHED)
+    found_ = False
     FOR all polygons
-        IF fovea is inside any polygon
-            sub_goal == True
-        ELSE
-            sub_goal == False
+        IF not found_
+            FUNCTION is_inside(fovea_coordinates, polygon) checks if
+                fovea is inside the polygon
+        IF fovea is inside polygon
+            SET found_ = True
+    IF found_
+        return True
+    ELSE
+        return False
     """
-    sub_goal = False
-    for polygon in polygons:
-        if is_inside(fovea_coordinates, polygon):
-            sub_goal = True    # Or just return True?
-    return sub_goal    # Or just return False?
+    return
 
 def goal_accomplished_classifier(internal_retina_matrix,
                                  external_retina_matrix
@@ -59,8 +70,8 @@ def goal_accomplished_classifier(internal_retina_matrix,
     accomplished
 
     Takes two numpy arrays and compares the normalised distance between
-    them.
-    The retina arrays should be 2D.
+    them. The retina arrays should be 2D. To define
+    sub_goal_accomplished there should be a threshold number.
     """
     internal_retina_vector = internal_retina_matrix.flatten() # Row-wise
     external_retina_vector = external_retina_matrix.flatten() # Row-wise
@@ -70,43 +81,62 @@ def goal_accomplished_classifier(internal_retina_matrix,
 
 def goal_achievable_classifier():
     """
-    Checks if goal can be achieved by parameterised skill from
-    current position. 
+    Checks if goal can be achieved by parameterised skill from current
+    position.
+
     This is something that comes later with the parameterised skill
     implemented.
+
+    FOR NOW: Just check if the right polygon is found in the external
+    environment.
     """
     return
 
 def parameterised_skill():
     """
-    Moves object in external environment to match internal goal. This
-    parameterised skill has to learn. This will be the main part of the
-    intelligent system. We will implement this using RBM.
+    Moves object in external environment to match internal goal. 
+
+    This parameterised skill has to learn. This will be the main part of
+    the intelligent system. We will implement this using RBM.
+
+    FOR NOW: Implement hardwired moving of objects.
     """
+    return
+
+def foveate(retina):
+    """
+    Foveation of retina
+
+    Uses the {RGB --> Black/White --> Add noise --> (smooth) -->
+    foveate } procedure.
+    """
+    return
 
 if __name__ == '__main__':
     """
     Main simulation
 
     # FLAGS
-    sub_goal = True/False
+    sub_goal_found = True/False
     sub_goal_accomplished = True/False
-    is_inside_ = True/False
+    sub_goal_achievable = True/False
+    max_search_steps = integer
+    number_of_steps = integer
     graphics_on = True/False    # Update graphics each step or not
     discrete_steps_on = True/False    # Whether the system should take discrete steps
-    goal_achievable = True/False
-    max_search_steps = integer
+
 
     # COUNTERS
     step
     search_step
 
     # PSEUDO-CODE OF MAIN FUNCTIONING
-    SET goal_found = False
-    SET goal_accomplished = False
+    SET sub_goal_found = False
+    SET sub_goal_accomplished = False
+    SET sub_goal_achievable = False
     FOR step = 1 to number_of_steps
         IF search_step >= max_search_steps
-            SET search_step = 0
+            SET search_step = 0 # Avoid endless search in external environment
         FUNCTION sub_goal() checks if sub_goal_found
         IF not sub_goal_found or search_step = 0
             FUNCTION foveate(internal_retina) moves internal retina
@@ -114,28 +144,30 @@ if __name__ == '__main__':
             # MAYBE THIS BELOW SHOULD BE OUTSIDE ANYWAY? JUST CHECK EXTERNAL
             # ENVIRONMENT IF A SUB-GOAL IS FOUND IN INTERNAL ENVIRONMENT? 
             SET external_retina position to match internal_retina position
-            FUNCTION goal_accomplished_classifier() checks if goal_accomplished
-        IF sub_goal_found and not goal_accomplished
+            FUNCTION goal_accomplished_classifier() checks if
+                sub_goal_accomplished
+        IF sub_goal_found and not sub_goal_accomplished
             search_step += 1
-            FUNCTION foveate(external_retina) updates the position of external
-                retina
-            FUNCTION goal_achievable_classifier(arguments) checks if
-                goal_achievable from current position
-            IF goal_achievable
+            FUNCTION foveate(external_retina) updates the position of
+                external_retina
+            FUNCTION goal_achievable_classifier() checks if sub_goal_achievable
+                from current position
+            IF sub_goal_achievable
                 FUNCTION parameterised_skill(x0, y0, x1, y1) moves polygon
                     in external environment using hand
                 FUNCTION goal_accomplished_classifier checks if
-                    goal_accomplished
-                IF goal_accomplished
-                    goal_found = False
-                    goal_accomplished = False
-                    goal_achievable = False
+                    sub_goal_accomplished
+                IF sub_goal_accomplished
+                    SET sub_goal_found = False
+                    SET sub_goal_accomplished = False
+                    SET sub_goal_achievable = False
 
-    # HERE GOES GRAPHICS/OUTPUT! 
+    # HERE GOES GRAPHICS/OUTPUT!
     """
-    # Set variables
+    # SET VARIABLES
     number_of_steps = 10
 
+    # MAIN FUNCTIONING
     for step in range(1, number_of_steps+1):
         if not sub_goal_found:
             move(internal_retina, new_random_position(table_dimensions))
