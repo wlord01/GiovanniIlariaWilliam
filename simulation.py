@@ -53,8 +53,8 @@ def sub_goal(fovea_coordinates, polygons):
         IF not found_
             FUNCTION is_inside(fovea_coordinates, polygon) checks if
                 fovea is inside the polygon
-        IF fovea is inside polygon
-            SET found_ = True
+            IF fovea is inside polygon
+                SET found_ = True
     IF found_
         return True
     ELSE
@@ -112,7 +112,7 @@ def foveate(retina):
     """
     return
 
-if __name__ == '__main__':
+def main():
     """
     Main simulation
 
@@ -172,3 +172,11 @@ if __name__ == '__main__':
         if not sub_goal_found:
             move(internal_retina, new_random_position(table_dimensions))
             sub_goal_found = sub_goal(internal_fovea, all_polygons)
+
+if __name__ == '__main__':
+    """
+    Here we can run automated tests to check that everything works.
+
+    After we made sure everything works we can just call main() here.
+    """
+    # Run tests
