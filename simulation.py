@@ -63,21 +63,26 @@ def sub_goal(fovea_coordinates, polygons):
     return
 
 def goal_accomplished_classifier(internal_retina_matrix,
-                                 external_retina_matrix
+                                 external_retina_matrix, threshold
                                  ):
     """
     Compare the internal and external retina to see if goal is
     accomplished
 
     Takes two numpy arrays and compares the normalised distance between
-    them. The retina arrays should be 2D. To define
-    sub_goal_accomplished there should be a threshold number.
+    their flattened versions. The retina arrays should be 2D. The
+    threshold is arbitrarily chosen and set, to determine if the
+    flattened vectors are similar enough (external image close enough
+    to internal goal image).
     """
     internal_retina_vector = internal_retina_matrix.flatten() # Row-wise
     external_retina_vector = external_retina_matrix.flatten() # Row-wise
     diff = internal_retina_vector - external_retina_vector
     norm = np.linalg.norm(diff)
-    return norm/len(internal_retina_vector)
+    if norm/len(internal_retina_vector) <= threshold:
+        return True
+    else:
+        return False
 
 def goal_achievable_classifier():
     """
@@ -173,10 +178,12 @@ def main():
             move(internal_retina, new_random_position(table_dimensions))
             sub_goal_found = sub_goal(internal_fovea, all_polygons)
 
+
 if __name__ == '__main__':
     """
     Here we can run automated tests to check that everything works.
 
     After we made sure everything works we can just call main() here.
     """
+    # main()
     # Run tests
