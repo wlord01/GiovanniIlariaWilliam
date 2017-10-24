@@ -38,6 +38,8 @@ def is_inside(fovea_coordinates, polygon):
     
     Uses shapely object function 'within'. Only checks for fovea in
     polygon for now, but could probably be generalised.
+    Takes input xy-coordinates and polygon object.
+    Returns True/False.
     """
     return poi(fovea_coordinates).within(poly(polygon.xy))
 
@@ -48,19 +50,28 @@ def sub_goal(fovea_coordinates, polygons):
     If the fovea is inside a polygon a sub-goal is found.
     
     # PSEUDO-CODE (NOT FINISHED)
-    found_ = False
+    _found = False
     FOR all polygons
-        IF not found_
+        IF not _found
             FUNCTION is_inside(fovea_coordinates, polygon) checks if
                 fovea is inside the polygon
             IF fovea is inside polygon
-                SET found_ = True
-    IF found_
+                SET _found = True
+    IF _found
         return True
     ELSE
         return False
     """
-    return
+    _found = False
+    for polygon in polygons:
+        if not _found:
+            if is_inside(fovea_coordinates, polygon):
+                _found = True
+
+    if _found:
+        return True
+    else:
+        return False
 
 def goal_accomplished_classifier(internal_retina_matrix,
                                  external_retina_matrix, threshold
