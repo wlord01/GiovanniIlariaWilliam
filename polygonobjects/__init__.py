@@ -20,7 +20,8 @@ import matplotlib.patches as ptc
 def math_round(x):
     """Round to integer
 
-    Round arithmetically to nearest integer, with ties going away from zero.
+    Round arithmetically to nearest integer, with ties going away from
+    zero.
     """
     if abs(x) < 1:
         if x >= 0.5:
@@ -123,11 +124,11 @@ class Square(Polygon):
     def draw(self, grid):
         """Draw object in grid.
 
-        Convert position and size to array index values and update grid.
+        Convert position and size to array index values and update
+        grid.
 
         Keyword arguments:
         grid -- the grid to draw in
-        unit_measure -- the size of the grid
         """
         _corners = self.get_corners()*self.unit
         _corner_coordinates = np.array([[math_round(_corners[0][0]),
@@ -144,9 +145,9 @@ class Square(Polygon):
     def is_inside(self, point):
         """Check if point is inside square.
 
-        If x-coordinate of point is between x_min and x_max of square and
-        y-coordinate of point is between y_min and _ymax of square, return
-        True. Otherwise return False.
+        If x-coordinate of point is between x_min and x_max of square
+        and y-coordinate of point is between y_min and _ymax of square,
+        return True. Otherwise return False.
         """
         _corners = self.get_corners()
         if (_corners[0][0] <= point[0] <= _corners[0][1] and
@@ -174,7 +175,10 @@ class Circle(Polygon):
     - Draw on table
     - Tell if point is inside
     """
-    def __init__(self):
+    type_ = "Circle"
+
+    def __init__(self, center, size, color, unit):
+        super(Circle, self).__init__(center, size, color, unit)
         self.radius = self.size/2
 
     def get_perimeter():
@@ -186,8 +190,25 @@ class Circle(Polygon):
         self.center += vector
 
     def draw(self, grid):
-        """Draw object in grid."""
-        pass
+        """Draw circle object in grid.
+
+        Keyword arguments:
+        grid -- the grid to draw in
+
+        Takes center (float coordinates), size (float) and grid
+        (matrix array) and updates the array elements in the grid which
+        are within radius distance from center.
+        """
+        _x = self.center[0]*self.unit
+        _y = self.center[1]*self.unit
+        
+        _r = self.radius*self.unit
+
+        _X, _Y = np.meshgrid(np.arange(grid.shape[0]), np.arange(grid.shape[1]))
+
+        _d = np.sqrt((_X-_x)**2 + (_Y-_y)**2)
+
+        grid[np.where(_d < _r)] = self.color
 
     def is_inside(self, point):
         pass
@@ -293,7 +314,7 @@ if __name__ == '__main__':
     # Run tests
     plt.close('all')
 
-    external_size = 10*10
+    external_size = 1000
 
     # RGB VERSION
     external_grid = np.ones([external_size, external_size, 3])
@@ -302,7 +323,9 @@ if __name__ == '__main__':
 #    external_grid = np.zeros([external_size, external_size])
 #    color = 1
 
-    p1 = Square(np.array([0.7, 0.5], dtype=float), 0.3, color, external_size)
+    # Create objects
+    p1 = Square(np.array([0.7, 0.6], dtype=float), 0.3, color, external_size)
+    c1 = Circle(np.array([0.3, 0.3], dtype=float), 0.3, color, external_size)
 
     # Before square is put in
 #    plt.imshow(external_grid)
@@ -312,13 +335,16 @@ if __name__ == '__main__':
     plt.xlim(-0.1*external_size, external_size + 0.1*external_size)
     plt.ylim(external_size + 0.1*external_size, -0.1*external_size)
 #    print(external_grid)  # Before square is put in
+
     p1.draw(external_grid)
+    c1.draw(external_grid)
+
     plt.imshow(external_grid)
     print(external_grid)  # After square is put in
 
     # Test points for is_inside()
     point = np.array([0.6, 0.6])
-    print(p1.is_inside(point))
+#    print(p1.is_inside(point))
     plt_point = point*(external_size-1)
     plt.plot(plt_point[0], plt_point[1], 'wo')
 #
@@ -333,6 +359,7 @@ if __name__ == '__main__':
     plt.grid()
     plt.show()
 
+    # Other kind of plot
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
 
@@ -341,8 +368,11 @@ if __name__ == '__main__':
     plt.xlim(0, 1)
     plt.ylim(1, 0)
     ax1.add_patch(patches.Rectangle((0.2, 0.2), 0.6, 0.6, fill=False))
-    ax1.add_patch(patches.Rectangle(p1.center - p1.size/2, p1.size, p1.size, 
+    ax1.add_patch(patches.Rectangle(p1.center - p1.size/2, p1.size, p1.size,
                                     color=p1.color
                                     )
+                  )
+    ax1.add_patch(patches.Circle(c1.center, c1.radius, color=c1.color
+                                 )
                   )
     ax1.plot(point[0], point[1], 'wo')
