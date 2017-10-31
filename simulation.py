@@ -10,6 +10,7 @@ discrete steps in the simulation.
 """
 
 import numpy as np
+from polygonobjects import Square
 
 
 def new_random_position(max_values):
@@ -35,16 +36,17 @@ def move(object_, end_position):
     object_.xy = end_position
 
 
-def is_inside(fovea_coordinates, polygon):
+def is_inside(coordinates, object_):
     """
     Check if coordinates are inside object.
 
-    Uses shapely object function 'within'. Only checks for fovea in
-    polygon for now, but could probably be generalised.
     Takes input xy-coordinates and polygon object.
     Return True/False.
     """
-    pass
+    if object_.is_inside(coordinates):
+        return True
+    else:
+        return False
 
 
 def sub_goal(fovea_coordinates, polygons):

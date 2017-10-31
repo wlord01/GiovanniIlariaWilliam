@@ -39,11 +39,10 @@ class Polygon(object):
     """Polygon object
 
     Variables:
-    - Type (string?)
-    - Color (integer? RGB code?)
+    - Type (string)
+    - Color (integer 0/1 or RGB list)
     - Center coordinates (floats)
-    - Size (integer? Or float?)
-    - Coordinates of object with respect to center
+    - Size (float)
 
     Methods:
     - Move object
@@ -109,22 +108,19 @@ class Square(Polygon):
     """
     type_ = "Square"
 
+    def get_corners(self):
+        """Get the corner coordinates of the square."""
+#        _center = self.center*(self.unit-1)  # Pixel-value
+#        _size = self.size*self.unit
+        _x_min = (self.center[0] - self.size/2)
+        _x_max = (self.center[0] + self.size/2)
+        _y_min = (self.center[1] - self.size/2)
+        _y_max = (self.center[1] + self.size/2)
+        return np.array([[_x_min, _x_max], [_y_min, _y_max]])
+
     def move(self, vector):
         """Move object by adding vector to its center position."""
         self.center += vector
-
-    def get_corners(self):
-        """Get the corner coordinates of the square."""
-        _center = self.center*(self.unit-1)  # Pixel-value
-        _size = self.size*self.unit
-        _x_min = math_round(_center[0] - _size/2)
-        _x_max = math_round(_center[0] + _size/2)
-        _y_min = math_round(_center[1] - _size/2)
-        _y_max = math_round(_center[1] + _size/2)
-        _corner_coordinates = [np.array([_x_min, _x_max], dtype=int),
-                               np.array([_y_min, _y_max], dtype=int)
-                               ]
-        return _corner_coordinates
 
     def draw(self, grid):
         """Draw object in grid.
@@ -135,7 +131,13 @@ class Square(Polygon):
         grid -- the grid to draw in
         unit_measure -- the size of the grid
         """
-        _corner_coordinates = self.get_corners()
+        _corners = self.get_corners()*self.unit - self.center
+        _corner_coordinates = np.array([[math_round(_corners[0][0]),
+                                         math_round(_corners[0][1])],
+                                        [math_round(_corners[1][0]),
+                                         math_round(_corners[1][1])]
+                                        ], dtype=int
+                                       )
         grid[_corner_coordinates[1][0]:_corner_coordinates[1][1],
              _corner_coordinates[0][0]:_corner_coordinates[0][1]
              ] = self.color
@@ -147,24 +149,51 @@ class Square(Polygon):
         y-coordinate of point is between y_min and _ymax of square, return
         True. Otherwise return False.
         """
-        _x_min = self.center[0] - self.size/2
-        _x_max = self.center[0] + self.size/2
-        _y_min = self.center[1] - self.size/2
-        _y_max = self.center[1] + self.size/2
-        if _x_min <= point[0] <= _x_max and _y_min <= point[1] <= _y_max:
+        _corners = self.get_corners()
+        if (_corners[0][0] <= point[0] <= _corners[0][1] and
+                _corners[1][0] <= point[1] <= _corners[1][1]):
             return True
         else:
             return False
 
 
 class Circle(Polygon):
-    """Circle"""
-    def __init__(self,xy,radius):
-        self.xy=xy
-        self.radius=radius
-        self.color="none"
+    """Circle class with inheritance from Polygon.
 
-    def plotDef(self):
+    Added in Circle:
+    self.radius (float)
+
+    Variables:
+    - Type (string)
+    - Color (integer 0/1 or RGB list)
+    - Center coordinates (floats)
+    - Size (float)
+    - Radius (float)
+
+    Methods:
+    - Move object
+    - Draw on table
+    - Tell if point is inside
+    """
+    def __init__(self):
+        self.radius = self.size/2
+
+    def get_perimeter():
+        """Calculate the perimeter points of the object."""
+        pass
+
+    def move(self, vector):
+        """Move object by adding vector to its center position."""
+        self.center += vector
+
+    def draw(self, grid):
+        """Draw object in grid."""
+        pass
+
+    def is_inside(self, point):
+        pass
+
+    def plotDef(self):  # Old stuff
         self.figure=ptc.Circle((self.xy),self.radius, 
                             facecolor = self.color)
 
@@ -265,7 +294,7 @@ if __name__ == '__main__':
     # Run tests
     plt.close('all')
 
-    external_size = 1024
+    external_size = 10
 
     # Put grid as ones for RGB images
 #    external_grid = np.ones([external_size, external_size, 3])
@@ -278,16 +307,16 @@ if __name__ == '__main__':
 #    plt.show()
 
     plt.figure()
-    print(external_grid)  # Before square is put in
+#    print(external_grid)  # Before square is put in
     p1.draw(external_grid)
     plt.imshow(external_grid)
     print(external_grid)  # After square is put in
 
     # Test points for is_inside()
-    point = np.array([0.53, 0.457])
-    print(p1.is_inside(point))
-    plt_point = point*(external_size-1)
-    plt.plot(plt_point[0], plt_point[1], 'wo')
+#    point = np.array([0.5, 0.5])
+#    print(p1.is_inside(point))
+#    plt_point = point*(external_size-1)
+#    plt.plot(plt_point[0], plt_point[1], 'wo')
 #
 #    p1.move(np.array([0.1, 0.1]))
 #    p1.draw(external_grid)
@@ -296,5 +325,6 @@ if __name__ == '__main__':
 #    p1.move(np.array([-0.1, 0.1]))
 #    p1.draw(external_grid)
 #    plt.imshow(external_grid)
-    
+
+    plt.grid()
     plt.show()
