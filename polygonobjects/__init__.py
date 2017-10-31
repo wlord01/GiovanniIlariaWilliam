@@ -110,8 +110,6 @@ class Square(Polygon):
 
     def get_corners(self):
         """Get the corner coordinates of the square."""
-#        _center = self.center*(self.unit-1)  # Pixel-value
-#        _size = self.size*self.unit
         _x_min = (self.center[0] - self.size/2)
         _x_max = (self.center[0] + self.size/2)
         _y_min = (self.center[1] - self.size/2)
@@ -131,13 +129,14 @@ class Square(Polygon):
         grid -- the grid to draw in
         unit_measure -- the size of the grid
         """
-        _corners = self.get_corners()*self.unit - self.center
+        _corners = self.get_corners()*self.unit
         _corner_coordinates = np.array([[math_round(_corners[0][0]),
                                          math_round(_corners[0][1])],
                                         [math_round(_corners[1][0]),
                                          math_round(_corners[1][1])]
                                         ], dtype=int
                                        )
+        print(_corner_coordinates)
         grid[_corner_coordinates[1][0]:_corner_coordinates[1][1],
              _corner_coordinates[0][0]:_corner_coordinates[0][1]
              ] = self.color
@@ -294,29 +293,34 @@ if __name__ == '__main__':
     # Run tests
     plt.close('all')
 
-    external_size = 10
+    external_size = 10*10
 
-    # Put grid as ones for RGB images
-#    external_grid = np.ones([external_size, external_size, 3])
-    external_grid = np.zeros([external_size, external_size])
+    # RGB VERSION
+    external_grid = np.ones([external_size, external_size, 3])
+    color = [1, 0, 0]
+    # BINARY VERSION
+#    external_grid = np.zeros([external_size, external_size])
+#    color = 1
 
-    p1 = Square(np.array([0.5, 0.5], dtype=float), 0.2, 1, external_size)
+    p1 = Square(np.array([0.7, 0.5], dtype=float), 0.3, color, external_size)
 
     # Before square is put in
 #    plt.imshow(external_grid)
 #    plt.show()
 
     plt.figure()
+    plt.xlim(-0.1*external_size, external_size + 0.1*external_size)
+    plt.ylim(external_size + 0.1*external_size, -0.1*external_size)
 #    print(external_grid)  # Before square is put in
     p1.draw(external_grid)
     plt.imshow(external_grid)
     print(external_grid)  # After square is put in
 
     # Test points for is_inside()
-#    point = np.array([0.5, 0.5])
-#    print(p1.is_inside(point))
-#    plt_point = point*(external_size-1)
-#    plt.plot(plt_point[0], plt_point[1], 'wo')
+    point = np.array([0.6, 0.6])
+    print(p1.is_inside(point))
+    plt_point = point*(external_size-1)
+    plt.plot(plt_point[0], plt_point[1], 'wo')
 #
 #    p1.move(np.array([0.1, 0.1]))
 #    p1.draw(external_grid)
@@ -328,3 +332,17 @@ if __name__ == '__main__':
 
     plt.grid()
     plt.show()
+
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111, aspect='equal')
+    plt.xlim(0, 1)
+    plt.ylim(1, 0)
+    ax1.add_patch(patches.Rectangle((0.2, 0.2), 0.6, 0.6, fill=False))
+    ax1.add_patch(patches.Rectangle(p1.center - p1.size/2, p1.size, p1.size, 
+                                    color=p1.color
+                                    )
+                  )
+    ax1.plot(point[0], point[1], 'wo')
