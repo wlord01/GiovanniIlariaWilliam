@@ -26,16 +26,6 @@ def new_random_position(max_values):
     return np.array(random_values)
 
 
-def move(object_, end_position):
-    """
-    Move object from current position to end_position.
-
-    What about the hand? And fovea? Needs to be incorporated here.
-    Also, this should be implemented as a paremeterised skill later.
-    """
-    object_.xy = end_position
-
-
 def is_inside(coordinates, object_):
     """
     Check if coordinates are inside object.

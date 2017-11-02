@@ -6,15 +6,13 @@ Function:
 math_round(x)
 
 Classes:
-Polygon
+Shape
 Square
 Circle
-Retina
 """
 
+
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as ptc
 
 
 def math_round(x):
@@ -36,21 +34,20 @@ def math_round(x):
     return x
 
 
-class Polygon(object):
-    """Polygon object
+class Shape(object):
+    """Geometric shape.
 
     Variables:
-    - Type (string)
-    - Color (integer 0/1 or RGB list)
-    - Center coordinates (floats)
-    - Size (float)
+    - type_ -- type of object (string)
+    - center -- center coordinates (floats)
+    - size -- float value of object size
+    - color -- color as integer (0/1) or RGB list ([R, G, B])
+    - unit -- integer unit measure (number of pixels in environment)
 
     Methods:
-    - Move object
-    - Draw on table
-    - Tell if point is inside
+    - move -- Move object
     """
-    type_ = "Polygon"
+    type_ = "Shape"
 
     def __init__(self, center, size, color, unit):
         self.center = center
@@ -58,92 +55,69 @@ class Polygon(object):
         self.color = color
         self.unit = unit
 
-        # Old stuff
-        self.linestyle = "-"
-        self.edge = "k"
+    def move(self, vector):
+        """Move object by adding vector to its center position.
 
-    def randPos(self):  # Old stuff
-        randomX = np.random.uniform(0, 10)
-        randomY = np.random.uniform(0, 10)
-        randomXY = np.array([randomX, randomY])
-        return randomXY
-
-    def plotDef(self):  # Old stuff
-        self.figure = ptc.Polygon(self.xy, facecolor=self.color,
-                                  linestyle=self.linestyle,
-                                  edgecolor=self.edge
-                                  )
-
-    def plotAdd(self,numFig,title): # Old stuff
-        self.xLim=(-5,15)      
-        self.yLim=(-5,15)
-        self.fig=plt.figure(numFig) 
-        self.ax1 = self.fig.add_subplot(111,aspect='equal')       
-        self.ax1.set_xlim((self.xLim))
-        self.ax1.set_ylim((self.yLim))
-        self.ax1.set_title(title)
-        
-        self.ax1.add_patch(self.figure)
-        
-    def animateFig(self,coorList,position,numFig,title): # Old stuff
-        self.xy=coorList[position]
-        
-        self.figure.remove()
-        self.plotDef()
-        self.plotAdd(numFig,title)
+        Keyword arguments:
+        vector -- 2D vector array
+        """
+        self.center += vector
 
 
-class Square(Polygon):
-    """Square object with inheritance from Polygon class.
+class Square(Shape):
+    """Square object with inheritance from Shape class.
+
+    Added in Square:
+    - Methods draw and is_inside
 
     Variables:
-    - Type (string)
-    - Color (integer 0/1 or RGB list)
-    - Center coordinates (floats)
-    - Size (float)
+    - type_ -- type of object (string)
+    - center -- center coordinates (floats)
+    - size -- float value of object size
+    - color -- color as integer (0/1) or RGB list ([R, G, B])
+    - unit -- integer unit measure (number of pixels in environment)
 
     Methods:
-    - Move object
-    - Draw on table
-    - Tell if point is inside
+    - move -- Move object
+    - draw -- Draw in image array
+    - is_inside -- Tell if point is inside square
     """
     type_ = "Square"
 
     def get_corners(self):
-        """Get the corner coordinates of the square."""
+        """Get the coordinates of the square's coordinates."""
         _x_min = (self.center[0] - self.size/2)
         _x_max = (self.center[0] + self.size/2)
         _y_min = (self.center[1] - self.size/2)
         _y_max = (self.center[1] + self.size/2)
         return np.array([[_x_min, _x_max], [_y_min, _y_max]])
 
-    def move(self, vector):
-        """Move object by adding vector to its center position."""
-        self.center += vector
-
-    def draw(self, grid):
-        """Draw object in grid.
-
-        Convert position and size to array index values and update
-        grid.
+    def draw(self, image_array):
+        """Draw object in image array.
 
         Keyword arguments:
-        grid -- the grid to draw in
+        image_array -- the image array to draw in.
+
+        Get coordinates of square's corners, convert to array index
+        values and update image_array by coloring the pixels within
+        the square.
         """
         _corners = self.get_corners()*self.unit
-        _corner_coordinates = np.array([[math_round(_corners[0][0]),
-                                         math_round(_corners[0][1])],
-                                        [math_round(_corners[1][0]),
-                                         math_round(_corners[1][1])]
-                                        ], dtype=int
-                                       )
-        print(_corner_coordinates)
-        grid[_corner_coordinates[1][0]:_corner_coordinates[1][1],
-             _corner_coordinates[0][0]:_corner_coordinates[0][1]
-             ] = self.color
+        _corner_index_values = np.array([[math_round(_corners[0][0]),
+                                          math_round(_corners[0][1])],
+                                         [math_round(_corners[1][0]),
+                                          math_round(_corners[1][1])]
+                                         ], dtype=int
+                                        )
+        image_array[_corner_index_values[1][0]:_corner_index_values[1][1],
+                    _corner_index_values[0][0]:_corner_index_values[0][1]
+                    ] = self.color
 
     def is_inside(self, point):
         """Check if point is inside square.
+
+        Keyword arguments:
+        point -- array of float coordinates of the point
 
         If x-coordinate of point is between x_min and x_max of square
         and y-coordinate of point is between y_min and _ymax of square,
@@ -157,23 +131,25 @@ class Square(Polygon):
             return False
 
 
-class Circle(Polygon):
-    """Circle class with inheritance from Polygon.
+class Circle(Shape):
+    """Circle class with inheritance from Shape.
 
     Added in Circle:
-    self.radius (float)
+    - self.radius (float)
+    - Methods draw and is_inside
 
     Variables:
-    - Type (string)
-    - Color (integer 0/1 or RGB list)
-    - Center coordinates (floats)
-    - Size (float)
-    - Radius (float)
+    - type_ -- type of object (string)
+    - center -- center coordinates (floats)
+    - size -- float value of object size
+    - color -- color as integer (0/1) or RGB list ([R, G, B])
+    - unit -- integer unit measure (number of pixels in environment)
+    - radius -- float value of circle radius
 
     Methods:
-    - Move object
-    - Draw on table
-    - Tell if point is inside
+    - move -- Move object
+    - draw -- Draw in image array
+    - is_inside -- Tell if point is inside circle
     """
     type_ = "Circle"
 
@@ -181,198 +157,65 @@ class Circle(Polygon):
         super(Circle, self).__init__(center, size, color, unit)
         self.radius = self.size/2
 
-    def get_perimeter():
-        """Calculate the perimeter points of the object."""
-        pass
-
-    def move(self, vector):
-        """Move object by adding vector to its center position."""
-        self.center += vector
-
-    def draw(self, grid):
-        """Draw circle object in grid.
+    def draw(self, image_array):
+        """Draw circle object in image array.
 
         Keyword arguments:
-        grid -- the grid to draw in
+        image_array -- the image array to draw in
 
-        Takes center (float coordinates), size (float) and grid
-        (matrix array) and updates the array elements in the grid which
-        are within radius distance from center.
+        Takes center (float coordinates), size (float) and image_array
+        (matrix array). Updates the array elements in image_array
+        which are within radius distance from the center of the circle
+        to the color of the circle.
         """
         _x = self.center[0]*self.unit
         _y = self.center[1]*self.unit
-        
+
         _r = self.radius*self.unit
 
-        _X, _Y = np.meshgrid(np.arange(grid.shape[0]), np.arange(grid.shape[1]))
+        _X, _Y = np.meshgrid(np.arange(image_array.shape[0]),
+                             np.arange(image_array.shape[1])
+                             )
 
         _d = np.sqrt((_X-_x)**2 + (_Y-_y)**2)
 
-        grid[np.where(_d < _r)] = self.color
+        image_array[np.where(_d < _r)] = self.color
 
     def is_inside(self, point):
-        pass
+        """Check if point is inside circle object.
 
-    def plotDef(self):  # Old stuff
-        self.figure=ptc.Circle((self.xy),self.radius, 
-                            facecolor = self.color)
+        Keyword arguments:
+        point -- array of float coordinates of the point
 
+        Takes the center (float coordinates), radius (float) and point
+        (float coordinates) and calculates the distance _d between the
+        point and the center of the circle. If _d is smaller than the
+        radius _r of the circle the point is inside.
+        """
+        _d = np.sqrt((point[0]-self.center[0])**2
+                     + (point[1]-self.center[1])**2
+                     )
 
-class Hand(Circle):
-    """Hand"""
-    def __init__(self,xy,radius):
-        Circle.__init__(self,xy,radius)
+        if _d <= self.radius:
+            return True
+        else:
+            return False
 
-
-class Retina(Polygon):
-    """Retina"""
-    def __init__(self,xy, row_amount,col_amount): #CONSTRUCTOR
-        self.xy=xy
-        self.color="none"    
-        self.col_amount=col_amount #columns of pixels
-        self.row_amount=row_amount #rows of pixels
-        
-        self.widthX=(max(self.xy[:,0])-min(self.xy[:,0]))/self.col_amount #resolution(x)
-        self.widthY=(max(self.xy[:,1])-min(self.xy[:,1]))/self.row_amount #resolution(y)
-        
-    def calcFovea(self): #calculates the center of the polygon retina 
-        #VERTICES-from bottom left-ABCD
-        x=(max(self.xy[:,0])+min(self.xy[:,0]))/2 #lenght of AB/2
-        y=(max(self.xy[:,1])+min(self.xy[:,1]))/2 #lenght of AD/2
-        fovea=np.array([x,y]) #fovea coordinates
-        return fovea
-        
-    def plotAdd(self,numFig,title):
-        #modified, to plot the grid of retina on the setting
-        self.xLim=(-5,15)      
-        self.yLim=(-5,15)
-        self.fig=plt.figure(numFig) 
-        self.ax1 = self.fig.add_subplot(111,aspect='equal')       
-        self.ax1.set_xlim((self.xLim))
-        self.ax1.set_ylim((self.yLim))
-        self.ax1.set_title(title)
-
-        self.ax1.add_patch(self.figure)
-        
-        #define range of grid (row/col)
-        self.ax1.set_xticks(np.arange(min(self.xy[:,0]),max(self.xy[:,0]), self.widthX))
-        self.ax1.set_yticks(np.arange(min(self.xy[:,1]), max(self.xy[:,1]), self.widthY))
-        self.ax1.grid(linewidth=1,clip_path=self.figure) 
-        plt.show()
-        
-    def pixelCalc(self):#calculates the coordinates for every pixel in the retina
-        #from the bottom left one:
-        iniX=min(self.xy[:,0])
-        iniY=min(self.xy[:,1]) 
-        pixel_list = [] # empty list to hold all pixels  
-        
-        #PIXELS iteration
-        for row in range(0,self.row_amount):
-            y0=iniY
-            y1=y0+self.widthY
-            iniY=y1
-            iniX=min(self.xy[:,0])
-            
-            for col in range(0,self.col_amount):
-                x0=iniX
-                x1=x0+self.widthX
-                iniX=x1
-                #coordinates of vertices of pixel xy
-                pixelCoor=np.array([[x0,y0],[x1,y0],[x1,y1],[x0,y1]],dtype=float)
-                pixel_list.append(pixelCoor)
-                      
-        return pixel_list
-
-    def pixelLoop(grid,tri,squ,cir,retiPixVec):
-        cell=-1 #pixel
-        for pix in (grid): #for every pixel of the retina's grid --->
-            cell+=1
-            
-            #___check if PIXEL is on a FIGURE, then: 
-                                              #   add the value RGB in retinaVector
-                                              #   depending on which is the figure 
-            
-            #----->below..
-            if (poly(tri).intersects(poly(pix)))==True:
-                retiPixVec[0,cell]=green
-            elif (poly(squ).intersects(poly(pix)))==True:
-                retiPixVec[0,cell]=red
-            elif ((cir).intersects(poly(pix))) == True:
-                retiPixVec[0,cell]=blue
-            else:
-                retiPixVec[0,cell]=others #   if pixel doesn't overlapping figures
-            #.....below again :P    
-            #N.B. (poly .... intersects) is a function of "shapely" library; it allows
-            #to check if two figures intersecates in 3 ways:
-            #   1. True if two figures edges are in touch
-            #   2. True if one figure overlap the other
-            #   3. True if one figure is inside the other
-            #So it works even if only one point of the figure in on one of the other.
-            #*we should consider to use it instead of checkPoint and checkPath! ;)
 
 if __name__ == '__main__':
-    # Run tests
-    plt.close('all')
+    # RUN TESTS
 
-    external_size = 1000
+    # ALTERNATIVE WAY OF PLOTTING: USE PATCHES
+    # import matplotlib.pyplot as plt
+    # import matplotlib.patches as patches
 
-    # RGB VERSION
-    external_grid = np.ones([external_size, external_size, 3])
-    color = [1, 0, 0]
-    # BINARY VERSION
-#    external_grid = np.zeros([external_size, external_size])
-#    color = 1
+    # fig1 = plt.figure()
+    # ax1 = fig1.add_subplot(111, aspect='equal')
+    # plt.xlim(0, 1)
+    # plt.ylim(1, 0)
+    # ax1.add_patch(patches.Rectangle((0.2, 0.2), 0.6, 0.6, fill=False))
+    # 3ax1.add_patch(patches.Rectangle(center, x_size, y_size, color=color))
+    # ax1.add_patch(patches.Circle(center, radius, color=color))
+    # ax1.plot(point[0], point[1], 'wo')
 
-    # Create objects
-    p1 = Square(np.array([0.7, 0.6], dtype=float), 0.3, color, external_size)
-    c1 = Circle(np.array([0.3, 0.3], dtype=float), 0.3, color, external_size)
-
-    # Before square is put in
-#    plt.imshow(external_grid)
-#    plt.show()
-
-    plt.figure()
-    plt.xlim(-0.1*external_size, external_size + 0.1*external_size)
-    plt.ylim(external_size + 0.1*external_size, -0.1*external_size)
-#    print(external_grid)  # Before square is put in
-
-    p1.draw(external_grid)
-    c1.draw(external_grid)
-
-    plt.imshow(external_grid)
-    print(external_grid)  # After square is put in
-
-    # Test points for is_inside()
-    point = np.array([0.6, 0.6])
-#    print(p1.is_inside(point))
-    plt_point = point*(external_size-1)
-    plt.plot(plt_point[0], plt_point[1], 'wo')
-#
-#    p1.move(np.array([0.1, 0.1]))
-#    p1.draw(external_grid)
-#    plt.imshow(external_grid)
-#
-#    p1.move(np.array([-0.1, 0.1]))
-#    p1.draw(external_grid)
-#    plt.imshow(external_grid)
-
-    plt.grid()
-    plt.show()
-
-    # Other kind of plot
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
-
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111, aspect='equal')
-    plt.xlim(0, 1)
-    plt.ylim(1, 0)
-    ax1.add_patch(patches.Rectangle((0.2, 0.2), 0.6, 0.6, fill=False))
-    ax1.add_patch(patches.Rectangle(p1.center - p1.size/2, p1.size, p1.size,
-                                    color=p1.color
-                                    )
-                  )
-    ax1.add_patch(patches.Circle(c1.center, c1.radius, color=c1.color
-                                 )
-                  )
-    ax1.plot(point[0], point[1], 'wo')
+    pass
