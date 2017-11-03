@@ -60,8 +60,56 @@ class Shape(object):
 
         Keyword arguments:
         vector -- 2D vector array
+
+        The method adds the vector to the object's center coordinates
+        and trims if the object ends up outside the table
+        (0.2 < x, y < 0.8). Trimming is done by checking first if x or
+        y is outside the limits. Then check the two functions x = y and
+        x = 1 - y to see if the object is over or under these. This
+        determines on which coordinate to base the trimming.
         """
         self.center += vector
+
+        # Trim if X or Y is outside table {0.2, 0.8}
+        if (not 0.2 <= self.center[0] <= 0.8 or
+                not 0.2 <= self.center[1] <= 0.8):
+            # Trim based on which coordinate is farther out
+            if (self.center[0] < self.center[1] and
+                    self.center[0] > 1 - self.center[1]):
+                # Trim based on y
+                _y_trim = -abs(self.center[1]-0.8)
+                _x_trim = -vector[0]*abs(_y_trim)/abs(vector[1])
+            elif (self.center[0] > self.center[1] and
+                  self.center[0] < 1 - self.center[1]
+                  ):
+                # Trim based on y
+                _y_trim = abs(self.center[1]-0.2)
+                _x_trim = -vector[0]*abs(_y_trim)/abs(vector[1])
+            elif (self.center[0] < self.center[1] and
+                  self.center[0] < 1 - self.center[1]
+                  ):
+                # Trim based on x
+                _x_trim = abs(self.center[0]-0.2)
+                _y_trim = -vector[1]*abs(_x_trim)/abs(vector[0])
+            elif (self.center[0] > self.center[1] and
+                  self.center[0] > 1 - self.center[1]
+                  ):
+                # Trim based on x
+                _x_trim = -abs(self.center[0]-0.8)
+                _y_trim = -vector[1]*abs(_x_trim)/abs(vector[0])
+            else:
+                if self.center[0] > 0.5:
+                    _x_trim = -abs(self.center[0]-0.8)
+                elif self.center[0] < 0.5:
+                    _x_trim = abs(self.center[0]-0.2)
+                if self.center[1] > 0.5:
+                    _y_trim = -abs(self.center[1]-0.8)
+                elif self.center[1] < 0.5:
+                    _y_trim = abs(self.center[1]-0.2)
+
+            _trim = np.array([_x_trim, _y_trim])
+
+            self.center += _trim
 
 
 class Square(Shape):
@@ -85,7 +133,7 @@ class Square(Shape):
     type_ = "Square"
 
     def get_corners(self):
-        """Get the coordinates of the square's coordinates."""
+        """Get the coordinates of the square's corners."""
         _x_min = (self.center[0] - self.size/2)
         _x_max = (self.center[0] + self.size/2)
         _y_min = (self.center[1] - self.size/2)
@@ -205,6 +253,32 @@ class Circle(Shape):
 if __name__ == '__main__':
     # RUN TESTS
 
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111, aspect='equal')
+    ax1.add_patch(patches.Rectangle((0.2, 0.2), 0.6, 0.6, fill=False))
+
+    point1 = np.array([0.5, 0.5])
+    c = Circle([0.5, 0.5], 0.1, 1, 10)
+    vector = 2*np.random.random_sample(2) - 1
+    point2 = point1 + vector
+
+    ax1.plot(c.center[0], c.center[1], 'o')
+
+    c.move(vector)
+
+    ax1.plot(c.center[0], c.center[1], 'o')
+
+#    ax1.plot(point2[0], point2[1], 'o')
+    ax1.plot([point1[0], point2[0]], [point1[1], point2[1]])
+
+    plt.xlim(-0.2, 1.2)
+    plt.ylim(1.2, -0.2)
+    plt.show()
+    print(c.center)
+
     # ALTERNATIVE WAY OF PLOTTING: USE PATCHES
     # import matplotlib.pyplot as plt
     # import matplotlib.patches as patches
@@ -214,7 +288,7 @@ if __name__ == '__main__':
     # plt.xlim(0, 1)
     # plt.ylim(1, 0)
     # ax1.add_patch(patches.Rectangle((0.2, 0.2), 0.6, 0.6, fill=False))
-    # 3ax1.add_patch(patches.Rectangle(center, x_size, y_size, color=color))
+    # ax1.add_patch(patches.Rectangle(center, x_size, y_size, color=color))
     # ax1.add_patch(patches.Circle(center, radius, color=color))
     # ax1.plot(point[0], point[1], 'wo')
 
