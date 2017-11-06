@@ -50,7 +50,7 @@ class Shape(object):
     type_ = "Shape"
 
     def __init__(self, center, size, color, unit):
-        self.center = center
+        self.center = np.array(center)
         self.size = size
         self.color = color
         self.unit = unit

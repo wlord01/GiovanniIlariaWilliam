@@ -96,7 +96,7 @@ def goal_accomplished_classifier(internal_retina_matrix,
         return False
 
 
-def goal_achievable_classifier():
+def goal_achievable_classifier(int_sub_goal, ext_object):
     """
     Check if goal can be achieved by parameterised skill from current
     position.
@@ -104,10 +104,30 @@ def goal_achievable_classifier():
     This is something that comes later with the parameterised skill
     implemented.
 
-    FOR NOW: Just check if the right polygon is found in the external
+    FOR NOW: Just check if the right object is found in the external
     environment.
+
+    Keyword arguments:
+    - int_sub_goal -- found internal sub goal object
+    - ext_object -- found external object
+
+    IF sub_goal_found in both internal and external environment
+        IF object.type_, object.size and object.color is same for both
+            RETURN True
+        ELSE
+            RETURN False
+    ELSE
+        RETURN False
     """
-    return
+    if int_sub_goal and ext_object:
+        if (int_sub_goal.type_ == ext_sub_goal.type_ and
+                int_sub_goal.color == ext_sub_goal.color and
+                int_sub_goal.size == ext_sub_goal.size):
+            return True
+        else:
+            return False
+    else:
+        return False
 
 
 def parameterised_skill(ext_fov, int_fov, object_):
@@ -255,6 +275,14 @@ if __name__ == '__main__':
     plt.imshow(int_ret_image)
     plt.show()
 
-    sub_goal = sub_goal(int_retina.center, int_objects)
-    if sub_goal:
-        print(sub_goal)
+    int_sub_goal = sub_goal(int_retina.center, int_objects)
+    print(int_sub_goal)
+
+    # EXTERNAL
+    ext_s = Square([0.4, 0.4], 0.1, [0, 0, 1], unit)
+    ext_objects = [ext_s]
+    ext_ret = Retina([0.45, 0.4], 0.3, [1, 1, 1], unit)
+    ext_sub_goal = sub_goal(ext_ret.center, ext_objects)
+    print(ext_sub_goal)
+
+    print(goal_achievable_classifier(int_sub_goal, ext_sub_goal))
