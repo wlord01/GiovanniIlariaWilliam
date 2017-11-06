@@ -71,41 +71,45 @@ class Shape(object):
         self.center += vector
 
         # Trim if X or Y is outside table {0.2, 0.8}
-        if (not 0.2 <= self.center[0] <= 0.8 or
-                not 0.2 <= self.center[1] <= 0.8):
+        low_limit_ = 0.2
+        high_limit_ = 0.8
+        center_ = 0.5
+
+        if (not low_limit_ <= self.center[0] <= high_limit_ or
+                not low_limit_ <= self.center[1] <= high_limit_):
             # Trim based on which coordinate is farther out
             if (self.center[0] < self.center[1] and
                     self.center[0] > 1 - self.center[1]):
                 # Trim based on y
-                _y_trim = -abs(self.center[1]-0.8)
+                _y_trim = -abs(self.center[1]-high_limit_)
                 _x_trim = -vector[0]*abs(_y_trim)/abs(vector[1])
             elif (self.center[0] > self.center[1] and
                   self.center[0] < 1 - self.center[1]
                   ):
                 # Trim based on y
-                _y_trim = abs(self.center[1]-0.2)
+                _y_trim = abs(self.center[1]-low_limit_)
                 _x_trim = -vector[0]*abs(_y_trim)/abs(vector[1])
             elif (self.center[0] < self.center[1] and
                   self.center[0] < 1 - self.center[1]
                   ):
                 # Trim based on x
-                _x_trim = abs(self.center[0]-0.2)
+                _x_trim = abs(self.center[0]-low_limit_)
                 _y_trim = -vector[1]*abs(_x_trim)/abs(vector[0])
             elif (self.center[0] > self.center[1] and
                   self.center[0] > 1 - self.center[1]
                   ):
                 # Trim based on x
-                _x_trim = -abs(self.center[0]-0.8)
+                _x_trim = -abs(self.center[0]-high_limit_)
                 _y_trim = -vector[1]*abs(_x_trim)/abs(vector[0])
             else:
-                if self.center[0] > 0.5:
-                    _x_trim = -abs(self.center[0]-0.8)
-                elif self.center[0] < 0.5:
-                    _x_trim = abs(self.center[0]-0.2)
-                if self.center[1] > 0.5:
-                    _y_trim = -abs(self.center[1]-0.8)
-                elif self.center[1] < 0.5:
-                    _y_trim = abs(self.center[1]-0.2)
+                if self.center[0] > center_:
+                    _x_trim = -abs(self.center[0]-high_limit_)
+                elif self.center[0] < center_:
+                    _x_trim = abs(self.center[0]-low_limit_)
+                if self.center[1] > center_:
+                    _y_trim = -abs(self.center[1]-high_limit_)
+                elif self.center[1] < center_:
+                    _y_trim = abs(self.center[1]-low_limit_)
 
             _trim = np.array([_x_trim, _y_trim])
 
@@ -140,6 +144,17 @@ class Square(Shape):
         _y_max = (self.center[1] + self.size/2)
         return np.array([[_x_min, _x_max], [_y_min, _y_max]])
 
+    def get_index_values(self):
+        """Get the coodrinates of the square's corners in index values."""
+        _corners = self.get_corners()*self.unit
+        _corner_index_values = np.array([[math_round(_corners[0][0]),
+                                          math_round(_corners[0][1])],
+                                         [math_round(_corners[1][0]),
+                                          math_round(_corners[1][1])]
+                                         ], dtype=int
+                                        )
+        return _corner_index_values
+
     def draw(self, image_array):
         """Draw object in image array.
 
@@ -150,13 +165,7 @@ class Square(Shape):
         values and update image_array by coloring the pixels within
         the square.
         """
-        _corners = self.get_corners()*self.unit
-        _corner_index_values = np.array([[math_round(_corners[0][0]),
-                                          math_round(_corners[0][1])],
-                                         [math_round(_corners[1][0]),
-                                          math_round(_corners[1][1])]
-                                         ], dtype=int
-                                        )
+        _corner_index_values = self.get_index_values()
         image_array[_corner_index_values[1][0]:_corner_index_values[1][1],
                     _corner_index_values[0][0]:_corner_index_values[0][1]
                     ] = self.color
@@ -177,6 +186,44 @@ class Square(Shape):
             return True
         else:
             return False
+
+
+class Retina(Square):
+    """Retina class with inheritance from Square.
+
+    Added in Retina:
+    - Method get_retina_image(environment_image)
+
+    Variables:
+    - type_ -- type of object (string)
+    - center -- center coordinates (floats)
+    - size -- float value of object size
+    - color -- color as integer (0/1) or RGB list ([R, G, B])
+    - unit -- integer unit measure
+
+    Methods:
+    - move -- Move object
+    - draw -- Draw in image array
+    - get_retina_image -- Get the array of pixels in the retina
+    """
+    type_ = "Retina"
+
+    def get_retina_image(self, environment):
+        """Get the retina image pixel array.
+
+        Keyword arguments:
+        - environment -- the pixel array of the environment the retina
+          is in
+
+        Calculate coordinates of retina corners in the environment
+        and return array of pixels of the retina.
+        """
+        _corner_index_values = self.get_index_values()
+        _ret_image = environment[
+            _corner_index_values[0][0]:_corner_index_values[0][1],
+            _corner_index_values[1][0]:_corner_index_values[1][1]
+            ]
+        return _ret_image
 
 
 class Circle(Shape):
@@ -252,32 +299,28 @@ class Circle(Shape):
 
 if __name__ == '__main__':
     # RUN TESTS
-
     import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
 
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111, aspect='equal')
-    ax1.add_patch(patches.Rectangle((0.2, 0.2), 0.6, 0.6, fill=False))
+    unit = 100
+    image = np.ones([unit, unit, 3])
 
-    point1 = np.array([0.5, 0.5])
-    c = Circle([0.5, 0.5], 0.1, 1, 10)
-    vector = 2*np.random.random_sample(2) - 1
-    point2 = point1 + vector
+    s = Square([0.5, 0.5], 0.15, [1, 0, 0], unit)
+    s.draw(image)
 
-    ax1.plot(c.center[0], c.center[1], 'o')
+    retina = Retina([0.5, 0.5], 0.3, [1, 1, 1], unit)
+    ret_image = retina.get_retina_image(image)
 
-    c.move(vector)
+    plt.imshow(image)
+    plt.figure()
+    plt.imshow(ret_image)
 
-    ax1.plot(c.center[0], c.center[1], 'o')
+    retina.move(np.array([0.1, 0.1]))
+    ret_image = retina.get_retina_image(image)
+    plt.figure()
+    plt.imshow(ret_image)
 
-#    ax1.plot(point2[0], point2[1], 'o')
-    ax1.plot([point1[0], point2[0]], [point1[1], point2[1]])
-
-    plt.xlim(-0.2, 1.2)
-    plt.ylim(1.2, -0.2)
-    plt.show()
-    print(c.center)
+#    import matplotlib.pyplot as plt
+#    import matplotlib.patches as patches
 
     # ALTERNATIVE WAY OF PLOTTING: USE PATCHES
     # import matplotlib.pyplot as plt
