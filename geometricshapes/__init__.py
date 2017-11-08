@@ -220,8 +220,8 @@ class Retina(Square):
         """
         _corner_index_values = self.get_index_values()
         _ret_image = environment[
-            _corner_index_values[0][0]:_corner_index_values[0][1],
-            _corner_index_values[1][0]:_corner_index_values[1][1]
+            _corner_index_values[1][0]:_corner_index_values[1][1],
+            _corner_index_values[0][0]:_corner_index_values[0][1]
             ]
         return _ret_image
 
