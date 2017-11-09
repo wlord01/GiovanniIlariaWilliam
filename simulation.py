@@ -41,7 +41,7 @@ def is_inside(coordinates, object_):
         return False
 
 
-def sub_goal(fovea_coordinates, polygons):
+def check_sub_goal(fovea_coordinates, polygons):
     """
     Check if current position of fovea is on a sub-goal.
 
@@ -73,30 +73,52 @@ def sub_goal(fovea_coordinates, polygons):
         return False
 
 
-def goal_accomplished_classifier(internal_retina_matrix,
-                                 external_retina_matrix, threshold
-                                 ):
-    """
-    Compare the internal and external retina to see if goal is
-    accomplished.
+def check_images(image_array_1, image_array_2, threshold):
+    """Compare two image arrays and say if they show the same thing.
 
-    Takes two numpy arrays and compares the normalised distance between
-    their flattened versions. The retina arrays should be 2D. The
-    threshold is arbitrarily chosen and set, to determine if the
-    flattened vectors are similar enough (external image close enough
-    to internal goal image).
+    Takes two numpy arrays and calculates the normalised distance
+    between their flattened versions. The threshold is arbitrarily
+    chosen and set, to determine if the flattened vectors are similar
+    enough.
     """
-    internal_retina_vector = internal_retina_matrix.flatten()  # Row-wise
-    external_retina_vector = external_retina_matrix.flatten()  # Row-wise
-    diff = internal_retina_vector - external_retina_vector
+    vector_1 = image_array_1.flatten()  # Row-wise
+    vector_2 = image_array_2.flatten()  # Row-wise
+    diff = vector_1 - vector_2
     norm = np.linalg.norm(diff)
-    if norm/len(internal_retina_vector) <= threshold:
+    if norm/len(vector_1) <= threshold:
         return True
     else:
         return False
 
 
-def goal_achievable_classifier(int_sub_goal, ext_object):
+def goal_accomplished_classifier(internal_retina_image, external_retina_image,
+                                 threshold
+                                 ):
+    """
+    Check if sub goal is accomplished.
+
+    Keyword arguments:
+    - internal_retina_image -- image array of internal retina
+    - external_retina_image -- image array of external retina
+    - threshold -- float value threshold number (arbitrarily chosen)
+
+    Compares the internal and external retina images using the function
+    check_images(). The retinas should have the same position. If
+    images are equal enough (within threshold), the goal is
+    accomplished.
+    """
+    same_images = check_images(internal_retina_image,
+                               external_retina_image,
+                               threshold
+                               )
+    if same_images:
+        return True
+    else:
+        return False
+
+
+def goal_achievable_classifier(internal_retina_image, external_retina_image,
+                               threshold):
     """
     Check if goal can be achieved by parameterised skill from current
     position.
@@ -108,24 +130,22 @@ def goal_achievable_classifier(int_sub_goal, ext_object):
     environment.
 
     Keyword arguments:
-    - int_sub_goal -- found internal sub goal object
-    - ext_object -- found external object
+    - internal_retina_image -- image array of internal retina
+    - external_retina_image -- image array of external retina
+    - threshold -- float value threshold number (arbitrarily chosen)
 
-    IF sub_goal_found in both internal and external environment
-        IF object.type_, object.size and object.color is same for both
-            RETURN True
-        ELSE
-            RETURN False
-    ELSE
-        RETURN False
+    Compares the internal and external retina images using the function
+    check_images(). The retinas should be in different positions. If
+    images are equal enough (within threshold), the goal is
+    accomplished.
     """
-    if int_sub_goal and ext_object:
-        if (int_sub_goal.type_ == ext_sub_goal.type_ and
-                int_sub_goal.color == ext_sub_goal.color and
-                int_sub_goal.size == ext_sub_goal.size):
-            return True
-        else:
-            return False
+    same_images = check_images(internal_retina_image,
+                               external_retina_image,
+                               threshold
+                               )
+
+    if same_images:
+        return True
     else:
         return False
 
@@ -167,7 +187,118 @@ def foveate(retina):
 
     For now: just move retina to random pos.
     """
-    retina.move(0.8*np.random.random_sample(2) - 0.4)
+    retina.move(0.3*np.random.random_sample(2) - 0.15)
+
+
+def internal_env_init(unit):
+    """Initiate the internal environment.
+
+    Keyword arguments:
+    - unit -- the size of the sides of the quadratic environment
+    """
+    int_env = np.ones([unit, unit, 3])
+    int_ret = Retina([0.5, 0.5], 0.2, [1, 1, 1], unit)
+    int_s1 = Square([0.35, 0.35], 0.15, [1, 0, 0], unit)
+    int_c1 = Circle([0.65, 0.65], 0.15, [0, 1, 0], unit)
+    int_objects = [int_s1, int_c1]
+    for obj in int_objects:
+        obj.draw(int_env)
+    return int_env, int_ret, int_objects
+
+
+def external_env_init(unit):
+    """Initiate the external environment.
+
+    Keyword arguments:
+    - unit -- the size of the sides of the quadratic environment
+    """
+    ext_env = np.ones([unit, unit, 3])
+    ext_ret = Retina([0.5, 0.5], 0.2, [1, 1, 1], unit)
+    ext_s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
+    ext_c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
+    ext_objects = [ext_s1, ext_c1]
+    for obj in ext_objects:
+        obj.draw(ext_env)
+    return ext_env, ext_ret, ext_objects
+
+
+def redraw_environment(environment, unit, objects):
+    """Redraw an environment image.
+
+    Keyword arguments:
+    - environment -- the image array of the environment
+    - unit -- the size of the sides of the quadratic environment
+    - objects -- a list containing the objects in the environment
+    """
+    environment.fill(1)
+    for obj in objects:
+        obj.draw(environment)
+    return environment
+
+
+def graphics(int_env, int_objects, int_ret, ext_env, ext_objects, ext_ret,
+             unit):
+    """Provisory function for plotting the graphics of the system.
+
+    Keyword arguments:
+    - int_env -- the image array of the internal environment
+    - int_objects -- a list containing the objects in the internal
+      environment
+    - int_ret -- the retina object in the internal environment
+    - ext_env -- the image array of the external environment
+    - ext_objects -- a list containing the objects in the external
+      environment
+    - ext_ret -- the retina object in the external environment
+    - unit -- the size of the sides of the quadratic environment
+    """
+    plt.clf()
+
+    int_env = redraw_environment(int_env, unit, int_objects)
+    int_ret_im = int_ret.get_retina_image(int_env)
+
+    plt.subplot(221)
+    plt.title('Internal image')
+    plt.imshow(int_env)
+    # PLOT DESK EDGES
+    plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
+             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit]
+             )
+    # PLOT RETINA EDGES
+    ret_indices = int_ret.get_index_values()
+    plt.plot([ret_indices[0][0], ret_indices[0][0], ret_indices[0][1],
+              ret_indices[0][1], ret_indices[0][0]],
+             [ret_indices[1][0], ret_indices[1][1], ret_indices[1][1],
+              ret_indices[1][0], ret_indices[1][0]]
+             )
+
+    plt.subplot(222)
+    plt.title('Internal retina')
+    plt.imshow(int_ret_im)
+
+    ext_env = redraw_environment(ext_env, unit, ext_objects)
+    ext_ret_im = ext_ret.get_retina_image(ext_env)
+
+    plt.subplot(223)
+    plt.title('External image')
+    plt.imshow(ext_env)
+    # PLOT DESK EDGES
+    plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
+             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit]
+             )
+    # PLOT RETINA EDGES
+    ret_indices = ext_ret.get_index_values()
+    plt.plot([ret_indices[0][0], ret_indices[0][0], ret_indices[0][1],
+              ret_indices[0][1], ret_indices[0][0]],
+             [ret_indices[1][0], ret_indices[1][1], ret_indices[1][1],
+              ret_indices[1][0], ret_indices[1][0]]
+             )
+
+    plt.subplot(224)
+    plt.title('External retina')
+    plt.imshow(ext_ret_im)
+
+    plt.draw()
+    plt.pause(0.002)
 
 
 def main():
@@ -194,15 +325,16 @@ def main():
     FOR step = 1 to number_of_steps
         IF search_step >= max_search_steps
             SET search_step = 0 # Avoid endless search in external environment
-        FUNCTION sub_goal() checks if sub_goal_found
+        FUNCTION check_sub_goal() checks if sub_goal_found  # This messes up!
         IF not sub_goal_found or search_step = 0
             FUNCTION foveate(internal_retina) moves internal retina
-            FUNCTION sub_goal() checks if sub_goal_found
+            FUNCTION check_sub_goal() checks if sub_goal_found
             # MAYBE THIS BELOW SHOULD BE OUTSIDE ANYWAY? JUST CHECK EXTERNAL
             # ENVIRONMENT IF A SUB-GOAL IS FOUND IN INTERNAL ENVIRONMENT?
             SET external_retina position to match internal_retina position
-            FUNCTION goal_accomplished_classifier() checks if
-                sub_goal_accomplished
+            IF sub_goal_found
+                FUNCTION goal_accomplished_classifier() checks if
+                    sub_goal_accomplished
         IF sub_goal_found and not sub_goal_accomplished
             search_step += 1
             FUNCTION foveate(external_retina) updates the position of
@@ -214,24 +346,94 @@ def main():
                     in external environment using hand
                 FUNCTION goal_accomplished_classifier checks if
                     sub_goal_accomplished
-                IF sub_goal_accomplished
-                    SET sub_goal_found = False
-                    SET sub_goal_accomplished = False
-                    SET sub_goal_achievable = False
+        IF sub_goal_accomplished
+            SET sub_goal_found = False
+            SET sub_goal_accomplished = False
+            SET sub_goal_achievable = False
 
     # HERE GOES GRAPHICS/OUTPUT!
     """
     # SET VARIABLES
-    number_of_steps = 10
+    number_of_steps = 100
+    max_search_steps = 10
+    search_step = 0
+    image_threshold = 0.003
     sub_goal_found = False
     sub_goal_accomplished = False
     sub_goal_achievable = False
+    graphics_on = True
+
+    pixels = 100
+
+    int_env, int_ret, int_objects = internal_env_init(pixels)
+    ext_env, ext_ret, ext_objects = external_env_init(pixels)
+
+    # PROVISORY GRAPHICS
+    if graphics_on:
+        plt.ion()
+        plt.figure()
+        plt.axis('off')
+
+        graphics(int_env, int_objects, int_ret, ext_env, ext_objects, ext_ret,
+                 pixels
+                 )
 
     # MAIN FUNCTIONING
+    sub_goal = check_sub_goal(int_ret.center, int_objects)
+    if sub_goal:
+        sub_goal_found = True
+    if sub_goal_found:
+        sub_goal_accomplished = goal_accomplished_classifier(
+            int_ret.get_retina_image(int_env),
+            ext_ret.get_retina_image(ext_env),
+            image_threshold
+            )
+
     for step in range(1, number_of_steps+1):
+        if search_step >= max_search_steps:
+            search_step = 0
+            sub_goal_found = False
         if not sub_goal_found:
-            move(internal_retina, new_random_position(table_dimensions))
-            sub_goal_found = sub_goal(internal_fovea, all_polygons)
+            foveate(int_ret)
+            ext_ret.move(int_ret.center - ext_ret.center)
+            sub_goal = check_sub_goal(int_ret.center, int_objects)
+            if sub_goal:
+                sub_goal_found = True
+            if sub_goal_found:
+                sub_goal_accomplished = goal_accomplished_classifier(
+                    int_ret.get_retina_image(int_env),
+                    ext_ret.get_retina_image(ext_env),
+                    image_threshold
+                    )
+        if sub_goal_found and not sub_goal_accomplished:
+            search_step += 1
+            foveate(ext_ret)
+            ext_object = check_sub_goal(ext_ret.center, ext_objects)
+            sub_goal_achievable = goal_achievable_classifier(
+                int_ret.get_retina_image(int_env),
+                ext_ret.get_retina_image(ext_env),
+                image_threshold
+                )
+            if sub_goal_achievable:
+                parameterised_skill(ext_ret.center,
+                                    int_ret.center,
+                                    ext_object)
+                ext_env = redraw_environment(ext_env, pixels, ext_objects)
+                ext_ret.move(int_ret.center - ext_ret.center)
+                sub_goal_accomplished = goal_accomplished_classifier(
+                    int_ret.get_retina_image(int_env),
+                    ext_ret.get_retina_image(ext_env),
+                    image_threshold
+                    )
+        if sub_goal_accomplished:
+            sub_goal_found = False
+            sub_goal_accomplished = False
+            sub_goal_achievable = False
+
+        if graphics_on:
+            graphics(int_env, int_objects, int_ret, ext_env, ext_objects,
+                     ext_ret, pixels
+                     )
 
 
 if __name__ == '__main__':
@@ -239,50 +441,34 @@ if __name__ == '__main__':
     Here we can run automated tests to check that everything works.
 
     After we made sure everything works we can just call main() here.
+
+    Make sure to put plots in separate window (%matplotlib qt) to see
+    graphics!
     """
-    # main()
+    main()
+
     # Run tests
 
-    # Set up environment
-    unit = 100
-
-    # INTERNAL
-    int_image = np.ones([unit, unit, 3])
-
-    # Create objects
-    int_c = Circle([0.3, 0.4], 0.15, [1, 0, 0], unit)
-    int_s = Square([0.6, 0.6], 0.1, [0, 0, 1], unit)
-    int_objects = [int_c, int_s]
-
-    int_c.draw(int_image)
-    int_s.draw(int_image)
-
-    # Get retina
-    int_retina = Retina([0.55, 0.55], 0.3, [1, 1, 1], unit)
-    int_ret_image = int_retina.get_retina_image(int_image)
-
-    plt.imshow(int_image)
-    plt.plot([20, 20, 80, 80, 20], [20, 80, 80, 20, 20])
-    ret_indices = int_retina.get_index_values()
-    print(ret_indices)
-    plt.plot([ret_indices[0][0], ret_indices[0][0], ret_indices[0][1],
-              ret_indices[0][1], ret_indices[0][0]],
-             [ret_indices[1][0], ret_indices[1][1], ret_indices[1][1],
-              ret_indices[1][0], ret_indices[1][0]]
-             )
-
-    plt.figure()
-    plt.imshow(int_ret_image)
-    plt.show()
-
-    int_sub_goal = sub_goal(int_retina.center, int_objects)
-    print(int_sub_goal)
-
-    # EXTERNAL
-    ext_s = Square([0.4, 0.4], 0.1, [0, 0, 1], unit)
-    ext_objects = [ext_s]
-    ext_ret = Retina([0.45, 0.4], 0.3, [1, 1, 1], unit)
-    ext_sub_goal = sub_goal(ext_ret.center, ext_objects)
-    print(ext_sub_goal)
-
-    print(goal_achievable_classifier(int_sub_goal, ext_sub_goal))
+#    # Set up environment
+#    unit = 100
+#
+#    # INTERNAL
+#    int_image = np.ones([unit, unit, 3])
+#
+#    # Create objects
+#    int_c = Circle([0.3, 0.4], 0.15, [1, 0, 0], unit)
+#    int_s = Square([0.6, 0.6], 0.1, [0, 0, 1], unit)
+#    int_objects = [int_c, int_s]
+#
+#    int_c.draw(int_image)
+#    int_s.draw(int_image)
+#
+#    plt.figure(1)
+#    plt.imshow(int_image)
+#
+#    import scipy.ndimage as ndimage
+#
+#    blur = ndimage.gaussian_filter(int_image, sigma=5)
+#
+#    plt.figure(2)
+#    plt.imshow(blur)
