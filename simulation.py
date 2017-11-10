@@ -11,21 +11,9 @@ discrete steps in the simulation.
 
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.ndimage as ndimage
 
 from geometricshapes import Square, Circle, Retina
-
-
-def new_random_position(max_values):
-    """
-    Return coordinates randomly chosen within limits.
-
-    Take as input a list of dimensions of table object to make sure
-    the new position is inside the working environment.
-    """
-    random_values = []
-    for max_value in max_values:
-        random_values.append(np.random.uniform(0, max_value))
-    return np.array(random_values)
 
 
 def is_inside(coordinates, object_):
@@ -73,7 +61,7 @@ def check_sub_goal(fovea_coordinates, polygons):
         return False
 
 
-def check_images(image_array_1, image_array_2, threshold):
+def check_images(image_array_1, image_array_2, threshold=0):
     """Compare two image arrays and say if they show the same thing.
 
     Takes two numpy arrays and calculates the normalised distance
@@ -150,6 +138,16 @@ def goal_achievable_classifier(internal_retina_image, external_retina_image,
         return False
 
 
+def move_object(object_, vector):
+    """Move the objects center along the vector.
+
+    Needs to know limits so object is not moved outside table. This
+    check is inside the class method move() now, but maybe it should
+    be out here?
+    """
+    object_.move(vector)
+
+
 def parameterised_skill(ext_fov, int_fov, object_):
     """
     Move object in external environment.
@@ -168,26 +166,60 @@ def parameterised_skill(ext_fov, int_fov, object_):
     move_object(object_, vector)
 
 
-def move_object(object_, vector):
-    """Move the objects center along the vector.
-
-    Needs to know limits so object is not moved outside table. This
-    check is inside the class method move() now, but maybe it should
-    be out here?
+def get_intensity_image(image):
     """
-    object_.move(vector)
+    Translate RGB image to intensity image.
+
+    Keyword arguments:
+    - image -- numpy array of RGB image
+
+    Takes the RGB image array, transforms it to black/white image,
+    adds Gaussian noise, adds noise and returns this new image.
+    """
+    bw_image = np.mean(image, -1)
+    blurred = ndimage.gaussian_filter(bw_image, sigma=1)
+    noisy = blurred + (0.1*np.random.random_sample(blurred.shape) - 0.05)
+    clipped = noisy.clip(0, 1)
+    return clipped
 
 
-def foveate(retina):
+def foveate(retina, image):
     """
     Foveate retina.
 
-    Uses the {RGB --> Black/White --> Add noise --> (smooth) -->
-    foveate} procedure.
+    Keyword arguments:
+    - retina -- Retina object
+    - image -- Numpy array of the image the retina is scanning
 
-    For now: just move retina to random pos.
+    Uses bottom-up attention (the {RGB --> Black/White --> Add noise
+    --> (smooth) --> foveate} procedure). That is, RGB image is turned
+    into an intensity image, then the fovea is moved to the coordinates
+    of the most salient pixel in the image.
     """
-    retina.move(0.3*np.random.random_sample(2) - 0.15)
+    intensity_image = get_intensity_image(image)
+    min_index = np.unravel_index(intensity_image.argmin(),
+                                 intensity_image.shape
+                                 )
+    min_pos = np.flipud(np.array(min_index))/image.shape[0]
+    retina.move(min_pos - retina.center)
+
+
+def hard_foveate(retina, image, objects):
+    """
+    Hard foveation of retina.
+
+    Keyword arguments:
+    - retina -- Retina object
+    - image -- Numpy array of the image the retina is scanning
+    - objects -- List of objects in the image
+
+    This one uses the bottom-up attention, but then checks which object
+    is found, gets its center coordinates and foveates the retina
+    to those coordinates.
+    """
+    foveate(retina, image)
+    found_object = check_sub_goal(retina.center, objects)
+    retina.move(found_object.center - retina.center)
 
 
 def internal_env_init(unit):
@@ -214,7 +246,7 @@ def external_env_init(unit):
     """
     ext_env = np.ones([unit, unit, 3])
     ext_ret = Retina([0.5, 0.5], 0.2, [1, 1, 1], unit)
-    ext_s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
+    ext_s1 = Square([0.35, 0.65], 0.15, [0, 1, 0], unit)
     ext_c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
     ext_objects = [ext_s1, ext_c1]
     for obj in ext_objects:
@@ -357,7 +389,8 @@ def main():
     number_of_steps = 100
     max_search_steps = 10
     search_step = 0
-    image_threshold = 0.003
+    accomplished_threshold = 0.01
+    achievable_threshold = 0.01
     sub_goal_found = False
     sub_goal_accomplished = False
     sub_goal_achievable = False
@@ -371,7 +404,7 @@ def main():
     # PROVISORY GRAPHICS
     if graphics_on:
         plt.ion()
-        plt.figure()
+        plt.figure(1)
         plt.axis('off')
 
         graphics(int_env, int_objects, int_ret, ext_env, ext_objects, ext_ret,
@@ -386,7 +419,7 @@ def main():
         sub_goal_accomplished = goal_accomplished_classifier(
             int_ret.get_retina_image(int_env),
             ext_ret.get_retina_image(ext_env),
-            image_threshold
+            accomplished_threshold
             )
 
     for step in range(1, number_of_steps+1):
@@ -394,25 +427,27 @@ def main():
             search_step = 0
             sub_goal_found = False
         if not sub_goal_found:
-            foveate(int_ret)
+#            foveate(int_ret, int_env)
+            hard_foveate(int_ret, int_env, int_objects)
             ext_ret.move(int_ret.center - ext_ret.center)
-            sub_goal = check_sub_goal(int_ret.center, int_objects)
+            sub_goal = True  # check_sub_goal(int_ret.center, int_objects)
             if sub_goal:
                 sub_goal_found = True
             if sub_goal_found:
                 sub_goal_accomplished = goal_accomplished_classifier(
                     int_ret.get_retina_image(int_env),
                     ext_ret.get_retina_image(ext_env),
-                    image_threshold
+                    accomplished_threshold
                     )
         if sub_goal_found and not sub_goal_accomplished:
             search_step += 1
-            foveate(ext_ret)
+#            foveate(ext_ret, ext_env)
+            hard_foveate(ext_ret, ext_env, ext_objects)
             ext_object = check_sub_goal(ext_ret.center, ext_objects)
             sub_goal_achievable = goal_achievable_classifier(
                 int_ret.get_retina_image(int_env),
                 ext_ret.get_retina_image(ext_env),
-                image_threshold
+                achievable_threshold
                 )
             if sub_goal_achievable:
                 parameterised_skill(ext_ret.center,
@@ -423,17 +458,23 @@ def main():
                 sub_goal_accomplished = goal_accomplished_classifier(
                     int_ret.get_retina_image(int_env),
                     ext_ret.get_retina_image(ext_env),
-                    image_threshold
+                    accomplished_threshold
                     )
         if sub_goal_accomplished:
             sub_goal_found = False
             sub_goal_accomplished = False
             sub_goal_achievable = False
+            search_step = 0
 
         if graphics_on:
             graphics(int_env, int_objects, int_ret, ext_env, ext_objects,
                      ext_ret, pixels
                      )
+
+        # BREAK IF GOAL IMAGE IS ACCOMPLISHED
+        if check_images(int_env, ext_env, 0.0008):
+            print('Goal accomplished!')
+            break
 
 
 if __name__ == '__main__':
@@ -449,6 +490,8 @@ if __name__ == '__main__':
 
     # Run tests
 
+#    plt.clf()
+#
 #    # Set up environment
 #    unit = 100
 #
@@ -457,7 +500,7 @@ if __name__ == '__main__':
 #
 #    # Create objects
 #    int_c = Circle([0.3, 0.4], 0.15, [1, 0, 0], unit)
-#    int_s = Square([0.6, 0.6], 0.1, [0, 0, 1], unit)
+#    int_s = Square([0.6, 0.6], 0.15, [0, 0, 1], unit)
 #    int_objects = [int_c, int_s]
 #
 #    int_c.draw(int_image)
@@ -468,7 +511,18 @@ if __name__ == '__main__':
 #
 #    import scipy.ndimage as ndimage
 #
-#    blur = ndimage.gaussian_filter(int_image, sigma=5)
+#    gray = np.mean(int_image, -1)
+#    blur = ndimage.gaussian_filter(gray, sigma=1)
 #
 #    plt.figure(2)
-#    plt.imshow(blur)
+#    plt.imshow(blur, cmap='gray')
+#
+#    # ADD NOISE
+#    blur += 0.1*np.random.random_sample(blur.shape) - 0.05
+#    # CLIP VALUES OUTSIDE {0, 1}
+#    blur = blur.clip(0, 1)
+#
+#    min_index = np.unravel_index(blur.argmin(), blur.shape)
+#
+#    plt.figure(2)
+#    plt.plot(min_index[1], min_index[0], 'ro')
