@@ -138,17 +138,127 @@ def goal_achievable_classifier(internal_retina_image, external_retina_image,
         return False
 
 
-def move_object(object_, vector):
+def get_line_equation(startpoint, endpoint):
+        """Return k and m in the line equation y = k*x + m"""
+        return np.polyfit([startpoint[0], endpoint[0]],
+                          [startpoint[1], endpoint[1]],
+                          1)
+
+
+def get_x_intersection(x_limit, k, m):
+    """Return intersection point of x_limit line and y = k*x + m"""
+    return np.array([x_limit, x_limit*k + m])
+
+
+def get_y_intersection(y_limit, k, m):
+    """Return intersection point of y_limit line and y = k*x + m"""
+    return np.array([(y_limit-m) / k, y_limit])
+
+
+def x_based_trim(endpoint, vector, x_limit):
+    """Trim vector based on x"""
+    _x_trim = -(endpoint[0] - x_limit)
+    _y_trim = (_x_trim*vector[1]/vector[0])
+    _trim = np.array([_x_trim, _y_trim])
+    vector += _trim
+    return vector
+
+
+def y_based_trim(endpoint, vector, y_limit):
+    """Trim vector based on y"""
+    _y_trim = -(endpoint[1] - y_limit)
+    _x_trim = (_y_trim*vector[0]/vector[1])
+    _trim = np.array([_x_trim, _y_trim])
+    vector += _trim
+    return vector
+
+
+def move_object(object_, vector, limits):
     """Move the objects center along the vector.
 
-    Needs to know limits so object is not moved outside table. This
-    check is inside the class method move() now, but maybe it should
-    be out here?
+    Keyword arguments:
+    - object_ -- the object to be moved
+    - vector -- numpy array of the 2D vector from starting point to end
+    point
+    - limits -- numpy array of [[x_min, x_max], [y_min, y_max]] limits
+
+    The method checks the proposed move and trims if the object would
+    end up outside the table limits. Trimming is done by checking first
+    if x or y is outside the limits. Then check if one of x or y is
+    inside the limits. If x is inside, the vector is trimmed based on
+    y. If y is inside, the vector is trimmed based on x. If both x and
+    y are outside the limits the algorithm checks which limit is
+    intersected first along the vector from start point to end point.
+    If the x limit is intersected first, the vector is trimmed based
+    on x and if the y limit is intersected first, the vector is trimmed
+    based on y.
     """
+    startpoint = object_.center
+    endpoint = object_.center + vector
+
+    if (not limits[0][0] <= endpoint[0] <= limits[0][1] or
+            not limits[1][0] <= endpoint[1] <= limits[1][1]):
+        # ENDPOINT OUTSIDE LIMITS
+        if limits[0][0] <= endpoint[0] <= limits[0][1]:
+            # INSIDE X-LIMIT --> TRIM BASED ON Y
+            if endpoint[1] < limits[1][0]:
+                y_limit = limits[1][0]
+            elif endpoint[1] > limits[1][1]:
+                y_limit = limits[1][1]
+
+            vector = y_based_trim(endpoint, vector, y_limit)
+
+        elif limits[1][0] <= endpoint[1] <= limits[1][1]:
+            # INSIDE Y-LIMIT --> TRIM BASED ON X
+            if endpoint[0] < limits[0][0]:
+                x_limit = limits[0][0]
+            elif endpoint[0] > limits[0][1]:
+                x_limit = limits[0][1]
+
+            vector = x_based_trim(endpoint, vector, x_limit)
+
+        else:
+            # OUTSIDE BOTH X- AND Y-LIMIT
+            k, m = get_line_equation(startpoint, endpoint)
+
+            if endpoint[0] < limits[0][0] and endpoint[1] < limits[1][0]:
+                # OUTSIDE LOWER LIMITS
+                x_limit = limits[0][0]
+                y_limit = limits[1][0]
+            elif (endpoint[0] < limits[0][0] and
+                    endpoint[1] > limits[1][1]):
+                # OUTSIDE LOWER X AND UPPER Y
+                x_limit = limits[0][0]
+                y_limit = limits[1][1]
+            elif (endpoint[0] > limits[0][1] and
+                    endpoint[1] > limits[1][1]):
+                # OUTSIDE BOTH UPPER LIMITS
+                x_limit = limits[0][1]
+                y_limit = limits[1][1]
+            elif (endpoint[0] > limits[0][1] and
+                    endpoint[1] < limits[1][0]):
+                # OUTSIDE UPPER X AND LOWER Y
+                x_limit = limits[0][1]
+                y_limit = limits[1][0]
+
+            if (np.linalg.norm(
+                    get_x_intersection(x_limit, k, m) -
+                    startpoint
+                    ) <=
+                np.linalg.norm(
+                    get_y_intersection(y_limit, k, m) -
+                    startpoint
+                    )):
+                # INTERSECTS X BEFORE Y
+                vector = x_based_trim(endpoint, vector, x_limit)
+            else:
+                # INTERSECTS Y BEFORE X
+                vector = y_based_trim(endpoint, vector, y_limit)
+
     object_.move(vector)
 
 
-def parameterised_skill(ext_fov, int_fov, object_):
+def parameterised_skill(ext_fov, int_fov, object_, limits):
     """
     Move object in external environment.
 
@@ -163,7 +273,7 @@ def parameterised_skill(ext_fov, int_fov, object_):
     - object_ -- the object that the function should move
     """
     vector = int_fov - ext_fov
-    move_object(object_, vector)
+    move_object(object_, vector, limits)
 
 
 def get_intensity_image(image):
@@ -246,7 +356,7 @@ def external_env_init(unit):
     """
     ext_env = np.ones([unit, unit, 3])
     ext_ret = Retina([0.5, 0.5], 0.2, [1, 1, 1], unit)
-    ext_s1 = Square([0.35, 0.65], 0.15, [0, 1, 0], unit)
+    ext_s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
     ext_c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
     ext_objects = [ext_s1, ext_c1]
     for obj in ext_objects:
@@ -330,7 +440,7 @@ def graphics(int_env, int_objects, int_ret, ext_env, ext_objects, ext_ret,
     plt.imshow(ext_ret_im)
 
     plt.draw()
-    plt.pause(0.002)
+    plt.pause(0.02)
 
 
 def main():
@@ -391,6 +501,9 @@ def main():
     search_step = 0
     accomplished_threshold = 0.01
     achievable_threshold = 0.01
+    limits = np.array([[0.2, 0.8], [0.2, 0.8]])
+
+    # FLAGS
     sub_goal_found = False
     sub_goal_accomplished = False
     sub_goal_achievable = False
@@ -427,8 +540,8 @@ def main():
             search_step = 0
             sub_goal_found = False
         if not sub_goal_found:
-#            foveate(int_ret, int_env)
-            hard_foveate(int_ret, int_env, int_objects)
+            foveate(int_ret, int_env)
+#            hard_foveate(int_ret, int_env, int_objects)
             ext_ret.move(int_ret.center - ext_ret.center)
             sub_goal = True  # check_sub_goal(int_ret.center, int_objects)
             if sub_goal:
@@ -441,8 +554,8 @@ def main():
                     )
         if sub_goal_found and not sub_goal_accomplished:
             search_step += 1
-#            foveate(ext_ret, ext_env)
-            hard_foveate(ext_ret, ext_env, ext_objects)
+            foveate(ext_ret, ext_env)
+#            hard_foveate(ext_ret, ext_env, ext_objects)
             ext_object = check_sub_goal(ext_ret.center, ext_objects)
             sub_goal_achievable = goal_achievable_classifier(
                 int_ret.get_retina_image(int_env),
@@ -452,7 +565,9 @@ def main():
             if sub_goal_achievable:
                 parameterised_skill(ext_ret.center,
                                     int_ret.center,
-                                    ext_object)
+                                    ext_object,
+                                    limits
+                                    )
                 ext_env = redraw_environment(ext_env, pixels, ext_objects)
                 ext_ret.move(int_ret.center - ext_ret.center)
                 sub_goal_accomplished = goal_accomplished_classifier(
