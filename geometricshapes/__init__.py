@@ -68,52 +68,100 @@ class Shape(object):
         x = 1 - y to see if the object is over or under these. This
         determines on which coordinate to base the trimming.
         """
-        self.center += vector
+        def get_line_equation(startpoint, endpoint):
+            """Return k and m in the line equation y = k*x + m"""
+            return np.polyfit([startpoint[0], endpoint[0]],
+                              [startpoint[1], endpoint[1]],
+                              1)
 
-        # Trim if X or Y is outside table {0.2, 0.8}
-        low_limit_ = 0.2
-        high_limit_ = 0.8
-        center_ = 0.5
+        def get_x_intersection(x_limit, k, m):
+            """Return intersection point of x_limit line and y = k*x + m"""
+            return np.array([x_limit, x_limit*k + m])
 
-        if (not low_limit_ <= self.center[0] <= high_limit_ or
-                not low_limit_ <= self.center[1] <= high_limit_):
-            # Trim based on which coordinate is farther out
-            if (self.center[0] < self.center[1] and
-                    self.center[0] > 1 - self.center[1]):
-                # Trim based on y
-                _y_trim = -abs(self.center[1]-high_limit_)
-                _x_trim = -vector[0]*abs(_y_trim)/abs(vector[1])
-            elif (self.center[0] > self.center[1] and
-                  self.center[0] < 1 - self.center[1]
-                  ):
-                # Trim based on y
-                _y_trim = abs(self.center[1]-low_limit_)
-                _x_trim = -vector[0]*abs(_y_trim)/abs(vector[1])
-            elif (self.center[0] < self.center[1] and
-                  self.center[0] < 1 - self.center[1]
-                  ):
-                # Trim based on x
-                _x_trim = abs(self.center[0]-low_limit_)
-                _y_trim = -vector[1]*abs(_x_trim)/abs(vector[0])
-            elif (self.center[0] > self.center[1] and
-                  self.center[0] > 1 - self.center[1]
-                  ):
-                # Trim based on x
-                _x_trim = -abs(self.center[0]-high_limit_)
-                _y_trim = -vector[1]*abs(_x_trim)/abs(vector[0])
-            else:
-                if self.center[0] > center_:
-                    _x_trim = -abs(self.center[0]-high_limit_)
-                elif self.center[0] < center_:
-                    _x_trim = abs(self.center[0]-low_limit_)
-                if self.center[1] > center_:
-                    _y_trim = -abs(self.center[1]-high_limit_)
-                elif self.center[1] < center_:
-                    _y_trim = abs(self.center[1]-low_limit_)
+        def get_y_intersection(y_limit, k, m):
+            """Return intersection point of y_limit line and y = k*x + m"""
+            return np.array([(y_limit-m) / k, y_limit])
 
+        def x_based_trim(endpoint, vector, x_limit):
+            """Trim vector based on x"""
+            _x_trim = -(endpoint[0] - x_limit)
+            _y_trim = (_x_trim*vector[1]/vector[0])
             _trim = np.array([_x_trim, _y_trim])
+            vector += _trim
+            return vector
 
-            self.center += _trim
+        def y_based_trim(endpoint, vector, y_limit):
+            """Trim vector based on y"""
+            _y_trim = -(endpoint[1] - y_limit)
+            _x_trim = (_y_trim*vector[0]/vector[1])
+            _trim = np.array([_x_trim, _y_trim])
+            vector += _trim
+            return vector
+
+        startpoint = self.center
+        endpoint = self.center + vector
+        limits = np.array([[0.2, 0.8], [0.2, 0.8]])  # MAKE GENERAL
+
+        if (not limits[0][0] <= endpoint[0] <= limits[0][1] or
+                not limits[1][0] <= endpoint[1] <= limits[1][1]):
+            # ENDPOINT OUTSIDE LIMITS
+            if limits[0][0] <= endpoint[0] <= limits[0][1]:
+                # INSIDE X-LIMIT --> TRIM BASED ON Y
+                if endpoint[1] < limits[1][0]:
+                    y_limit = limits[1][0]
+                elif endpoint[1] > limits[1][1]:
+                    y_limit = limits[1][1]
+
+                vector = y_based_trim(endpoint, vector, y_limit)
+
+            elif limits[1][0] <= endpoint[1] <= limits[1][1]:
+                # INSIDE Y-LIMIT --> TRIM BASED ON X
+                if endpoint[0] < limits[0][0]:
+                    x_limit = limits[0][0]
+                elif endpoint[0] > limits[0][1]:
+                    x_limit = limits[0][1]
+
+                vector = x_based_trim(endpoint, vector, x_limit)
+
+            else:
+                # OUTSIDE BOTH X- AND Y-LIMIT
+                k, m = get_line_equation(startpoint, endpoint)
+
+                if endpoint[0] < limits[0][0] and endpoint[1] < limits[1][0]:
+                    # OUTSIDE LOWER LIMITS
+                    x_limit = limits[0][0]
+                    y_limit = limits[1][0]
+                elif (endpoint[0] < limits[0][0] and
+                        endpoint[1] > limits[1][1]):
+                    # OUTSIDE LOWER X AND UPPER Y
+                    x_limit = limits[0][0]
+                    y_limit = limits[1][1]
+                elif (endpoint[0] > limits[0][1] and
+                        endpoint[1] > limits[1][1]):
+                    # OUTSIDE BOTH UPPER LIMITS
+                    x_limit = limits[0][1]
+                    y_limit = limits[1][1]
+                elif (endpoint[0] > limits[0][1] and
+                        endpoint[1] < limits[1][0]):
+                    # OUTSIDE UPPER X AND LOWER Y
+                    x_limit = limits[0][1]
+                    y_limit = limits[1][0]
+
+                if (np.linalg.norm(
+                        get_x_intersection(x_limit, k, m) -
+                        startpoint
+                        ) <=
+                    np.linalg.norm(
+                        get_y_intersection(y_limit, k, m) -
+                        startpoint
+                        )):
+                    # INTERSECTS X BEFORE Y
+                    vector = x_based_trim(endpoint, vector, x_limit)
+                else:
+                    # INTERSECTS Y BEFORE X
+                    vector = y_based_trim(endpoint, vector, y_limit)
+
+        self.center += vector
 
 
 class Square(Shape):
@@ -300,24 +348,46 @@ class Circle(Shape):
 if __name__ == '__main__':
     # RUN TESTS
     import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111, aspect='equal')
+    ax1.add_patch(patches.Rectangle((0.2, 0.2), 0.6, 0.6, fill=False))
 
-    unit = 100
-    image = np.ones([unit, unit, 3])
+    startpoint = np.array([0.6, 0.5])
+#    c = Circle(startpoint, 0.1, 1, 10)
 
-    s = Square([0.5, 0.5], 0.15, [1, 0, 0], unit)
-    s.draw(image)
+    endpoints = np.array([[0.1, 0.5], [0.1, 0.15], [0.1, 0.1], [0.15, 0.1],
+                          [0.5, 0.1], [0.85, 0.1], [0.9, 0.1], [0.9, 0.15],
+                          [0.9, 0.5], [0.9, 0.85], [0.9, 0.9], [0.85, 0.9],
+                          [0.5, 0.9], [0.15, 0.9], [0.1, 0.9], [0.1, 0.85]
+                          ]
+                         )
+#    endpoints = np.array([[0.5, 0.1]])
 
-    retina = Retina([0.5, 0.5], 0.3, [1, 1, 1], unit)
-    ret_image = retina.get_retina_image(image)
+    c_list = []
+    for i in range(len(endpoints)):
+        c_list.append(Circle(startpoint, 0.1, 1, 10))
 
-    plt.imshow(image)
-    plt.figure()
-    plt.imshow(ret_image)
+    for i in range(len(endpoints)):
+        c = c_list[i]
+        endpointz = endpoints[i]
 
-    retina.move(np.array([0.1, 0.1]))
-    ret_image = retina.get_retina_image(image)
-    plt.figure()
-    plt.imshow(ret_image)
+        vectorz = endpointz - c.center
+        point2 = startpoint + vectorz
+
+        ax1.plot(c.center[0], c.center[1], 'o')
+
+        c.move(vectorz)
+        ax1.plot(c.center[0], c.center[1], 'o')
+
+        #    ax1.plot(point2[0], point2[1], 'o')
+        ax1.plot([startpoint[0], endpointz[0]], [startpoint[1], endpointz[1]])
+
+        plt.xlim(-0.2, 1.2)
+        plt.ylim(1.2, -0.2)
+        plt.show()
+        plt.pause(0.002)
+        print(c.center)
 
 #    import matplotlib.pyplot as plt
 #    import matplotlib.patches as patches
@@ -334,5 +404,3 @@ if __name__ == '__main__':
     # ax1.add_patch(patches.Rectangle(center, x_size, y_size, color=color))
     # ax1.add_patch(patches.Circle(center, radius, color=color))
     # ax1.plot(point[0], point[1], 'wo')
-
-    pass
