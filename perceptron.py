@@ -15,9 +15,11 @@ class Perceptron(object):
 
     VARIABLES
     - self.input -- the input to the perceptron
+    - self.output -- the output of the perceptron
     - input_size -- the size of the input
     - self.weights -- the weight matrix of the perceptron
-    - weights_size -- the size of the weight matrix
+    - output_size -- the size of the output
+    - learning_rate -- the learning rate of the perceptron
 
     METHODS
     - add_input -- adds input values
@@ -27,16 +29,17 @@ class Perceptron(object):
     - read_weights_from_file -- read the weight matrix from a file and
         update the values
     """
-    def __init__(self, input_size, weights_size, learning_rate):
+    def __init__(self, input_size, output_size, learning_rate):
         """Allocate arrays for input and weights
 
         Keyword arguments:
         - input_size -- tuple of input array dimensions
-        - weights_size -- tuple of weight matrix array dimensions
+        - output_size -- tuple of weight matrix array dimensions
         - learning_rate -- float value of learning rate
         """
         self.input = np.zeros(input_size)
-        self.weights = np.zeros(weights_size)
+        self.output = np.zeros(output_size)
+        self.weights = np.zeros((input_size[1], output_size[1]))
         self.learning_rate = learning_rate
 
     def set_input(self, input_):
