@@ -46,32 +46,6 @@ from polygonobjects import Polygon, Circle, Hand, Retina
 
 plt.ion()
 ###############################################################_________METHODS       
-def pixelLoop(grid,tri,squ,cir,retiPixVec):
-    cell=-1 #pixel
-    for pix in (grid): #for every pixel of the retina's grid --->
-        cell+=1
-        
-        #___check if PIXEL is on a FIGURE, then: 
-                                          #   add the value RGB in retinaVector
-                                          #   depending on which is the figure 
-        
-        #----->below..
-        if (poly(tri).intersects(poly(pix)))==True:
-            retiPixVec[0,cell]=green
-        elif (poly(squ).intersects(poly(pix)))==True:
-            retiPixVec[0,cell]=red
-        elif ((cir).intersects(poly(pix))) == True:
-            retiPixVec[0,cell]=blue
-        else:
-            retiPixVec[0,cell]=others #   if pixel doesn't overlapping figures
-        #.....below again :P    
-        #N.B. (poly .... intersects) is a function of "shapely" library; it allows
-        #to check if two figures intersecates in 3 ways:
-        #   1. True if two figures edges are in touch
-        #   2. True if one figure overlap the other
-        #   3. True if one figure is inside the other
-        #So it works even if only one point of the figure in on one of the other.
-        #*we should consider to use it instead of checkPoint and checkPath! ;)
       
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%            
 #%%%%%%%%%%%%%%%%%%%%_________________________________%%%%%%%%%%%%%%%%%%%%%%%%%
