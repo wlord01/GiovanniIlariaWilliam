@@ -9,6 +9,7 @@ Classes:
 Shape
 Square
 Circle
+Fovea
 """
 
 
@@ -136,11 +137,11 @@ class Square(Shape):
             return False
 
 
-class Retina(Square):
-    """Retina class with inheritance from Square.
+class Fovea(Square):
+    """Fovea class with inheritance from Square.
 
-    Added in Retina:
-    - Method get_retina_image(environment_image)
+    Added in Fovea:
+    - Method get_focus_image(environment_image)
 
     Variables:
     - type_ -- type of object (string)
@@ -152,26 +153,26 @@ class Retina(Square):
     Methods:
     - move -- Move object
     - draw -- Draw in image array
-    - get_retina_image -- Get the array of pixels in the retina
+    - get_focus_image -- Get the array of pixels in the fovea
     """
-    type_ = "Retina"
+    type_ = "Fovea"
 
-    def get_retina_image(self, environment):
-        """Get the retina image pixel array.
+    def get_focus_image(self, environment):
+        """Get the focus image pixel array.
 
         Keyword arguments:
-        - environment -- the pixel array of the environment the retina
+        - environment -- the pixel array of the environment the fovea
           is in
 
-        Calculate coordinates of retina corners in the environment
-        and return array of pixels of the retina.
+        Calculate coordinates of fovea corners in the environment
+        and return array of pixels of the fovea.
         """
         _corner_index_values = self.get_index_values()
-        _ret_image = environment[
+        _fov_image = environment[
             _corner_index_values[1][0]:_corner_index_values[1][1],
             _corner_index_values[0][0]:_corner_index_values[0][1]
             ]
-        return _ret_image
+        return _fov_image
 
 
 class Circle(Shape):
@@ -246,49 +247,8 @@ class Circle(Shape):
 
 
 if __name__ == '__main__':
+    """Main"""
     # RUN TESTS
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111, aspect='equal')
-    ax1.add_patch(patches.Rectangle((0.2, 0.2), 0.6, 0.6, fill=False))
-
-    startpoint = np.array([0.6, 0.5])
-#    c = Circle(startpoint, 0.1, 1, 10)
-
-    endpoints = np.array([[0.1, 0.5], [0.1, 0.15], [0.1, 0.1], [0.15, 0.1],
-                          [0.5, 0.1], [0.85, 0.1], [0.9, 0.1], [0.9, 0.15],
-                          [0.9, 0.5], [0.9, 0.85], [0.9, 0.9], [0.85, 0.9],
-                          [0.5, 0.9], [0.15, 0.9], [0.1, 0.9], [0.1, 0.85]
-                          ]
-                         )
-#    endpoints = np.array([[0.5, 0.1]])
-
-    c_list = []
-    for i in range(len(endpoints)):
-        c_list.append(Circle(startpoint, 0.1, 1, 10))
-
-    for i in range(len(endpoints)):
-        c = c_list[i]
-        endpointz = endpoints[i]
-
-        vectorz = endpointz - c.center
-        point2 = startpoint + vectorz
-
-        ax1.plot(c.center[0], c.center[1], 'o')
-
-        c.move(vectorz)
-        ax1.plot(c.center[0], c.center[1], 'o')
-
-        #    ax1.plot(point2[0], point2[1], 'o')
-        ax1.plot([startpoint[0], endpointz[0]], [startpoint[1], endpointz[1]])
-
-        plt.xlim(-0.2, 1.2)
-        plt.ylim(1.2, -0.2)
-        plt.show()
-        plt.pause(0.002)
-        print(c.center)
-
 #    import matplotlib.pyplot as plt
 #    import matplotlib.patches as patches
 

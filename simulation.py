@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.ndimage as ndimage
 
-from geometricshapes import Square, Circle, Retina
+from geometricshapes import Square, Circle, Fovea
 
 
 def is_inside(coordinates, object_):
@@ -61,7 +61,7 @@ def check_sub_goal(fovea_coordinates, polygons):
         return False
 
 
-def check_images(image_array_1, image_array_2, threshold=0):
+def check_images(image_array_1, image_array_2, threshold=0.01):
     """Compare two image arrays and say if they show the same thing.
 
     Takes two numpy arrays and calculates the normalised distance
@@ -79,24 +79,24 @@ def check_images(image_array_1, image_array_2, threshold=0):
         return False
 
 
-def goal_accomplished_classifier(internal_retina_image, external_retina_image,
+def goal_accomplished_classifier(internal_fovea_image, external_fovea_image,
                                  threshold
                                  ):
     """
     Check if sub goal is accomplished.
 
     Keyword arguments:
-    - internal_retina_image -- image array of internal retina
-    - external_retina_image -- image array of external retina
+    - internal_fovea_image -- image array of internal fovea
+    - external_fovea_image -- image array of external fovea
     - threshold -- float value threshold number (arbitrarily chosen)
 
-    Compares the internal and external retina images using the function
-    check_images(). The retinas should have the same position. If
+    Compares the internal and external fovea images using the function
+    check_images(). The foveas should have the same position. If
     images are equal enough (within threshold), the goal is
     accomplished.
     """
-    same_images = check_images(internal_retina_image,
-                               external_retina_image,
+    same_images = check_images(internal_fovea_image,
+                               external_fovea_image,
                                threshold
                                )
     if same_images:
@@ -105,7 +105,7 @@ def goal_accomplished_classifier(internal_retina_image, external_retina_image,
         return False
 
 
-def goal_achievable_classifier(internal_retina_image, external_retina_image,
+def goal_achievable_classifier(internal_fovea_image, external_fovea_image,
                                threshold):
     """
     Check if goal can be achieved by parameterised skill from current
@@ -118,17 +118,17 @@ def goal_achievable_classifier(internal_retina_image, external_retina_image,
     environment.
 
     Keyword arguments:
-    - internal_retina_image -- image array of internal retina
-    - external_retina_image -- image array of external retina
+    - internal_fovea_image -- image array of internal fovea
+    - external_fovea_image -- image array of external fovea
     - threshold -- float value threshold number (arbitrarily chosen)
 
-    Compares the internal and external retina images using the function
-    check_images(). The retinas should be in different positions. If
+    Compares the internal and external fovea images using the function
+    check_images(). The foveas should be in different positions. If
     images are equal enough (within threshold), the goal is
     accomplished.
     """
-    same_images = check_images(internal_retina_image,
-                               external_retina_image,
+    same_images = check_images(internal_fovea_image,
+                               external_fovea_image,
                                threshold
                                )
 
@@ -293,13 +293,13 @@ def get_intensity_image(image):
     return clipped
 
 
-def foveate(retina, image):
+def foveate(fovea, image):
     """
-    Foveate retina.
+    Foveate fovea.
 
     Keyword arguments:
-    - retina -- Retina object
-    - image -- Numpy array of the image the retina is scanning
+    - fovea -- Fovea object
+    - image -- Numpy array of the image the fovea is scanning
 
     Uses bottom-up attention (the {RGB --> Black/White --> Add noise
     --> (smooth) --> foveate} procedure). That is, RGB image is turned
@@ -311,25 +311,25 @@ def foveate(retina, image):
                                  intensity_image.shape
                                  )
     min_pos = np.flipud(np.array(min_index))/image.shape[0]
-    retina.move(min_pos - retina.center)
+    fovea.move(min_pos - fovea.center)
 
 
-def hard_foveate(retina, image, objects):
+def hard_foveate(fovea, image, objects):
     """
-    Hard foveation of retina.
+    Hard foveation of fovea.
 
     Keyword arguments:
-    - retina -- Retina object
-    - image -- Numpy array of the image the retina is scanning
+    - fovea -- Fovea object
+    - image -- Numpy array of the image the fovea is scanning
     - objects -- List of objects in the image
 
     This one uses the bottom-up attention, but then checks which object
-    is found, gets its center coordinates and foveates the retina
+    is found, gets its center coordinates and foveates the fovea
     to those coordinates.
     """
-    foveate(retina, image)
-    found_object = check_sub_goal(retina.center, objects)
-    retina.move(found_object.center - retina.center)
+    foveate(fovea, image)
+    found_object = check_sub_goal(fovea.center, objects)
+    fovea.move(found_object.center - fovea.center)
 
 
 def internal_env_init(unit):
@@ -339,13 +339,13 @@ def internal_env_init(unit):
     - unit -- the size of the sides of the quadratic environment
     """
     int_env = np.ones([unit, unit, 3])
-    int_ret = Retina([0.5, 0.5], 0.2, [1, 1, 1], unit)
+    int_fov = Fovea([0.5, 0.5], 0.2, [1, 1, 1], unit)
     int_s1 = Square([0.35, 0.35], 0.15, [1, 0, 0], unit)
     int_c1 = Circle([0.65, 0.65], 0.15, [0, 1, 0], unit)
     int_objects = [int_s1, int_c1]
     for obj in int_objects:
         obj.draw(int_env)
-    return int_env, int_ret, int_objects
+    return int_env, int_fov, int_objects
 
 
 def external_env_init(unit):
@@ -355,13 +355,13 @@ def external_env_init(unit):
     - unit -- the size of the sides of the quadratic environment
     """
     ext_env = np.ones([unit, unit, 3])
-    ext_ret = Retina([0.5, 0.5], 0.2, [1, 1, 1], unit)
+    ext_fov = Fovea([0.35, 0.65], 0.2, [1, 1, 1], unit)
     ext_s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
     ext_c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
     ext_objects = [ext_s1, ext_c1]
     for obj in ext_objects:
         obj.draw(ext_env)
-    return ext_env, ext_ret, ext_objects
+    return ext_env, ext_fov, ext_objects
 
 
 def redraw_environment(environment, unit, objects):
@@ -378,7 +378,7 @@ def redraw_environment(environment, unit, objects):
     return environment
 
 
-def graphics(int_env, int_objects, int_ret, ext_env, ext_objects, ext_ret,
+def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
              unit):
     """Provisory function for plotting the graphics of the system.
 
@@ -386,17 +386,17 @@ def graphics(int_env, int_objects, int_ret, ext_env, ext_objects, ext_ret,
     - int_env -- the image array of the internal environment
     - int_objects -- a list containing the objects in the internal
       environment
-    - int_ret -- the retina object in the internal environment
+    - int_fov -- the fovea object in the internal environment
     - ext_env -- the image array of the external environment
     - ext_objects -- a list containing the objects in the external
       environment
-    - ext_ret -- the retina object in the external environment
+    - ext_fov -- the fovea object in the external environment
     - unit -- the size of the sides of the quadratic environment
     """
     plt.clf()
 
     int_env = redraw_environment(int_env, unit, int_objects)
-    int_ret_im = int_ret.get_retina_image(int_env)
+    int_fov_im = int_fov.get_focus_image(int_env)
 
     plt.subplot(221)
     plt.title('Internal image')
@@ -405,20 +405,20 @@ def graphics(int_env, int_objects, int_ret, ext_env, ext_objects, ext_ret,
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
              [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit]
              )
-    # PLOT RETINA EDGES
-    ret_indices = int_ret.get_index_values()
-    plt.plot([ret_indices[0][0], ret_indices[0][0], ret_indices[0][1],
-              ret_indices[0][1], ret_indices[0][0]],
-             [ret_indices[1][0], ret_indices[1][1], ret_indices[1][1],
-              ret_indices[1][0], ret_indices[1][0]]
+    # PLOT FOVEA EDGES
+    fov_indices = int_fov.get_index_values()
+    plt.plot([fov_indices[0][0], fov_indices[0][0], fov_indices[0][1],
+              fov_indices[0][1], fov_indices[0][0]],
+             [fov_indices[1][0], fov_indices[1][1], fov_indices[1][1],
+              fov_indices[1][0], fov_indices[1][0]]
              )
 
     plt.subplot(222)
-    plt.title('Internal retina')
-    plt.imshow(int_ret_im)
+    plt.title('Internal fovea')
+    plt.imshow(int_fov_im)
 
     ext_env = redraw_environment(ext_env, unit, ext_objects)
-    ext_ret_im = ext_ret.get_retina_image(ext_env)
+    ext_fov_im = ext_fov.get_focus_image(ext_env)
 
     plt.subplot(223)
     plt.title('External image')
@@ -427,17 +427,17 @@ def graphics(int_env, int_objects, int_ret, ext_env, ext_objects, ext_ret,
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
              [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit]
              )
-    # PLOT RETINA EDGES
-    ret_indices = ext_ret.get_index_values()
-    plt.plot([ret_indices[0][0], ret_indices[0][0], ret_indices[0][1],
-              ret_indices[0][1], ret_indices[0][0]],
-             [ret_indices[1][0], ret_indices[1][1], ret_indices[1][1],
-              ret_indices[1][0], ret_indices[1][0]]
+    # PLOT FOVEA EDGES
+    fov_indices = ext_fov.get_index_values()
+    plt.plot([fov_indices[0][0], fov_indices[0][0], fov_indices[0][1],
+              fov_indices[0][1], fov_indices[0][0]],
+             [fov_indices[1][0], fov_indices[1][1], fov_indices[1][1],
+              fov_indices[1][0], fov_indices[1][0]]
              )
 
     plt.subplot(224)
-    plt.title('External retina')
-    plt.imshow(ext_ret_im)
+    plt.title('External fovea')
+    plt.imshow(ext_fov_im)
 
     plt.draw()
     plt.pause(0.02)
@@ -469,18 +469,18 @@ def main():
             SET search_step = 0 # Avoid endless search in external environment
         FUNCTION check_sub_goal() checks if sub_goal_found  # This messes up!
         IF not sub_goal_found or search_step = 0
-            FUNCTION foveate(internal_retina) moves internal retina
+            FUNCTION foveate(internal_fovea) moves internal fovea
             FUNCTION check_sub_goal() checks if sub_goal_found
             # MAYBE THIS BELOW SHOULD BE OUTSIDE ANYWAY? JUST CHECK EXTERNAL
             # ENVIRONMENT IF A SUB-GOAL IS FOUND IN INTERNAL ENVIRONMENT?
-            SET external_retina position to match internal_retina position
+            SET external_fovea position to match internal_fovea position
             IF sub_goal_found
                 FUNCTION goal_accomplished_classifier() checks if
                     sub_goal_accomplished
         IF sub_goal_found and not sub_goal_accomplished
             search_step += 1
-            FUNCTION foveate(external_retina) updates the position of
-                external_retina
+            FUNCTION foveate(external_rfovea) updates the position of
+                external_fovea
             FUNCTION goal_achievable_classifier() checks if sub_goal_achievable
                 from current position
             IF sub_goal_achievable
@@ -511,8 +511,8 @@ def main():
 
     pixels = 100
 
-    int_env, int_ret, int_objects = internal_env_init(pixels)
-    ext_env, ext_ret, ext_objects = external_env_init(pixels)
+    int_env, int_fov, int_objects = internal_env_init(pixels)
+    ext_env, ext_fov, ext_objects = external_env_init(pixels)
 
     # PROVISORY GRAPHICS
     if graphics_on:
@@ -520,18 +520,18 @@ def main():
         plt.figure(1)
         plt.axis('off')
 
-        graphics(int_env, int_objects, int_ret, ext_env, ext_objects, ext_ret,
+        graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
                  pixels
                  )
 
     # MAIN FUNCTIONING
-    sub_goal = check_sub_goal(int_ret.center, int_objects)
+    sub_goal = check_sub_goal(int_fov.center, int_objects)
     if sub_goal:
         sub_goal_found = True
     if sub_goal_found:
         sub_goal_accomplished = goal_accomplished_classifier(
-            int_ret.get_retina_image(int_env),
-            ext_ret.get_retina_image(ext_env),
+            int_fov.get_focus_image(int_env),
+            ext_fov.get_focus_image(ext_env),
             accomplished_threshold
             )
 
@@ -540,39 +540,39 @@ def main():
             search_step = 0
             sub_goal_found = False
         if not sub_goal_found:
-            foveate(int_ret, int_env)
-#            hard_foveate(int_ret, int_env, int_objects)
-            ext_ret.move(int_ret.center - ext_ret.center)
-            sub_goal = True  # check_sub_goal(int_ret.center, int_objects)
+            foveate(int_fov, int_env)
+#            hard_foveate(int_fov, int_env, int_objects)
+            ext_fov.move(int_fov.center - ext_fov.center)
+            sub_goal = True  # check_sub_goal(int_fov.center, int_objects)
             if sub_goal:
                 sub_goal_found = True
             if sub_goal_found:
                 sub_goal_accomplished = goal_accomplished_classifier(
-                    int_ret.get_retina_image(int_env),
-                    ext_ret.get_retina_image(ext_env),
+                    int_fov.get_focus_image(int_env),
+                    ext_fov.get_focus_image(ext_env),
                     accomplished_threshold
                     )
         if sub_goal_found and not sub_goal_accomplished:
             search_step += 1
-            foveate(ext_ret, ext_env)
-#            hard_foveate(ext_ret, ext_env, ext_objects)
-            ext_object = check_sub_goal(ext_ret.center, ext_objects)
+            foveate(ext_fov, ext_env)
+#            hard_foveate(ext_fov, ext_env, ext_objects)
+            ext_object = check_sub_goal(ext_fov.center, ext_objects)
             sub_goal_achievable = goal_achievable_classifier(
-                int_ret.get_retina_image(int_env),
-                ext_ret.get_retina_image(ext_env),
+                int_fov.get_focus_image(int_env),
+                ext_fov.get_focus_image(ext_env),
                 achievable_threshold
                 )
             if sub_goal_achievable:
-                parameterised_skill(ext_ret.center,
-                                    int_ret.center,
+                parameterised_skill(ext_fov.center,
+                                    int_fov.center,
                                     ext_object,
                                     limits
                                     )
                 ext_env = redraw_environment(ext_env, pixels, ext_objects)
-                ext_ret.move(int_ret.center - ext_ret.center)
+                ext_fov.move(int_fov.center - ext_fov.center)
                 sub_goal_accomplished = goal_accomplished_classifier(
-                    int_ret.get_retina_image(int_env),
-                    ext_ret.get_retina_image(ext_env),
+                    int_fov.get_focus_image(int_env),
+                    ext_fov.get_focus_image(ext_env),
                     accomplished_threshold
                     )
         if sub_goal_accomplished:
@@ -582,8 +582,8 @@ def main():
             search_step = 0
 
         if graphics_on:
-            graphics(int_env, int_objects, int_ret, ext_env, ext_objects,
-                     ext_ret, pixels
+            graphics(int_env, int_objects, int_fov, ext_env, ext_objects,
+                     ext_fov, pixels
                      )
 
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
