@@ -137,8 +137,49 @@ class Square(Shape):
             return False
 
 
+class Rectangle(Square):
+    """Rectangle class with inheritance from Square
+
+    Added in Rectangle:
+    - Changed get_corners method
+    - Added orientation
+
+    Variables:
+    - type_ -- type of object (string)
+    - center -- center coordinates (floats)
+    - size -- float value of object size
+    - color -- color as integer (0/1) or RGB list ([R, G, B])
+    - unit -- integer unit measure (number of pixels in environment)
+    - orientation -- integer number (0 or 1) for horizontal/vertical
+
+    Methods:
+    - move -- Move object
+    - get_corners -- Return coordinates of the corners of the object
+    - get_index_values -- Return the array index values of corners
+    - draw -- Draw object in image array
+    - is_inside -- Tell if point is inside square
+    """
+    type_ = "Rectangle"
+
+    def __init__(self, center, size, color, unit, orientation):
+        super(Rectangle, self).__init__(center, size, color, unit)
+        self.orientation = orientation
+
+    def get_corners(self):
+        """Return corner coordinates"""
+        _min_1 = (self.center[0] - self.size/3.5)
+        _max_1 = (self.center[0] + self.size/3.5)
+        _min_2 = (self.center[1] - self.size/1.15)
+        _max_2 = (self.center[1] + self.size/1.15)
+
+        if self.orientation == 0:
+            return np.array([[_min_2, _max_2], [_min_1, _max_1]])
+        elif self.orientation == 1:
+            return np.array([[_min_1, _max_1], [_min_2, _max_2]])
+
+
 class Fovea(Square):
-    """Fovea class with inheritance from Square.
+    """Fovea class with inheritance from Square
 
     Added in Fovea:
     - Method get_focus_image(environment_image)
@@ -249,6 +290,21 @@ class Circle(Shape):
 if __name__ == '__main__':
     """Main"""
     # RUN TESTS
+    import matplotlib.pyplot as plt
+    unit = 100
+    env = np.ones([unit, unit, 3])
+    fov = Fovea([0.35, 0.65], 0.2, [1, 1, 1], unit)
+    s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
+    c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
+    r1 = Rectangle([0.65, 0.65], 0.15, [0, 0, 1], unit, 1)
+    r2 = Rectangle([0.35, 0.35], 0.15, [1, 0, 0], unit, 0)
+    objects = [s1, c1, r1, r2]
+    for obj in objects:
+        obj.draw(env)
+
+    plt.imshow(env)
+    plt.show()
+
 #    import matplotlib.pyplot as plt
 #    import matplotlib.patches as patches
 
