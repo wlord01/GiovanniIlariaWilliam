@@ -66,11 +66,6 @@ FOR step in range number_of_steps
     FUNCTION update_avg_ignorance updates the average ignorance (leaky)
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-import simulation as s
-
 
 import numpy as np
 import matplotlib.pyplot as plt
