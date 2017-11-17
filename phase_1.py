@@ -8,11 +8,11 @@ Script for phase I of system.
 
 In phase I the system should be able to form a sort of meta cognition.
 This phase is driven by epistemic (associated to knowledge)/intrinsic
-motivations. The system should log an average of the ignorance of the
-objects in the environment. When observing an object, if the systems
-ignorance of this object is higher than the average, then the system
-wants to apply action to it to learn about it. If the ignorance is
-lower than average it doesn't spend energy on it.
+motivations. The system should log an overall ignorance of the objects
+in the environment. When observing an object, if the systems ignorance
+of this object is higher than the average, then the system wants to
+apply action to it to learn about it. If the ignorance is lower than
+average it doesn't spend energy on it.
 
 One way of defining successful application of skill is to "nail" some
 objects to the environment so only some can be moved. Then the system
@@ -32,8 +32,8 @@ VARIABLES
 - environment -- the environment image array
 - fovea -- the fovea image array
 - objects -- list of objects
-- average_ignorance -- float number between 0 and 1 indicating the
-    average ignorance of objects in the system
+- overall_ignorance -- float number between 0 and 1 indicating the
+    overall ignorance of objects in the system
 - ignorance -- float number between 0 and 1 indicating the ignorance
     of the object in focus
 - number_of_steps -- int number of how many loops should be run
@@ -49,7 +49,7 @@ FOR step in range number_of_steps
     PERCEPTRON checks the knowledge about the focus image using
         (p.get_output)
     SET ignorance as the absolute distance from the knowledge to 1 or 0
-    IF ignorance + 0.05 > average_ignorance
+    IF ignorance + 0.05 > overall_ignorance
         FUNCTION get_random_position() generates random xy coordinates
            as target position
         FUNCTION check_free_space() checks if the chosen target
@@ -63,7 +63,8 @@ FOR step in range number_of_steps
             PERCEPTRON is updated (p.update_weights) with target = 1
         IF not successful_action
             PERCEPTRON is updated (p.update_weights) with target = 0
-    FUNCTION update_avg_ignorance updates the average ignorance (leaky)
+    FUNCTION update_overall_ignorance updates the overall ignorance
+        (leaky integrator)
 """
 
 
@@ -73,20 +74,20 @@ import matplotlib.pyplot as plt
 import simulation as s
 
 
-def update_avg_ignorance(average_ignorance, object_ignorance, rate=0.05):
-    """Update the average ignorance
+def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
+    """Update the overall ignorance
 
     Keyword arguments:
-    - average_ignorance -- float of current average ignorance
+    - overall_ignorance -- float of current overall ignorance
     - object_ignorance -- float value of ignorance in current position
     - rate -- the update rate between 0 and 1 (float)
 
-    Update the average ignorance using the formula:
-    I_avg_t = (1 - rate) * I_avg_t-1 + rate * I_t,
-    where I_avg_t-1 is the average ignorance before update, rate is the
+    Update the overall ignorance using the formula:
+    I_ovrl_t = (1 - rate) * I_ovrl_t-1 + rate * I_t,
+    where I_ovrl_t-1 is the overall ignorance before update, rate is the
     leak rate and I_t is the current ignorance of the object in focus.
     """
-    return (1-rate)*average_ignorance + rate*object_ignorance
+    return (1-rate)*overall_ignorance + rate*object_ignorance
 
 
 def check_action_success(before_image, after_image):
@@ -98,13 +99,9 @@ def check_action_success(before_image, after_image):
 
     Compare the focus image array at the start point, before action
     attempt, and the focus image array at the end point of the action,
-    after the action attempt with mask added to images.
+    after the action attempt.
 
     Return True/False.
-
-    The mask is created by making all pixels black, except for the ones
-    where the object in focus is in the before_image. This mask is then
-    transferred to the after_image.
     """
     image_match = s.check_images(before_image, after_image)
     if image_match:
@@ -178,10 +175,12 @@ def graphics(env, fovea, objects, unit):
     plt.subplot(121)
     plt.title('Training environment')
     plt.imshow(env)
+
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
              [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit]
              )
+
     # PLOT FOVEA EDGES
     fov_indices = fovea.get_index_values()
     plt.plot([fov_indices[0][0], fov_indices[0][0], fov_indices[0][1],
@@ -207,7 +206,7 @@ def main():
     - environment -- image array of environment
     - fovea -- fovea object
     - objects -- list of objects in environment
-    - average_ignorance -- float value of average ignorance
+    - overall_ignorance -- float value of overall ignorance
     - ignorance -- float number between 0 and 1 indicating the ignorance
       of the object in focus
     - ignorance_bias -- float value of bias added in ignorance
@@ -226,7 +225,7 @@ def main():
         PERCEPTRON checks the knowledge about the focus image using
             (p.get_output)
         SET ignorance as the absolute distance from the knowledge to 1 or 0
-        IF ignorance + 0.05 > average_ignorance
+        IF ignorance + 0.05 > overall_ignorance
             FUNCTION get_random_position() generates random xy coordinates
                as target position
             FUNCTION check_free_space() checks if the chosen target
@@ -240,12 +239,13 @@ def main():
                 PERCEPTRON is updated (p.update_weights) with target = 1
             IF not successful_action
                 PERCEPTRON is updated (p.update_weights) with target = 0
-        FUNCTION update_avg_ignorance updates the average ignorance (leaky)
+        FUNCTION update_overall_ignorance updates the overall ignorance
+            (leaky integrator)
     """
     # SET VARIABLES
     p = 1  # PERCEPTRON
     unit = 100
-    average_ignorance = 0.5
+    overall_ignorance = 0.5
     ignorance_bias = 0.05
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
     number_of_steps = 10
@@ -264,7 +264,7 @@ def main():
             current_ignorance = current_knowledge
         else:
             current_ignorance = 1 - current_knowledge
-        if current_ignorance + ignorance_bias >= average_ignorance:
+        if current_ignorance + ignorance_bias >= overall_ignorance:
             before_image = np.copy(fovea_im)
             new_position = get_random_position(limits)
             fovea.move(new_position - fovea.center)
@@ -275,7 +275,8 @@ def main():
                 graphics(env, fovea, objects, unit)
             current_object = s.check_sub_goal(current_position, objects)
             s.parameterised_skill(current_object.center, new_position,
-                                  current_object, limits)
+                                  current_object, limits
+                                  )
             env = s.redraw_environment(env, unit, objects)
             target_pos_image = check_target_position(env, new_position,
                                                      fovea
@@ -289,9 +290,9 @@ def main():
             if not successful_action:
                 target = 0
                 # UPDATE PERCEPTRON WEIGHTS HERE
-        average_ignorance = update_avg_ignorance(average_ignorance,
-                                                 current_ignorance
-                                                 )
+        overall_ignorance = update_overall_ignorance(overall_ignorance,
+                                                     current_ignorance
+                                                     )
 
         graphics(env, fovea, objects, unit)
 
@@ -301,27 +302,3 @@ if __name__ == '__main__':
     main()
 
     # TESTS
-#    image_1 = np.zeros((10, 10))
-#    image_2 = np.ones((10, 10))
-#
-#    unit = 100
-#    env, fovea, objects = s.external_env_init(unit)
-#
-#    fovea_im = fovea.get_focus_image(env)
-#    print(check_action_success(fovea_im, fovea_im))
-#
-#    print(check_free_space(env, [0.65, 0.35], fovea.size, unit))
-
-#    plt.imshow(fovea.get_focus_image(env))
-#    plt.show()
-
-#    average_ignorance = 0.5
-#    object_ignorance = 0.5
-#    print(average_ignorance)
-#    average_ignorance = update_avg_ignorance(average_ignorance,
-#                                             object_ignorance,
-#                                             rate=0.05
-#                                             )
-#    print(average_ignorance)
-#
-#    print(get_random_position(np.array([[0.2, 0.8], [0.2, 0.8]])))
