@@ -45,7 +45,7 @@ FLAGS
 FOR step in range number_of_steps
     FUNCTION hard_foveate(fovea, environment, objects) moves
     focus to an object
-    OBJECT METHOD get_focus_image updates the fovea image  # NAME IS WRONG
+    OBJECT METHOD get_focus_image updates the fovea image
     PERCEPTRON checks the knowledge about the focus image using
         (p.get_output)
     SET ignorance as the absolute distance from the knowledge to 1 or 0
@@ -222,7 +222,7 @@ def main():
     FOR step in range number_of_steps
         FUNCTION hard_foveate(fovea, environment, objects) moves
         focus to an object
-        OBJECT METHOD get_focus_image updates the fovea image  # NAME IS WRONG
+        OBJECT METHOD get_focus_image updates the fovea image
         PERCEPTRON checks the knowledge about the focus image using
             (p.get_output)
         SET ignorance as the absolute distance from the knowledge to 1 or 0
@@ -259,7 +259,7 @@ def main():
         graphics(env, fovea, objects, unit)
         fovea_im = fovea.get_focus_image(env)
         current_position = np.copy(fovea.center)
-        current_knowledge = 0.5  # np.random.random_sample()  # PUT PERCEPTRON HERE
+        current_knowledge = 0.5  # PUT PERCEPTRON HERE
         if current_knowledge < 0.5:
             current_ignorance = current_knowledge
         else:
