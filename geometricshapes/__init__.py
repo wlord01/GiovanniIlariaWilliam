@@ -8,8 +8,9 @@ math_round(x)
 Classes:
 Shape
 Square
-Circle
+Rectangle
 Fovea
+Circle
 """
 
 
