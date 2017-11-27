@@ -72,6 +72,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import simulation as s
+from perceptron import Perceptron
 
 
 def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
@@ -243,14 +244,18 @@ def main():
             (leaky integrator)
     """
     # SET VARIABLES
-    p = 1  # PERCEPTRON
     unit = 100
     overall_ignorance = 0.5
-    ignorance_bias = 0.05
+    ignorance_bias = 0
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 10
+    number_of_steps = 50
+    leak_rate = 0.2
 
     env, fovea, objects = s.external_env_init(unit)
+    p = Perceptron(np.array([fovea.get_focus_image(env).flatten()]).T.shape,
+                   (1, 1), 0.01
+                   )
+    p.initialize_weights()
 
     graphics(env, fovea, objects, unit)
 
@@ -259,12 +264,19 @@ def main():
         graphics(env, fovea, objects, unit)
         fovea_im = fovea.get_focus_image(env)
         current_position = np.copy(fovea.center)
+        current_object = s.check_sub_goal(current_position, objects)
         current_knowledge = 0.5  # PUT PERCEPTRON HERE
+        p.set_input(np.array([fovea_im.flatten()]).T)
+        current_knowledge = p.get_output()
         if current_knowledge < 0.5:
             current_ignorance = current_knowledge
         else:
             current_ignorance = 1 - current_knowledge
+        print('Ignorance: ', current_ignorance, ' vs overall: ',
+              overall_ignorance
+              )
         if current_ignorance + ignorance_bias >= overall_ignorance:
+            print('Make move on '+current_object.type_)
             before_image = np.copy(fovea_im)
             new_position = get_random_position(limits)
             fovea.move(new_position - fovea.center)
@@ -273,7 +285,7 @@ def main():
                 new_position = get_random_position(limits)
                 fovea.move(new_position - fovea.center)
                 graphics(env, fovea, objects, unit)
-            current_object = s.check_sub_goal(current_position, objects)
+#            current_object = s.check_sub_goal(current_position, objects)
             s.parameterised_skill(current_object.center, new_position,
                                   current_object, limits
                                   )
@@ -287,11 +299,17 @@ def main():
             if successful_action:
                 target = 1
                 # UPDATE PERCEPTRON WEIGHTS HERE
+                p.update_weights(target)
             if not successful_action:
                 target = 0
                 # UPDATE PERCEPTRON WEIGHTS HERE
+                p.update_weights(target)
+        else:
+            print('Do not spend energy on '+current_object.type_)
+
         overall_ignorance = update_overall_ignorance(overall_ignorance,
-                                                     current_ignorance
+                                                     current_ignorance,
+                                                     leak_rate
                                                      )
 
         graphics(env, fovea, objects, unit)
@@ -300,5 +318,6 @@ def main():
 if __name__ == '__main__':
     """Main"""
     main()
+    print('END')
 
     # TESTS
