@@ -122,7 +122,7 @@ def check_target_position(environment, target_xy, fovea):
     The function creates and returns a temporary focus image using the
     attributes of the real focus image and the target position.
     """
-    temp_fovea = s.Fovea(target_xy, fovea.size, [1, 1, 1], fovea.unit)
+    temp_fovea = s.Fovea(target_xy, fovea.size, [0, 0, 0], fovea.unit)
     temp_image = temp_fovea.get_focus_image(environment)
     return temp_image
 
@@ -142,7 +142,7 @@ def check_free_space(environment, target_xy, fovea):
     Returns True/False.
     """
     temp_image = check_target_position(environment, target_xy, fovea)
-    if np.array_equal(temp_image, np.ones(temp_image.shape)):
+    if np.array_equal(temp_image, np.zeros(temp_image.shape)):
         return True
     else:
         return False
@@ -179,7 +179,7 @@ def graphics(env, fovea, objects, unit):
 
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
-             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit]
+             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit], 'w-'
              )
 
     # PLOT FOVEA EDGES
@@ -187,7 +187,7 @@ def graphics(env, fovea, objects, unit):
     plt.plot([fov_indices[0][0], fov_indices[0][0], fov_indices[0][1],
               fov_indices[0][1], fov_indices[0][0]],
              [fov_indices[1][0], fov_indices[1][1], fov_indices[1][1],
-              fov_indices[1][0], fov_indices[1][0]]
+              fov_indices[1][0], fov_indices[1][0]], 'w-'
              )
 
     plt.subplot(122)
