@@ -69,8 +69,8 @@ def check_images(image_array_1, image_array_2, threshold=0.01):
     chosen and set, to determine if the flattened vectors are similar
     enough.
     """
-    vector_1 = image_array_1.flatten()  # Row-wise
-    vector_2 = image_array_2.flatten()  # Row-wise
+    vector_1 = image_array_1.flatten('F')
+    vector_2 = image_array_2.flatten('F')
     diff = vector_1 - vector_2
     norm = np.linalg.norm(diff)
     if norm/len(vector_1) <= threshold:
@@ -307,11 +307,11 @@ def foveate(fovea, image):
     of the most salient pixel in the image.
     """
     intensity_image = get_intensity_image(image)
-    min_index = np.unravel_index(intensity_image.argmin(),
+    max_index = np.unravel_index(intensity_image.argmax(),
                                  intensity_image.shape
                                  )
-    min_pos = np.flipud(np.array(min_index))/image.shape[0]
-    fovea.move(min_pos - fovea.center)
+    max_pos = np.flipud(np.array(max_index))/image.shape[0]
+    fovea.move(max_pos - fovea.center)
 
 
 def hard_foveate(fovea, image, objects):
@@ -338,8 +338,8 @@ def internal_env_init(unit):
     Keyword arguments:
     - unit -- the size of the sides of the quadratic environment
     """
-    int_env = np.ones([unit, unit, 3])
-    int_fov = Fovea([0.5, 0.5], 0.2, [1, 1, 1], unit)
+    int_env = np.zeros([unit, unit, 3])
+    int_fov = Fovea([0.5, 0.5], 0.2, [0, 0, 0], unit)
     int_s1 = Square([0.35, 0.35], 0.15, [1, 0, 0], unit)
     int_c1 = Circle([0.65, 0.65], 0.15, [0, 1, 0], unit)
     int_objects = [int_s1, int_c1]
@@ -354,8 +354,8 @@ def external_env_init(unit):
     Keyword arguments:
     - unit -- the size of the sides of the quadratic environment
     """
-    ext_env = np.ones([unit, unit, 3])
-    ext_fov = Fovea([0.35, 0.65], 0.2, [1, 1, 1], unit)
+    ext_env = np.zeros([unit, unit, 3])
+    ext_fov = Fovea([0.35, 0.65], 0.2, [0, 0, 0], unit)
     ext_s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
     ext_c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
     ext_objects = [ext_s1, ext_c1]
@@ -372,7 +372,7 @@ def redraw_environment(environment, unit, objects):
     - unit -- the size of the sides of the quadratic environment
     - objects -- a list containing the objects in the environment
     """
-    environment.fill(1)
+    environment.fill(0)
     for obj in objects:
         obj.draw(environment)
     return environment
@@ -403,14 +403,14 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.imshow(int_env)
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
-             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit]
+             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit], 'w-'
              )
     # PLOT FOVEA EDGES
     fov_indices = int_fov.get_index_values()
     plt.plot([fov_indices[0][0], fov_indices[0][0], fov_indices[0][1],
               fov_indices[0][1], fov_indices[0][0]],
              [fov_indices[1][0], fov_indices[1][1], fov_indices[1][1],
-              fov_indices[1][0], fov_indices[1][0]]
+              fov_indices[1][0], fov_indices[1][0]], 'w-'
              )
 
     plt.subplot(222)
@@ -425,14 +425,14 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.imshow(ext_env)
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
-             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit]
+             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit], 'w-'
              )
     # PLOT FOVEA EDGES
     fov_indices = ext_fov.get_index_values()
     plt.plot([fov_indices[0][0], fov_indices[0][0], fov_indices[0][1],
               fov_indices[0][1], fov_indices[0][0]],
              [fov_indices[1][0], fov_indices[1][1], fov_indices[1][1],
-              fov_indices[1][0], fov_indices[1][0]]
+              fov_indices[1][0], fov_indices[1][0]], 'w-'
              )
 
     plt.subplot(224)
@@ -587,7 +587,7 @@ def main():
                      )
 
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
-        if check_images(int_env, ext_env, 0.0008):
+        if check_images(int_env, ext_env, 0.00055):
             print('Goal accomplished!')
             break
 
