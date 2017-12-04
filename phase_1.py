@@ -73,6 +73,7 @@ import matplotlib.pyplot as plt
 
 import simulation as s
 from perceptron import Perceptron
+import phase_1_data
 
 
 def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
@@ -247,44 +248,64 @@ def main():
     unit = 100
     overall_ignorance = 0.5
     ignorance_bias = 0
+    # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 50
-    leak_rate = 0.2
+    number_of_steps = 500
+    leak_rate = 0.2  # LEAKY INTEGRATOR
+    learning_rate = 0.005  # PERCEPTRON
 
+    # FLAGS
+    move_made = False
+
+    save_data = True
+    plot_data = True
+    print_statements_on = True
+
+    # INITIALIZE ENVIRONMENT AND PERCEPTRON
     env, fovea, objects = s.external_env_init(unit)
-    p = Perceptron(np.array([fovea.get_focus_image(env).flatten()]).T.shape,
-                   (1, 1), 0.01
+    p = Perceptron(np.array([fovea.get_focus_image(env).flatten('F')]).T.shape,
+                   (1, 1), learning_rate
                    )
-    p.initialize_weights()
+#    p.initialize_weights()
 
-    graphics(env, fovea, objects, unit)
+    if save_data:
+        file_name = 'data_array.npy'
+        number_of_objects = len(objects)
+        ignorance = [0.5 for i in range(number_of_objects)]
+        p_out = [0.5 for i in range(number_of_objects)]
+        features = [ignorance, p_out]
+        number_of_features = len(features)
+        data = np.zeros((number_of_steps,
+                         number_of_features,
+                         number_of_objects
+                         )
+                        )
+
+#    graphics(env, fovea, objects, unit)
 
     for step in range(number_of_steps):
         s.hard_foveate(fovea, env, objects)
-        graphics(env, fovea, objects, unit)
+#        graphics(env, fovea, objects, unit)
         fovea_im = fovea.get_focus_image(env)
         current_position = np.copy(fovea.center)
         current_object = s.check_sub_goal(current_position, objects)
         current_knowledge = 0.5  # PUT PERCEPTRON HERE
-        p.set_input(np.array([fovea_im.flatten()]).T)
+        p.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = p.get_output()
         if current_knowledge < 0.5:
             current_ignorance = current_knowledge
         else:
             current_ignorance = 1 - current_knowledge
-        print('Ignorance: ', current_ignorance, ' vs overall: ',
-              overall_ignorance
-              )
         if current_ignorance + ignorance_bias >= overall_ignorance:
-            print('Make move on '+current_object.type_)
+            move_made = True
             before_image = np.copy(fovea_im)
             new_position = get_random_position(limits)
             fovea.move(new_position - fovea.center)
-            graphics(env, fovea, objects, unit)
+#            graphics(env, fovea, objects, unit)
             while not check_free_space(env, new_position, fovea):
                 new_position = get_random_position(limits)
                 fovea.move(new_position - fovea.center)
-                graphics(env, fovea, objects, unit)
+#                graphics(env, fovea, objects, unit)
 #            current_object = s.check_sub_goal(current_position, objects)
             s.parameterised_skill(current_object.center, new_position,
                                   current_object, limits
@@ -304,16 +325,39 @@ def main():
                 target = 0
                 # UPDATE PERCEPTRON WEIGHTS HERE
                 p.update_weights(target)
-        else:
-            print('Do not spend energy on '+current_object.type_)
+
+#        graphics(env, fovea, objects, unit)
+
+        if save_data:
+            ignorance[objects.index(current_object)] = current_ignorance
+            p_out[objects.index(current_object)] = current_knowledge
+            data[step, 0] = ignorance
+            data[step, 1] = p_out
+
+            np.save(file_name, data)
+
+        if print_statements_on:
+            print(('Ignorance  {} vs overall {}').format(
+                  str(current_ignorance), str(overall_ignorance))
+                  )
+            if move_made:
+                print('Move attempt on object #{}'.format(
+                      str(objects.index(current_object) + 1))
+                      )
+            else:
+                print('No move attempt on object #{}'.format(
+                      str(objects.index(current_object) + 1))
+                      )
+
+        move_made = False
 
         overall_ignorance = update_overall_ignorance(overall_ignorance,
                                                      current_ignorance,
                                                      leak_rate
                                                      )
 
-        graphics(env, fovea, objects, unit)
-
+    if plot_data:
+        phase_1_data.plot(file_name, number_of_steps, len(objects))
 
 if __name__ == '__main__':
     """Main"""
