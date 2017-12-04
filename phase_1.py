@@ -357,7 +357,7 @@ def main():
                                                      )
 
     if plot_data:
-        phase_1_data.plot(file_name, number_of_steps, len(objects))
+        phase_1_data.plot(file_name)
 
 if __name__ == '__main__':
     """Main"""
