@@ -260,6 +260,7 @@ def main():
     save_data = True
     plot_data = True
     print_statements_on = True
+    graphics_on = False
 
     # INITIALIZE ENVIRONMENT AND PERCEPTRON
     env, fovea, objects = s.external_env_init(unit)
@@ -280,12 +281,13 @@ def main():
                          number_of_objects
                          )
                         )
-
-#    graphics(env, fovea, objects, unit)
+    if graphics_on:
+        graphics(env, fovea, objects, unit)
 
     for step in range(number_of_steps):
         s.hard_foveate(fovea, env, objects)
-#        graphics(env, fovea, objects, unit)
+        if graphics_on:
+            graphics(env, fovea, objects, unit)
         fovea_im = fovea.get_focus_image(env)
         current_position = np.copy(fovea.center)
         current_object = s.check_sub_goal(current_position, objects)
@@ -301,11 +303,13 @@ def main():
             before_image = np.copy(fovea_im)
             new_position = get_random_position(limits)
             fovea.move(new_position - fovea.center)
-#            graphics(env, fovea, objects, unit)
+            if graphics_on:
+                graphics(env, fovea, objects, unit)
             while not check_free_space(env, new_position, fovea):
                 new_position = get_random_position(limits)
                 fovea.move(new_position - fovea.center)
-#                graphics(env, fovea, objects, unit)
+                if graphics_on:
+                    graphics(env, fovea, objects, unit)
 #            current_object = s.check_sub_goal(current_position, objects)
             s.parameterised_skill(current_object.center, new_position,
                                   current_object, limits
@@ -326,7 +330,8 @@ def main():
                 # UPDATE PERCEPTRON WEIGHTS HERE
                 p.update_weights(target)
 
-#        graphics(env, fovea, objects, unit)
+        if graphics_on:
+            graphics(env, fovea, objects, unit)
 
         if save_data:
             ignorance[objects.index(current_object)] = current_ignorance
