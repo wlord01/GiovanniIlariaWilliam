@@ -45,17 +45,19 @@ class Shape(object):
     - size -- float value of object size
     - color -- color as integer (0/1) or RGB list ([R, G, B])
     - unit -- integer unit measure (number of pixels in environment)
+    - movable -- 0 (not movable) or 1 (movable)
 
     Methods:
     - move -- Move object
     """
     type_ = "Shape"
 
-    def __init__(self, center, size, color, unit):
+    def __init__(self, center, size, color, unit, movable=1):
         self.center = np.array(center)
         self.size = size
         self.color = color
         self.unit = unit
+        self.movable = movable
 
     def move(self, vector):
         """Move object by adding vector to its center position.
@@ -63,7 +65,8 @@ class Shape(object):
         Keyword arguments:
         vector -- 2D vector array
         """
-        self.center += vector
+        if self.movable:
+            self.center += vector
 
 
 class Square(Shape):
@@ -239,8 +242,8 @@ class Circle(Shape):
     """
     type_ = "Circle"
 
-    def __init__(self, center, size, color, unit):
-        super(Circle, self).__init__(center, size, color, unit)
+    def __init__(self, center, size, color, unit, movable=1):
+        super(Circle, self).__init__(center, size, color, unit, movable)
         self.radius = self.size/2
 
     def draw(self, image_array):
