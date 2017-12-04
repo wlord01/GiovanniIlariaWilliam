@@ -138,7 +138,7 @@ def check_free_space(environment, target_xy, fovea):
 
     Check if the focus area around the target position enx_xy is free
     space. The method creates a temporary fovea image at the target
-    position and checks if it is all white.
+    position and checks if it contains only zeros.
 
     Returns True/False.
     """
@@ -291,7 +291,6 @@ def main():
         fovea_im = fovea.get_focus_image(env)
         current_position = np.copy(fovea.center)
         current_object = s.check_sub_goal(current_position, objects)
-        current_knowledge = 0.5  # PUT PERCEPTRON HERE
         p.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = p.get_output()
         if current_knowledge < 0.5:
@@ -310,7 +309,6 @@ def main():
                 fovea.move(new_position - fovea.center)
                 if graphics_on:
                     graphics(env, fovea, objects, unit)
-#            current_object = s.check_sub_goal(current_position, objects)
             s.parameterised_skill(current_object.center, new_position,
                                   current_object, limits
                                   )
@@ -323,11 +321,9 @@ def main():
                                                      )
             if successful_action:
                 target = 1
-                # UPDATE PERCEPTRON WEIGHTS HERE
                 p.update_weights(target)
             if not successful_action:
                 target = 0
-                # UPDATE PERCEPTRON WEIGHTS HERE
                 p.update_weights(target)
 
         if graphics_on:
