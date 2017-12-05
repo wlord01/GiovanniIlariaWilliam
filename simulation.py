@@ -363,7 +363,8 @@ def redraw_environment(environment, unit, objects):
     """
     environment.fill(0)
     for obj in objects:
-        obj.draw(environment)
+        if obj.center.all():
+            obj.draw(environment)
     return environment
 
 
@@ -618,35 +619,25 @@ if __name__ == '__main__':
 #
 #    # Set up environment
 #    unit = 100
-#
-#    # INTERNAL
-#    int_image = np.ones([unit, unit, 3])
+#    fovea_center = [0.5, 0.5]
+#    fovea_size = 0.2
 #
 #    # Create objects
-#    int_c = Circle([0.3, 0.4], 0.15, [1, 0, 0], unit)
-#    int_s = Square([0.6, 0.6], 0.15, [0, 0, 1], unit)
-#    int_objects = [int_c, int_s]
+#    c1 = Circle([0.3, 0.4], 0.15, [1, 0, 0], unit)
+#    s1 = Square([0.6, 0.6], 0.15, [0, 0, 1], unit)
+#    s2 = Square([0., 0.], 0.15, [0, 1, 0], unit)
+#    objects = [c1, s1, s2]
 #
-#    int_c.draw(int_image)
-#    int_s.draw(int_image)
+#    environment, fovea, objects = initialize_environment(unit, fovea_center,
+#                                                         fovea_size, objects
+#                                                         )
 #
 #    plt.figure(1)
-#    plt.imshow(int_image)
+#    plt.imshow(environment)
 #
-#    import scipy.ndimage as ndimage
+#    s2.move([0.2, 0.6])
+#    plt.pause(2)
 #
-#    gray = np.mean(int_image, -1)
-#    blur = ndimage.gaussian_filter(gray, sigma=1)
+#    environment = redraw_environment(environment, unit, objects)
 #
-#    plt.figure(2)
-#    plt.imshow(blur, cmap='gray')
-#
-#    # ADD NOISE
-#    blur += 0.1*np.random.random_sample(blur.shape) - 0.05
-#    # CLIP VALUES OUTSIDE {0, 1}
-#    blur = blur.clip(0, 1)
-#
-#    min_index = np.unravel_index(blur.argmin(), blur.shape)
-#
-#    plt.figure(2)
-#    plt.plot(min_index[1], min_index[0], 'ro')
+#    plt.imshow(environment)
