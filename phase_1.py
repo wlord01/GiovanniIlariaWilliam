@@ -74,6 +74,7 @@ import matplotlib.pyplot as plt
 import simulation as s
 from perceptron import Perceptron
 import phase_1_data
+from geometricshapes import Square, Circle, Fovea
 
 
 def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
@@ -263,7 +264,16 @@ def main():
     graphics_on = False
 
     # INITIALIZE ENVIRONMENT AND PERCEPTRON
-    env, fovea, objects = s.external_env_init(unit)
+    fovea_center = [0.5, 0.5]
+    fovea_size = 0.2
+
+    s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
+    c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
+    s2 = Square([0.65, 0.65], 0.15, [0, 0, 1], unit, 0)
+    objects = [s1, c1, s2]
+
+    env, fovea, objects = s.initialize_environment(unit, fovea_center,
+                                                   fovea_size, objects)
     p = Perceptron(np.array([fovea.get_focus_image(env).flatten('F')]).T.shape,
                    (1, 1), learning_rate
                    )
