@@ -296,6 +296,7 @@ def main():
                          number_of_objects
                          )
                         )
+
     if graphics_on:
         graphics(env, fovea, objects, unit)
 
@@ -309,30 +310,40 @@ def main():
                     position = get_random_position(limits)
                 late_object.center += position
             env = s.redraw_environment(env, unit, objects)
+
         s.hard_foveate(fovea, env, objects)
+
         if graphics_on:
             graphics(env, fovea, objects, unit)
+
         fovea_im = fovea.get_focus_image(env)
         current_position = np.copy(fovea.center)
         current_object = s.check_sub_goal(current_position, objects)
+
         p.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = p.get_output()
+
         if current_knowledge < 0.5:
             current_ignorance = current_knowledge
         else:
             current_ignorance = 1 - current_knowledge
+
         if current_ignorance + ignorance_bias >= overall_ignorance:
             move_made = True
             before_image = np.copy(fovea_im)
             new_position = get_random_position(limits)
             fovea.move(new_position - fovea.center)
+
             if graphics_on:
                 graphics(env, fovea, objects, unit)
+
             while not check_free_space(env, new_position, fovea):
                 new_position = get_random_position(limits)
                 fovea.move(new_position - fovea.center)
+
                 if graphics_on:
                     graphics(env, fovea, objects, unit)
+
             s.parameterised_skill(current_object.center, new_position,
                                   current_object, limits
                                   )
