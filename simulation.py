@@ -364,6 +364,27 @@ def external_env_init(unit):
     return ext_env, ext_fov, ext_objects
 
 
+def initialize_environment(unit, fovea_center, fovea_size, objects):
+    """Initialize environment
+
+    Keyword arguments:
+    - unit -- the size (int) of the sides of the quadratic environment
+    - fovea_center -- center coordinates (floats tuple) of fovea
+    - fovea_size -- size (float) of fovea
+    - objects -- list of objects
+
+    Creates enviroment image array and draws objects in it. Returns
+    enviroment image, fovea image and list of objects.
+
+    The environment is RGB color coded pixels. That is each pixel has
+    three dimensions.
+    """
+    environment = np.zeros([unit, unit, 3])
+    fovea = Fovea(fovea_center, fovea_size, [0, 0, 0], unit)
+    environment = redraw_environment(environment, unit, objects)
+    return environment, fovea, objects
+
+
 def redraw_environment(environment, unit, objects):
     """Redraw an environment image.
 
@@ -509,10 +530,30 @@ def main():
     sub_goal_achievable = False
     graphics_on = True
 
-    pixels = 100
+    # INITIALIZE ENVIRONMENT
+    unit = 100  # SIZE OF SIDES OF ENVIRONMENT
+    fovea_center = [0.5, 0.5]
+    fovea_size = 0.2
 
-    int_env, int_fov, int_objects = internal_env_init(pixels)
-    ext_env, ext_fov, ext_objects = external_env_init(pixels)
+    # INTERNAL ENVIRONMENT
+    int_s1 = Square([0.35, 0.35], 0.15, [1, 0, 0], unit)
+    int_c1 = Circle([0.65, 0.65], 0.15, [0, 1, 0], unit)
+    int_objects = [int_s1, int_c1]
+
+    int_env, int_fov, int_objects = initialize_environment(unit, fovea_center,
+                                                           fovea_size,
+                                                           int_objects
+                                                           )
+
+    # EXTERNAL ENVIRONMENT
+    ext_s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
+    ext_c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
+    ext_objects = [ext_s1, ext_c1]
+
+    ext_env, ext_fov, ext_objects = initialize_environment(unit, fovea_center,
+                                                           fovea_size,
+                                                           ext_objects
+                                                           )
 
     # PROVISORY GRAPHICS
     if graphics_on:
@@ -521,7 +562,7 @@ def main():
         plt.axis('off')
 
         graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
-                 pixels
+                 unit
                  )
 
     # MAIN FUNCTIONING
@@ -568,7 +609,7 @@ def main():
                                     ext_object,
                                     limits
                                     )
-                ext_env = redraw_environment(ext_env, pixels, ext_objects)
+                ext_env = redraw_environment(ext_env, unit, ext_objects)
                 ext_fov.move(int_fov.center - ext_fov.center)
                 sub_goal_accomplished = goal_accomplished_classifier(
                     int_fov.get_focus_image(int_env),
@@ -583,7 +624,7 @@ def main():
 
         if graphics_on:
             graphics(int_env, int_objects, int_fov, ext_env, ext_objects,
-                     ext_fov, pixels
+                     ext_fov, unit
                      )
 
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
