@@ -332,38 +332,6 @@ def hard_foveate(fovea, image, objects):
     fovea.move(found_object.center - fovea.center)
 
 
-def internal_env_init(unit):
-    """Initiate the internal environment.
-
-    Keyword arguments:
-    - unit -- the size of the sides of the quadratic environment
-    """
-    int_env = np.zeros([unit, unit, 3])
-    int_fov = Fovea([0.5, 0.5], 0.2, [0, 0, 0], unit)
-    int_s1 = Square([0.35, 0.35], 0.15, [1, 0, 0], unit)
-    int_c1 = Circle([0.65, 0.65], 0.15, [0, 1, 0], unit)
-    int_objects = [int_s1, int_c1]
-    for obj in int_objects:
-        obj.draw(int_env)
-    return int_env, int_fov, int_objects
-
-
-def external_env_init(unit):
-    """Initiate the external environment.
-
-    Keyword arguments:
-    - unit -- the size of the sides of the quadratic environment
-    """
-    ext_env = np.zeros([unit, unit, 3])
-    ext_fov = Fovea([0.35, 0.65], 0.2, [0, 0, 0], unit)
-    ext_s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
-    ext_c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
-    ext_objects = [ext_s1, ext_c1]
-    for obj in ext_objects:
-        obj.draw(ext_env)
-    return ext_env, ext_fov, ext_objects
-
-
 def initialize_environment(unit, fovea_center, fovea_size, objects):
     """Initialize environment
 
