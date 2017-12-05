@@ -197,7 +197,7 @@ def graphics(env, fovea, objects, unit):
     plt.imshow(fovea_im)
 
     plt.draw()
-    plt.pause(0.2)
+    plt.pause(0.01)
 
 
 def main():
@@ -248,10 +248,10 @@ def main():
     # SET VARIABLES
     unit = 100
     overall_ignorance = 0.5
-    ignorance_bias = 0
+    ignorance_bias = 0.
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 500
+    number_of_steps = 1000
     leak_rate = 0.2  # LEAKY INTEGRATOR
     learning_rate = 0.005  # PERCEPTRON
 
@@ -267,10 +267,15 @@ def main():
     fovea_center = [0.5, 0.5]
     fovea_size = 0.2
 
-    s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
-    c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
-    s2 = Square([0.65, 0.65], 0.15, [0, 0, 1], unit, 0)
-    objects = [s1, c1, s2]
+    s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit, 0)
+    c1 = Circle([0.65, 0.35], 0.14, [0, 1, 0], unit)
+    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit)
+    c2 = Circle([0., 0.], 0.14, [0, 0, 1], unit, 0)
+    objects = [s1, c1, s2, c2]
+
+    late_objects = np.array([[200, c2]
+                             ]
+                            )
 
     env, fovea, objects = s.initialize_environment(unit, fovea_center,
                                                    fovea_size, objects)
@@ -295,6 +300,15 @@ def main():
         graphics(env, fovea, objects, unit)
 
     for step in range(number_of_steps):
+        if np.any(late_objects == step):
+            for i in np.where(late_objects == step)[0]:
+                print('Introduce new object!')
+                late_object = late_objects[i, 1]
+                position = get_random_position(limits)
+                while not check_free_space(env, position, fovea):
+                    position = get_random_position(limits)
+                late_object.center += position
+            env = s.redraw_environment(env, unit, objects)
         s.hard_foveate(fovea, env, objects)
         if graphics_on:
             graphics(env, fovea, objects, unit)
@@ -348,6 +362,7 @@ def main():
             np.save(file_name, data)
 
         if print_statements_on:
+            print('Step ', step)
             print(('Ignorance  {} vs overall {}').format(
                   str(current_ignorance), str(overall_ignorance))
                   )
@@ -374,5 +389,3 @@ if __name__ == '__main__':
     """Main"""
     main()
     print('END')
-
-    # TESTS
