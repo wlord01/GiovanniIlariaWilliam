@@ -63,10 +63,10 @@ class Shape(object):
         """Move object by adding vector to its center position.
 
         Keyword arguments:
-        vector -- 2D vector array
+        vector -- 2D vector array (list or numpy array)
         """
         if self.movable:
-            self.center += vector
+            self.center += np.array(vector)
 
 
 class Square(Shape):
