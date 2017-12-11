@@ -247,7 +247,7 @@ def main():
     """
     # SET VARIABLES
     unit = 100
-    overall_ignorance = 0.5
+    overall_ignorance = 1
     ignorance_bias = 0.
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
@@ -287,7 +287,7 @@ def main():
     if save_data:
         file_name = 'data_array.npy'
         number_of_objects = len(objects)
-        ignorance = [0.5 for i in range(number_of_objects)]
+        ignorance = [1 for i in range(number_of_objects)]
         p_out = [0.5 for i in range(number_of_objects)]
         features = [ignorance, p_out]
         number_of_features = len(features)
@@ -323,10 +323,10 @@ def main():
         p.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = p.get_output()
 
-        if current_knowledge < 0.5:
-            current_ignorance = current_knowledge
-        else:
-            current_ignorance = 1 - current_knowledge
+        # SHANNON ENTROPY
+        current_ignorance = (- current_knowledge * np.log2(current_knowledge) -
+                             (1-current_knowledge) *
+                             np.log2(1-current_knowledge))
 
         if current_ignorance + ignorance_bias >= overall_ignorance:
             move_made = True
