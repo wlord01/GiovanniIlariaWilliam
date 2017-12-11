@@ -171,15 +171,18 @@ class Rectangle(Square):
 
     def get_corners(self):
         """Return corner coordinates"""
-        _min_1 = (self.center[0] - self.size/3.5)
-        _max_1 = (self.center[0] + self.size/3.5)
-        _min_2 = (self.center[1] - self.size/1.15)
-        _max_2 = (self.center[1] + self.size/1.15)
-
         if self.orientation == 0:
-            return np.array([[_min_2, _max_2], [_min_1, _max_1]])
+            _min_1 = (self.center[0] - self.size/3.5)
+            _max_1 = (self.center[0] + self.size/3.5)
+            _min_2 = (self.center[1] - self.size/1.15)
+            _max_2 = (self.center[1] + self.size/1.15)
         elif self.orientation == 1:
-            return np.array([[_min_1, _max_1], [_min_2, _max_2]])
+            _min_1 = (self.center[0] - self.size/1.15)
+            _max_1 = (self.center[0] + self.size/1.15)
+            _min_2 = (self.center[1] - self.size/3.5)
+            _max_2 = (self.center[1] + self.size/3.5)
+
+        return np.array([[_min_1, _max_1], [_min_2, _max_2]])
 
 
 class Fovea(Square):
@@ -295,19 +298,38 @@ if __name__ == '__main__':
     """Main"""
     # RUN TESTS
     import matplotlib.pyplot as plt
-    unit = 100
-    env = np.ones([unit, unit, 3])
-    fov = Fovea([0.35, 0.65], 0.2, [1, 1, 1], unit)
-    s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
-    c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
-    r1 = Rectangle([0.65, 0.65], 0.15, [0, 0, 1], unit, 1)
-    r2 = Rectangle([0.35, 0.35], 0.15, [1, 0, 0], unit, 0)
-    objects = [s1, c1, r1, r2]
+    unit = 256
+    env = np.zeros([unit, unit, 3])
+    fov = Fovea([0.35, 0.65], 0.26, [1, 1, 1], unit)
+
+    s1 = Square([0.2, 0.2], 0.14, [1, 0, 0], unit)
+    s2 = Square([0.2, 0.5], 0.14, [0, 1, 0], unit)
+    s3 = Square([0.2, 0.8], 0.14, [0, 0, 1], unit)
+    c1 = Circle([0.5, 0.2], 0.14, [1, 0, 0], unit)
+    c2 = Circle([0.5, 0.5], 0.14, [0, 1, 0], unit)
+    c3 = Circle([0.5, 0.8], 0.14, [0, 0, 1], unit)
+    b1 = Rectangle([0.8, 0.2], 0.14, [1, 0, 0], unit, 0)
+    b2 = Rectangle([0.8, 0.5], 0.14, [0, 1, 0], unit, 0)
+    b3 = Rectangle([0.8, 0.8], 0.14, [0, 0, 1], unit, 0)
+
+    objects = [s1, s2, s3, c1, c2, c3, b1, b2, b3]
     for obj in objects:
         obj.draw(env)
 
     plt.imshow(env)
     plt.show()
+
+    centers = ([0.2, 0.2], [0.2, 0.5], [0.2, 0.8], [0.5, 0.2], [0.5, 0.5],
+               [0.5, 0.8], [0.8, 0.2], [0.8, 0.5], [0.8, 0.8])
+
+    plt.figure()
+
+    env = np.zeros([unit, unit, 3])
+    for center in centers:
+        b1.center = np.array(center)
+        b1.draw(env)
+        plt.imshow(env)
+        plt.pause(0.2)
 
 #    import matplotlib.pyplot as plt
 #    import matplotlib.patches as patches
