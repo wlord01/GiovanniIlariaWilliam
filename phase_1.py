@@ -75,6 +75,7 @@ import simulation as s
 from perceptron import Perceptron
 import phase_1_data
 from geometricshapes import Square, Circle, Fovea
+import actions
 
 
 def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
@@ -344,9 +345,9 @@ def main():
                 if graphics_on:
                     graphics(env, fovea, objects, unit)
 
-            s.parameterised_skill(current_object.center, new_position,
-                                  current_object, limits
-                                  )
+            actions.parameterised_skill(current_object.center, new_position,
+                                        current_object, limits
+                                        )
             env = s.redraw_environment(env, unit, objects)
             target_pos_image = check_target_position(env, new_position,
                                                      fovea
