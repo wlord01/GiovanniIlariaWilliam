@@ -12,8 +12,9 @@ discrete steps in the simulation.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from geometricshapes import Square, Circle, Fovea
+from geometricshapes import Square, Circle
 import actions
+import environment
 
 
 def check_images(image_array_1, image_array_2, threshold=0.01):
@@ -93,42 +94,6 @@ def goal_achievable_classifier(internal_fovea_image, external_fovea_image,
         return False
 
 
-def initialize_environment(unit, fovea_center, fovea_size, objects):
-    """Initialize environment
-
-    Keyword arguments:
-    - unit -- the size (int) of the sides of the quadratic environment
-    - fovea_center -- center coordinates (floats tuple) of fovea
-    - fovea_size -- size (float) of fovea
-    - objects -- list of objects
-
-    Creates enviroment image array and draws objects in it. Returns
-    enviroment image, fovea image and list of objects.
-
-    The environment is RGB color coded pixels. That is each pixel has
-    three dimensions.
-    """
-    environment = np.zeros([unit, unit, 3])
-    fovea = Fovea(fovea_center, fovea_size, [0, 0, 0], unit)
-    environment = redraw_environment(environment, unit, objects)
-    return environment, fovea, objects
-
-
-def redraw_environment(environment, unit, objects):
-    """Redraw an environment image.
-
-    Keyword arguments:
-    - environment -- the image array of the environment
-    - unit -- the size of the sides of the quadratic environment
-    - objects -- a list containing the objects in the environment
-    """
-    environment.fill(0)
-    for obj in objects:
-        if obj.center.all():
-            obj.draw(environment)
-    return environment
-
-
 def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
              unit):
     """Provisory function for plotting the graphics of the system.
@@ -146,7 +111,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     """
     plt.clf()
 
-    int_env = redraw_environment(int_env, unit, int_objects)
+    int_env = environment.redraw(int_env, unit, int_objects)
     int_fov_im = int_fov.get_focus_image(int_env)
 
     plt.subplot(221)
@@ -168,7 +133,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.title('Internal fovea')
     plt.imshow(int_fov_im)
 
-    ext_env = redraw_environment(ext_env, unit, ext_objects)
+    ext_env = environment.redraw(ext_env, unit, ext_objects)
     ext_fov_im = ext_fov.get_focus_image(ext_env)
 
     plt.subplot(223)
@@ -270,7 +235,7 @@ def main():
     int_c1 = Circle([0.65, 0.65], 0.15, [0, 1, 0], unit)
     int_objects = [int_s1, int_c1]
 
-    int_env, int_fov, int_objects = initialize_environment(unit, fovea_center,
+    int_env, int_fov, int_objects = environment.initialize(unit, fovea_center,
                                                            fovea_size,
                                                            int_objects
                                                            )
@@ -280,7 +245,7 @@ def main():
     ext_c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
     ext_objects = [ext_s1, ext_c1]
 
-    ext_env, ext_fov, ext_objects = initialize_environment(unit, fovea_center,
+    ext_env, ext_fov, ext_objects = environment.initialize(unit, fovea_center,
                                                            fovea_size,
                                                            ext_objects
                                                            )
@@ -339,7 +304,7 @@ def main():
                                             ext_object,
                                             limits
                                             )
-                ext_env = redraw_environment(ext_env, unit, ext_objects)
+                ext_env = environment.redraw(ext_env, unit, ext_objects)
                 ext_fov.move(int_fov.center - ext_fov.center)
                 sub_goal_accomplished = goal_accomplished_classifier(
                     int_fov.get_focus_image(int_env),

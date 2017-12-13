@@ -76,6 +76,7 @@ from perceptron import Perceptron
 import phase_1_data
 from geometricshapes import Square, Circle, Fovea
 import actions
+import environment
 
 
 def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
@@ -278,8 +279,8 @@ def main():
                              ]
                             )
 
-    env, fovea, objects = s.initialize_environment(unit, fovea_center,
-                                                   fovea_size, objects)
+    env, fovea, objects = environment.initialize(unit, fovea_center,
+                                                 fovea_size, objects)
     p = Perceptron(np.array([fovea.get_focus_image(env).flatten('F')]).T.shape,
                    (1, 1), learning_rate
                    )
@@ -310,7 +311,7 @@ def main():
                 while not check_free_space(env, position, fovea):
                     position = get_random_position(limits)
                 late_object.center += position
-            env = s.redraw_environment(env, unit, objects)
+            env = environment.redraw(env, unit, objects)
 
         actions.hard_foveate(fovea, env, objects)
 
@@ -348,7 +349,7 @@ def main():
             actions.parameterised_skill(current_object.center, new_position,
                                         current_object, limits
                                         )
-            env = s.redraw_environment(env, unit, objects)
+            env = environment.redraw(env, unit, objects)
             target_pos_image = check_target_position(env, new_position,
                                                      fovea
                                                      )
