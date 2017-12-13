@@ -11,55 +11,9 @@ discrete steps in the simulation.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.ndimage as ndimage
 
 from geometricshapes import Square, Circle, Fovea
 import actions
-
-
-def is_inside(coordinates, object_):
-    """
-    Check if coordinates are inside object.
-
-    Takes input xy-coordinates and polygon object.
-    Return True/False.
-    """
-    if object_.is_inside(coordinates):
-        return True
-    else:
-        return False
-
-
-def check_sub_goal(fovea_coordinates, polygons):
-    """
-    Check if current position of fovea is on a sub-goal.
-
-    If the fovea is inside a polygon a sub-goal is found.
-
-    # PSEUDO-CODE (NOT FINISHED)
-    found = False
-    FOR all polygons
-        IF not found
-            FUNCTION is_inside(fovea_coordinates, polygon) checks if
-                fovea is inside the polygon
-            IF fovea is inside polygon
-                SET found = True
-    IF found
-        return True
-    ELSE
-        return False
-    """
-    found = False
-    for polygon in polygons:
-        if not found:
-            if is_inside(fovea_coordinates, polygon):
-                found = True
-                return polygon
-
-    if found:
-        return True
-    else:
-        return False
 
 
 def check_images(image_array_1, image_array_2, threshold=0.01):
@@ -137,62 +91,6 @@ def goal_achievable_classifier(internal_fovea_image, external_fovea_image,
         return True
     else:
         return False
-
-
-def get_intensity_image(image):
-    """
-    Translate RGB image to intensity image.
-
-    Keyword arguments:
-    - image -- numpy array of RGB image
-
-    Takes the RGB image array, transforms it to black/white image,
-    adds Gaussian noise, adds noise and returns this new image.
-    """
-    bw_image = np.mean(image, -1)
-    blurred = ndimage.gaussian_filter(bw_image, sigma=1)
-    noisy = blurred + (0.1*np.random.random_sample(blurred.shape) - 0.05)
-    clipped = noisy.clip(0, 1)
-    return clipped
-
-
-def foveate(fovea, image):
-    """
-    Foveate fovea.
-
-    Keyword arguments:
-    - fovea -- Fovea object
-    - image -- Numpy array of the image the fovea is scanning
-
-    Uses bottom-up attention (the {RGB --> Black/White --> Add noise
-    --> (smooth) --> foveate} procedure). That is, RGB image is turned
-    into an intensity image, then the fovea is moved to the coordinates
-    of the most salient pixel in the image.
-    """
-    intensity_image = get_intensity_image(image)
-    max_index = np.unravel_index(intensity_image.argmax(),
-                                 intensity_image.shape
-                                 )
-    max_pos = np.flipud(np.array(max_index))/image.shape[0]
-    fovea.move(max_pos - fovea.center)
-
-
-def hard_foveate(fovea, image, objects):
-    """
-    Hard foveation of fovea.
-
-    Keyword arguments:
-    - fovea -- Fovea object
-    - image -- Numpy array of the image the fovea is scanning
-    - objects -- List of objects in the image
-
-    This one uses the bottom-up attention, but then checks which object
-    is found, gets its center coordinates and foveates the fovea
-    to those coordinates.
-    """
-    foveate(fovea, image)
-    found_object = check_sub_goal(fovea.center, objects)
-    fovea.move(found_object.center - fovea.center)
 
 
 def initialize_environment(unit, fovea_center, fovea_size, objects):
@@ -398,7 +296,7 @@ def main():
                  )
 
     # MAIN FUNCTIONING
-    sub_goal = check_sub_goal(int_fov.center, int_objects)
+    sub_goal = actions.check_sub_goal(int_fov.center, int_objects)
     if sub_goal:
         sub_goal_found = True
     if sub_goal_found:
@@ -413,7 +311,7 @@ def main():
             search_step = 0
             sub_goal_found = False
         if not sub_goal_found:
-            foveate(int_fov, int_env)
+            actions.foveate(int_fov, int_env)
 #            hard_foveate(int_fov, int_env, int_objects)
             ext_fov.move(int_fov.center - ext_fov.center)
             sub_goal = True  # check_sub_goal(int_fov.center, int_objects)
@@ -427,9 +325,9 @@ def main():
                     )
         if sub_goal_found and not sub_goal_accomplished:
             search_step += 1
-            foveate(ext_fov, ext_env)
+            actions.foveate(ext_fov, ext_env)
 #            hard_foveate(ext_fov, ext_env, ext_objects)
-            ext_object = check_sub_goal(ext_fov.center, ext_objects)
+            ext_object = actions.check_sub_goal(ext_fov.center, ext_objects)
             sub_goal_achievable = goal_achievable_classifier(
                 int_fov.get_focus_image(int_env),
                 ext_fov.get_focus_image(ext_env),

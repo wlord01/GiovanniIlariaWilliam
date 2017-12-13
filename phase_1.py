@@ -125,7 +125,7 @@ def check_target_position(environment, target_xy, fovea):
     The function creates and returns a temporary focus image using the
     attributes of the real focus image and the target position.
     """
-    temp_fovea = s.Fovea(target_xy, fovea.size, [0, 0, 0], fovea.unit)
+    temp_fovea = Fovea(target_xy, fovea.size, [0, 0, 0], fovea.unit)
     temp_image = temp_fovea.get_focus_image(environment)
     return temp_image
 
@@ -312,14 +312,14 @@ def main():
                 late_object.center += position
             env = s.redraw_environment(env, unit, objects)
 
-        s.hard_foveate(fovea, env, objects)
+        actions.hard_foveate(fovea, env, objects)
 
         if graphics_on:
             graphics(env, fovea, objects, unit)
 
         fovea_im = fovea.get_focus_image(env)
         current_position = np.copy(fovea.center)
-        current_object = s.check_sub_goal(current_position, objects)
+        current_object = actions.check_sub_goal(current_position, objects)
 
         p.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = p.get_output()
