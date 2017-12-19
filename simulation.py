@@ -15,24 +15,7 @@ import matplotlib.pyplot as plt
 from geometricshapes import Square, Circle
 import actions
 import environment
-
-
-def check_images(image_array_1, image_array_2, threshold=0.01):
-    """Compare two image arrays and say if they show the same thing.
-
-    Takes two numpy arrays and calculates the normalised distance
-    between their flattened versions. The threshold is arbitrarily
-    chosen and set, to determine if the flattened vectors are similar
-    enough.
-    """
-    vector_1 = image_array_1.flatten('F')
-    vector_2 = image_array_2.flatten('F')
-    diff = vector_1 - vector_2
-    norm = np.linalg.norm(diff)
-    if norm/len(vector_1) <= threshold:
-        return True
-    else:
-        return False
+import perception
 
 
 def goal_accomplished_classifier(internal_fovea_image, external_fovea_image,
@@ -51,10 +34,10 @@ def goal_accomplished_classifier(internal_fovea_image, external_fovea_image,
     images are equal enough (within threshold), the goal is
     accomplished.
     """
-    same_images = check_images(internal_fovea_image,
-                               external_fovea_image,
-                               threshold
-                               )
+    same_images = perception.check_images(internal_fovea_image,
+                                          external_fovea_image,
+                                          threshold
+                                          )
     if same_images:
         return True
     else:
@@ -83,10 +66,10 @@ def goal_achievable_classifier(internal_fovea_image, external_fovea_image,
     images are equal enough (within threshold), the goal is
     accomplished.
     """
-    same_images = check_images(internal_fovea_image,
-                               external_fovea_image,
-                               threshold
-                               )
+    same_images = perception.check_images(internal_fovea_image,
+                                          external_fovea_image,
+                                          threshold
+                                          )
 
     if same_images:
         return True
@@ -265,7 +248,7 @@ def main():
                  )
 
     # MAIN FUNCTIONING
-    sub_goal = actions.check_sub_goal(int_fov.center, int_objects)
+    sub_goal = perception.check_sub_goal(int_fov.center, int_objects)
     if sub_goal:
         sub_goal_found = True
     if sub_goal_found:
@@ -280,10 +263,10 @@ def main():
             search_step = 0
             sub_goal_found = False
         if not sub_goal_found:
-            actions.foveate(int_fov, int_env)
-#            hard_foveate(int_fov, int_env, int_objects)
+            perception.foveate(int_fov, int_env)
+#            perception.hard_foveate(int_fov, int_env, int_objects)
             ext_fov.move(int_fov.center - ext_fov.center)
-            sub_goal = True  # check_sub_goal(int_fov.center, int_objects)
+            sub_goal = True  # perception.check_sub_goal(int_fov.center, int_objects)
             if sub_goal:
                 sub_goal_found = True
             if sub_goal_found:
@@ -294,9 +277,9 @@ def main():
                     )
         if sub_goal_found and not sub_goal_accomplished:
             search_step += 1
-            actions.foveate(ext_fov, ext_env)
-#            hard_foveate(ext_fov, ext_env, ext_objects)
-            ext_object = actions.check_sub_goal(ext_fov.center, ext_objects)
+            perception.foveate(ext_fov, ext_env)
+#            perception.hard_foveate(ext_fov, ext_env, ext_objects)
+            ext_object = perception.check_sub_goal(ext_fov.center, ext_objects)
             sub_goal_achievable = goal_achievable_classifier(
                 int_fov.get_focus_image(int_env),
                 ext_fov.get_focus_image(ext_env),
@@ -327,7 +310,7 @@ def main():
                      )
 
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
-        if check_images(int_env, ext_env, 0.00055):
+        if perception.check_images(int_env, ext_env, 0.00055):
             print('Goal accomplished!')
             break
 

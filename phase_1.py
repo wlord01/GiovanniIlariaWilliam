@@ -71,12 +71,12 @@ FOR step in range number_of_steps
 import numpy as np
 import matplotlib.pyplot as plt
 
-import simulation as s
 from perceptron import Perceptron
 import phase_1_data
 from geometricshapes import Square, Circle, Fovea
 import actions
 import environment
+import perception
 
 
 def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
@@ -108,7 +108,7 @@ def check_action_success(before_image, after_image):
 
     Return True/False.
     """
-    image_match = s.check_images(before_image, after_image)
+    image_match = perception.check_images(before_image, after_image)
     if image_match:
         return True
     else:
@@ -265,7 +265,7 @@ def main():
     save_data = True
     plot_data = True
     print_statements_on = True
-    graphics_on = False
+    graphics_on = True
 
     # INITIALIZE ENVIRONMENT AND PERCEPTRON
     fovea_center = [0.5, 0.5]
@@ -315,14 +315,14 @@ def main():
                 late_object.center += position
             env = environment.redraw(env, unit, objects)
 
-        actions.hard_foveate(fovea, env, objects)
+        perception.hard_foveate(fovea, env, objects)
 
         if graphics_on:
             graphics(env, fovea, objects, unit)
 
         fovea_im = fovea.get_focus_image(env)
         current_position = np.copy(fovea.center)
-        current_object = actions.check_sub_goal(current_position, objects)
+        current_object = perception.check_sub_goal(current_position, objects)
 
         p.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = p.get_output()
