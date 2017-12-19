@@ -174,11 +174,13 @@ def graphics(env, fovea, objects, unit):
     """
     plt.clf()
 
-    env = s.redraw_environment(env, unit, objects)
+    env = environment.redraw(env, unit, objects)
     fovea_im = fovea.get_focus_image(env)
 
     plt.subplot(121)
     plt.title('Training environment')
+    plt.xlim(0, unit)
+    plt.ylim(0, unit)
     plt.imshow(env)
 
     # PLOT DESK EDGES
