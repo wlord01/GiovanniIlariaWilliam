@@ -116,6 +116,8 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
 
     plt.subplot(221)
     plt.title('Internal image')
+    plt.xlim(0, unit)
+    plt.ylim(0, unit)
     plt.imshow(int_env)
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
@@ -138,6 +140,8 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
 
     plt.subplot(223)
     plt.title('External image')
+    plt.xlim(0, unit)
+    plt.ylim(0, unit)
     plt.imshow(ext_env)
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
