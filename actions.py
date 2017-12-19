@@ -247,8 +247,16 @@ def activate(object_):
     - object_ -- The object (class instance) to activate
 
     Turn object green if object color is red"""
-    if object_.color == [1, 0, 0]:
-        object_.color = np.array([0, 1, 0])
+    object_.color = np.array([0, 1, 0])
+
+
+def deactivate(object_):
+    """Deactivate object by making it red
+
+    Keyword arguments:
+    - object_ -- The object (class instance) to deactivate
+    """
+    object_.color = np.array([1, 0, 0])
 
 if __name__ == '__main__':
     """Main"""
