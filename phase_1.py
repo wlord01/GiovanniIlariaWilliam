@@ -21,9 +21,7 @@ interesting and complicated we can use scenarios where objects are
 overlapping.
 
 To evaluate if an action is successful or not the system should check
-the start position and desired end position of the action before and
-after the action is performed and then it can say if the action was
-successful or not.
+effects of the performed action.
 
 
 PSEUDO CODE
@@ -40,7 +38,7 @@ VARIABLES
 - target -- int value (0, 1) for supervised update of perceptron
 
 FLAGS
-- successful_action -- True/False success of action
+- effect -- True/False effect after applied action
 
 FOR step in range number_of_steps
     FUNCTION hard_foveate(fovea, environment, objects) moves
@@ -56,12 +54,12 @@ FOR step in range number_of_steps
             position is free
         FUNCTION parameterised_skill is applied on the object to try to
             move it to the target position
-        FUNCTION check_action_success checks if the action was
-            successful by comparing the focus image before the action
-            and the focus image at the target location after the action
-        IF successful_action
+        FUNCTION check_effect() checks if the action had an effect by
+            comparing the environment image array after and before
+            action
+        IF effect
             PERCEPTRON is updated (p.update_weights) with target = 1
-        IF not successful_action
+        IF not effect
             PERCEPTRON is updated (p.update_weights) with target = 0
     FUNCTION update_overall_ignorance updates the overall ignorance
         (leaky integrator)
@@ -93,26 +91,6 @@ def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
     leak rate and I_t is the current ignorance of the object in focus.
     """
     return (1-rate)*overall_ignorance + rate*object_ignorance
-
-
-def check_action_success(before_image, after_image):
-    """Check the success of an action
-
-    Keyword arguments:
-    - before_image -- focus image array before action
-    - after_image -- focus image array after action
-
-    Compare the focus image array at the start point, before action
-    attempt, and the focus image array at the end point of the action,
-    after the action attempt.
-
-    Return True/False.
-    """
-    image_match = perception.check_images(before_image, after_image)
-    if image_match:
-        return True
-    else:
-        return False
 
 
 def check_target_position(environment, target_xy, fovea):
@@ -239,12 +217,12 @@ def main():
                 position is free
             FUNCTION parameterised_skill is applied on the object to try to
                 move it to the target position
-            FUNCTION check_action_success checks if the action was
-                successful by comparing the focus image before the action
-                and the focus image at the target location after the action
-            IF successful_action
+            FUNCTION check_effect() checks if the action had an effect by
+                comparing the environment image array after and before
+                action
+            IF effect
                 PERCEPTRON is updated (p.update_weights) with target = 1
-            IF not successful_action
+            IF not effect
                 PERCEPTRON is updated (p.update_weights) with target = 0
         FUNCTION update_overall_ignorance updates the overall ignorance
             (leaky integrator)
@@ -257,7 +235,7 @@ def main():
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
     number_of_steps = 1000
     leak_rate = 0.2  # LEAKY INTEGRATOR
-    learning_rate = 0.005  # PERCEPTRON
+    learning_rate = 0.025  # PERCEPTRON
 
     # FLAGS
     move_made = False
@@ -265,7 +243,7 @@ def main():
     save_data = True
     plot_data = True
     print_statements_on = True
-    graphics_on = True
+    graphics_on = False
 
     # INITIALIZE ENVIRONMENT AND PERCEPTRON
     fovea_center = [0.5, 0.5]
@@ -334,7 +312,6 @@ def main():
 
         if current_ignorance + ignorance_bias >= overall_ignorance:
             move_made = True
-            before_image = np.copy(fovea_im)
             new_position = get_random_position(limits)
             fovea.move(new_position - fovea.center)
 
@@ -348,20 +325,19 @@ def main():
                 if graphics_on:
                     graphics(env, fovea, objects, unit)
 
+            # PERFORM ACTION AND CHECK EFFECT
+            env_before_action = np.copy(env)
             actions.parameterised_skill(current_object.center, new_position,
                                         current_object, limits
                                         )
             env = environment.redraw(env, unit, objects)
-            target_pos_image = check_target_position(env, new_position,
-                                                     fovea
-                                                     )
-            successful_action = check_action_success(before_image,
-                                                     target_pos_image
-                                                     )
-            if successful_action:
+
+            effect = perception.check_effect(env_before_action, env)
+
+            if effect:
                 target = 1
                 p.update_weights(target)
-            if not successful_action:
+            if not effect:
                 target = 0
                 p.update_weights(target)
 
