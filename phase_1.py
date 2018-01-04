@@ -230,7 +230,7 @@ def main():
     # SET VARIABLES
     unit = 100
     overall_ignorance = 1
-    ignorance_bias = 0.005
+    ignorance_bias = 0.
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
     number_of_steps = 1000
@@ -242,7 +242,7 @@ def main():
     move_made = False
 
     save_data = True
-    plot_data = True
+    plot_data = False
     print_statements_on = True
     graphics_on = False
 
@@ -252,11 +252,11 @@ def main():
 
     s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit)
     c1 = Circle([0.65, 0.35], 0.14, [0, 1, 0], unit)
-    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit, 0)
-    c2 = Circle([0., 0.], 0.14, [0, 0, 1], unit)
-    objects = [s1, c1, s2, c2]
+#    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit, 0)
+#    c2 = Circle([0., 0.], 0.14, [0, 1, 0], unit)
+    objects = [s1, c1]  # , s2]  # , c2]
 
-    late_objects = np.array([[200, c2]
+    late_objects = np.array([  # [200, c2]
                              ]
                             )
 
@@ -305,14 +305,23 @@ def main():
 
     if save_data:
         file_name = 'data_array.npy'
-        number_of_objects = len(objects)
-        ignorance = [1 for i in range(number_of_objects)]
-        p_out = [0.5 for i in range(number_of_objects)]
-        features = [ignorance, p_out]
+        object_images = environment.get_object_images(unit, fovea_size)
+        number_of_objects = len(object_images)
+        number_of_actions = len(action_list)
+        types = [[0 for i in range(number_of_actions)]
+                 for j in range(number_of_objects)]
+        colors = [[0 for i in range(number_of_actions)]
+                  for j in range(number_of_objects)]
+        ignorance = [[1 for i in range(number_of_actions)]
+                     for j in range(number_of_objects)]
+        p_out = [[0.5 for i in range(number_of_actions)]
+                 for j in range(number_of_objects)]
+        features = [types, colors, ignorance, p_out]
         number_of_features = len(features)
         data = np.zeros((number_of_steps,
                          number_of_features,
-                         number_of_objects
+                         number_of_objects,
+                         number_of_actions
                          )
                         )
 
@@ -340,8 +349,8 @@ def main():
         current_position = np.copy(fovea.center)
         current_object = perception.check_sub_goal(current_position, objects)
 
-#        action = np.random.choice(action_list)  # RANDOM FOR NOW
-        action = action_list[0]
+        action = np.random.choice(action_list)  # RANDOM FOR NOW
+#        action = action_list[0]
         affordance_predictor = affordance_predictors[action_list.index(action)]
         effect_predictor = effect_predictors[action_list.index(action)]
 
@@ -425,12 +434,30 @@ def main():
             graphics(env, fovea, objects, unit)
 
         if save_data:
-            ignorance[objects.index(current_object)] = current_ignorance
-            p_out[objects.index(current_object)] = current_knowledge
-            data[step, 0] = ignorance
-            data[step, 1] = p_out
+            action_number = action_list.index(action)
+            for object_number in range(len(object_images)):
+                object_type = int(object_images[object_number][0])
+                object_color = int(object_images[object_number][1])
+                types[object_number] = [object_type for i in
+                                        types[object_number]
+                                        ]
+                colors[object_number] = [object_color for i in
+                                         colors[object_number]
+                                         ]
 
-            np.save(file_name, data)
+                image = object_images[object_number][2:]
+                affordance_predictor.set_input(
+                    np.array([image.flatten('F')]).T
+                    )
+                out = affordance_predictor.get_output()
+                obj_ign = (- out * np.log2(out) - (1-out) * np.log2(1-out))
+                ignorance[object_number][action_number] = obj_ign
+                p_out[object_number][action_number] = out
+
+            data[step, 0] = types
+            data[step, 1] = colors
+            data[step, 2] = ignorance
+            data[step, 3] = p_out
 
         if print_statements_on:
             print('Step ', step)
@@ -452,6 +479,9 @@ def main():
                                                      current_ignorance,
                                                      leak_rate
                                                      )
+
+    if save_data:
+        np.save(file_name, data)
 
     if plot_data:
         phase_1_data.plot(file_name)
