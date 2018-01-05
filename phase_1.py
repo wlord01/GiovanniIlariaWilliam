@@ -242,7 +242,7 @@ def main():
     move_made = False
 
     save_data = True
-    plot_data = False
+    plot_data = True
     print_statements_on = True
     graphics_on = False
 
@@ -253,10 +253,10 @@ def main():
     s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit)
     c1 = Circle([0.65, 0.35], 0.14, [0, 1, 0], unit)
 #    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit, 0)
-#    c2 = Circle([0., 0.], 0.14, [0, 1, 0], unit)
-    objects = [s1, c1]  # , s2]  # , c2]
+    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
+    objects = [s1, c1, c2]  # s2, c2]
 
-    late_objects = np.array([  # [200, c2]
+    late_objects = np.array([[200, c2]
                              ]
                             )
 
