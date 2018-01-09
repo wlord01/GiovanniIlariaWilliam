@@ -187,45 +187,76 @@ def main():
 
     VARIABLES:
     - number_of_steps -- int number of how many loops should be run
-    - p -- Perceptron object
+    - unit -- Side size (int) of the square environment array
     - environment -- image array of environment
     - fovea -- fovea object
+    - fovea_center -- position of fovea center (float)
+    - fovea_size -- size of fovea (float)
     - objects -- list of objects in environment
+    - late_objects -- list of late objects and the step number they
+      are introduced (geomtericshape, int)
     - overall_ignorance -- float value of overall ignorance
-    - ignorance -- float number between 0 and 1 indicating the ignorance
-      of the object in focus
+    - leak_rate -- leak rate (float) of the overall ignorance
+    - ignorance -- float number between 0 and 1 indicating the
+      ignorance of the object in focus
     - ignorance_bias -- float value of bias added in ignorance
       comparison
     - limits -- array of coordinate limits [[x_min, x_max],
       [y_min, y_max]]
-    - target -- int value (0, 1) for supervised update of perceptron
+    - affordance_leak_rate -- learning rate (float) of affordance
+      predictors
+    - effect_learning_rate -- learning rate (float) of effect
+      predictors
 
     FLAGS
-    - successful_action -- True/False success of action
+    - action_performed -- True/False if action is performed
+    - save_data -- Save data of simulation or not
+    - plot_data -- Plot saved data or not
+    - print_statements_on -- Print statements on or off at each step
+    - graphics_on -- Simulation graphics or not
 
     FOR step in range number_of_steps
         FUNCTION hard_foveate(fovea, environment, objects) moves
         focus to an object
-        OBJECT METHOD get_focus_image updates the fovea image
-        PERCEPTRON checks the knowledge about the focus image using
-            (p.get_output)
-        SET ignorance as the absolute distance from the knowledge to 1 or 0
-        IF ignorance + 0.05 > overall_ignorance
-            FUNCTION get_random_position() generates random xy coordinates
-               as target position
-            FUNCTION check_free_space() checks if the chosen target
-                position is free
-            FUNCTION parameterised_skill is applied on the object to try to
-                move it to the target position
-            FUNCTION check_effect() checks if the action had an effect by
-                comparing the environment image array after and before
-                action
+        OBJECT METHOD get_focus_image(environment) updates the fovea
+            image
+        SELECT action (random for now, but by IM later)
+        FUCNTION affordance_predictor.set_input(input) sets affordance
+            predictor input to the flattened focus image (image vector)
+        FUNCTION affordance_predictor.get_output() checks prediction
+            for focus image
+        SET ignorance as Shannon entropy output of knowledge prediction
+        IF ignorance + ignorance_bias > overall_ignorance
+            IF action is move (parameterised_skill)
+                WHILE generated target position is not free
+                    FUNCTION get_random_position() generates random xy
+                        coordinates as target position
+                    FUNCTION check_free_space(environment, target_xy,
+                        fovea) checks if the chosen target position is
+                        free
+            SET effect_predictor input (using target position if action
+                is parameterised skill (move))
+            EXECUTE action
+            FUNCTION perception.check_effect(before_image, after_image)
+                checks if the action had an effect by comparing the
+                environment image array before and after action
             IF effect
-                PERCEPTRON is updated (p.update_weights) with target = 1
+                FUNCTION affordance_predictor.update_weights(1) updates
+                    affordance predictor weights with target = 1
+                FUNCTION hard_foveate(fovea, environment, objects)
+                    moves focus to observed effect of action
+                FUNCTION effect_predictor.update_weights(target)
+                    updates the weights of the effect predictor using
+                    position of fovea center and the flattened focus
+                    image (image vector)
             IF not effect
-                PERCEPTRON is updated (p.update_weights) with target = 0
+                FUNCTION affordance_predictor.update_weihgts(0) updates
+                    affordance predictor weights with target = 0
         FUNCTION update_overall_ignorance updates the overall ignorance
             (leaky integrator)
+        IF graphics_on
+            FUNCTION graphics(env, fovea, objects, unit) displays
+                simulation graphics
     """
     # SET VARIABLES
     unit = 100
@@ -239,8 +270,7 @@ def main():
     effect_learning_rate = 0.01
 
     # FLAGS
-    move_made = False
-
+    action_performed = False
     save_data = True
     plot_data = True
     print_statements_on = True
@@ -363,7 +393,7 @@ def main():
                              np.log2(1-current_knowledge))
 
         if current_ignorance + ignorance_bias >= overall_ignorance:
-            move_made = True
+            action_performed = True
 
             # PERFORM ACTION AND CHECK EFFECT
             env_before_action = np.copy(env)
@@ -430,6 +460,27 @@ def main():
                 target = 0
                 affordance_predictor.update_weights(target)
 
+        if print_statements_on:
+            print('Step ', step)
+            print(('Ignorance  {} vs overall {}').format(
+                  str(current_ignorance), str(overall_ignorance))
+                  )
+            if action_performed:
+                print('Move attempt on object #{}'.format(
+                      str(objects.index(current_object) + 1))
+                      )
+            else:
+                print('No move attempt on object #{}'.format(
+                      str(objects.index(current_object) + 1))
+                      )
+
+        overall_ignorance = update_overall_ignorance(overall_ignorance,
+                                                     current_ignorance,
+                                                     leak_rate
+                                                     )
+
+        action_performed = False
+
         if graphics_on:
             graphics(env, fovea, objects, unit)
 
@@ -458,27 +509,6 @@ def main():
             data[step, 1] = colors
             data[step, 2] = ignorance
             data[step, 3] = p_out
-
-        if print_statements_on:
-            print('Step ', step)
-            print(('Ignorance  {} vs overall {}').format(
-                  str(current_ignorance), str(overall_ignorance))
-                  )
-            if move_made:
-                print('Move attempt on object #{}'.format(
-                      str(objects.index(current_object) + 1))
-                      )
-            else:
-                print('No move attempt on object #{}'.format(
-                      str(objects.index(current_object) + 1))
-                      )
-
-        move_made = False
-
-        overall_ignorance = update_overall_ignorance(overall_ignorance,
-                                                     current_ignorance,
-                                                     leak_rate
-                                                     )
 
     if save_data:
         np.save(file_name, data)
