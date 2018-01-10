@@ -133,7 +133,7 @@ def move_object(object_, vector, limits):
     object_.move(vector)
 
 
-def parameterised_skill(end_position, start_position, object_, limits):
+def parameterised_skill(object_, end_position, limits):
     """
     Move object in external environment.
 
@@ -147,7 +147,8 @@ def parameterised_skill(end_position, start_position, object_, limits):
     - start_position -- array of float coordinates of start position
     - object_ -- the object that the function should move
     """
-    vector = start_position - end_position
+    start_position = np.copy(object_.center)
+    vector = end_position - start_position
     move_object(object_, vector, limits)
 
 

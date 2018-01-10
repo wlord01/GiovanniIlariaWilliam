@@ -286,11 +286,7 @@ def main():
                 achievable_threshold
                 )
             if sub_goal_achievable:
-                actions.parameterised_skill(ext_fov.center,
-                                            int_fov.center,
-                                            ext_object,
-                                            limits
-                                            )
+                actions.parameterised_skill(ext_object, int_fov.center, limits)
                 ext_env = environment.redraw(ext_env, unit, ext_objects)
                 ext_fov.move(int_fov.center - ext_fov.center)
                 sub_goal_accomplished = goal_accomplished_classifier(

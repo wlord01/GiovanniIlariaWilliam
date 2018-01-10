@@ -254,9 +254,7 @@ def main():
                     affordance predictor weights with target = 0
         FUNCTION update_overall_ignorance updates the overall ignorance
             (leaky integrator)
-        IF graphics_on
-            FUNCTION graphics(env, fovea, objects, unit) displays
-                simulation graphics
+        RESET action_performed to False
     """
     # SET VARIABLES
     unit = 100
@@ -421,11 +419,8 @@ def main():
                      )
                     )
 
-                actions.parameterised_skill(current_object.center,
-                                            new_position,
-                                            current_object,
-                                            limits
-                                            )
+                action_input = (new_position, limits)
+
             else:  # OTHER NON-PARAMETERISED ACTION
                 effect_predictor_input = np.concatenate(
                     (np.array([fovea.center]).T,
@@ -433,8 +428,9 @@ def main():
                      )
                     )
 
-                action(current_object)
+                action_input = ()
 
+            action(current_object, *action_input)
             effect_predictor.set_input(effect_predictor_input)
             env = environment.redraw(env, unit, objects)
 
