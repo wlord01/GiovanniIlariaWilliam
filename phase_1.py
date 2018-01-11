@@ -21,9 +21,7 @@ interesting and complicated we can use scenarios where objects are
 overlapping.
 
 To evaluate if an action is successful or not the system should check
-the start position and desired end position of the action before and
-after the action is performed and then it can say if the action was
-successful or not.
+effects of the performed action.
 
 
 PSEUDO CODE
@@ -40,7 +38,7 @@ VARIABLES
 - target -- int value (0, 1) for supervised update of perceptron
 
 FLAGS
-- successful_action -- True/False success of action
+- effect -- True/False effect after applied action
 
 FOR step in range number_of_steps
     FUNCTION hard_foveate(fovea, environment, objects) moves
@@ -56,12 +54,12 @@ FOR step in range number_of_steps
             position is free
         FUNCTION parameterised_skill is applied on the object to try to
             move it to the target position
-        FUNCTION check_action_success checks if the action was
-            successful by comparing the focus image before the action
-            and the focus image at the target location after the action
-        IF successful_action
+        FUNCTION check_effect() checks if the action had an effect by
+            comparing the environment image array after and before
+            action
+        IF effect
             PERCEPTRON is updated (p.update_weights) with target = 1
-        IF not successful_action
+        IF not effect
             PERCEPTRON is updated (p.update_weights) with target = 0
     FUNCTION update_overall_ignorance updates the overall ignorance
         (leaky integrator)
@@ -73,7 +71,7 @@ import matplotlib.pyplot as plt
 
 from perceptron import Perceptron
 import phase_1_data
-from geometricshapes import Square, Circle, Fovea
+from geometricshapes import Square, Circle, Fovea, Rectangle
 import actions
 import environment
 import perception
@@ -93,26 +91,6 @@ def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
     leak rate and I_t is the current ignorance of the object in focus.
     """
     return (1-rate)*overall_ignorance + rate*object_ignorance
-
-
-def check_action_success(before_image, after_image):
-    """Check the success of an action
-
-    Keyword arguments:
-    - before_image -- focus image array before action
-    - after_image -- focus image array after action
-
-    Compare the focus image array at the start point, before action
-    attempt, and the focus image array at the end point of the action,
-    after the action attempt.
-
-    Return True/False.
-    """
-    image_match = perception.check_images(before_image, after_image)
-    if image_match:
-        return True
-    else:
-        return False
 
 
 def check_target_position(environment, target_xy, fovea):
@@ -209,45 +187,74 @@ def main():
 
     VARIABLES:
     - number_of_steps -- int number of how many loops should be run
-    - p -- Perceptron object
+    - unit -- Side size (int) of the square environment array
     - environment -- image array of environment
     - fovea -- fovea object
+    - fovea_center -- position of fovea center (float)
+    - fovea_size -- size of fovea (float)
     - objects -- list of objects in environment
+    - late_objects -- list of late objects and the step number they
+      are introduced (geomtericshape, int)
     - overall_ignorance -- float value of overall ignorance
-    - ignorance -- float number between 0 and 1 indicating the ignorance
-      of the object in focus
+    - leak_rate -- leak rate (float) of the overall ignorance
+    - ignorance -- float number between 0 and 1 indicating the
+      ignorance of the object in focus
     - ignorance_bias -- float value of bias added in ignorance
       comparison
     - limits -- array of coordinate limits [[x_min, x_max],
       [y_min, y_max]]
-    - target -- int value (0, 1) for supervised update of perceptron
+    - affordance_leak_rate -- learning rate (float) of affordance
+      predictors
+    - effect_learning_rate -- learning rate (float) of effect
+      predictors
 
     FLAGS
-    - successful_action -- True/False success of action
+    - action_performed -- True/False if action is performed
+    - save_data -- Save data of simulation or not
+    - plot_data -- Plot saved data or not
+    - print_statements_on -- Print statements on or off at each step
+    - graphics_on -- Simulation graphics or not
 
     FOR step in range number_of_steps
         FUNCTION hard_foveate(fovea, environment, objects) moves
         focus to an object
-        OBJECT METHOD get_focus_image updates the fovea image
-        PERCEPTRON checks the knowledge about the focus image using
-            (p.get_output)
-        SET ignorance as the absolute distance from the knowledge to 1 or 0
-        IF ignorance + 0.05 > overall_ignorance
-            FUNCTION get_random_position() generates random xy coordinates
-               as target position
-            FUNCTION check_free_space() checks if the chosen target
-                position is free
-            FUNCTION parameterised_skill is applied on the object to try to
-                move it to the target position
-            FUNCTION check_action_success checks if the action was
-                successful by comparing the focus image before the action
-                and the focus image at the target location after the action
-            IF successful_action
-                PERCEPTRON is updated (p.update_weights) with target = 1
-            IF not successful_action
-                PERCEPTRON is updated (p.update_weights) with target = 0
+        OBJECT METHOD get_focus_image(environment) updates the fovea
+            image
+        SELECT action (random for now, but by IM later)
+        FUCNTION affordance_predictor.set_input(input) sets affordance
+            predictor input to the flattened focus image (image vector)
+        FUNCTION affordance_predictor.get_output() checks prediction
+            for focus image
+        SET ignorance as Shannon entropy output of knowledge prediction
+        IF ignorance + ignorance_bias > overall_ignorance
+            IF action is move (parameterised_skill)
+                WHILE generated target position is not free
+                    FUNCTION get_random_position() generates random xy
+                        coordinates as target position
+                    FUNCTION check_free_space(environment, target_xy,
+                        fovea) checks if the chosen target position is
+                        free
+            SET effect_predictor input (using target position if action
+                is parameterised skill (move))
+            EXECUTE action
+            FUNCTION perception.check_effect(before_image, after_image)
+                checks if the action had an effect by comparing the
+                environment image array before and after action
+            IF effect
+                FUNCTION affordance_predictor.update_weights(1) updates
+                    affordance predictor weights with target = 1
+                FUNCTION hard_foveate(fovea, environment, objects)
+                    moves focus to observed effect of action
+                FUNCTION effect_predictor.update_weights(target)
+                    updates the weights of the effect predictor using
+                    position of fovea center and the flattened focus
+                    image (image vector)
+            IF not effect
+                FUNCTION affordance_predictor.update_weihgts(0) updates
+                    affordance predictor weights with target = 0
         FUNCTION update_overall_ignorance updates the overall ignorance
             (leaky integrator)
+        RESET action_performed to False
     """
     # SET VARIABLES
     unit = 100
@@ -255,55 +262,96 @@ def main():
     ignorance_bias = 0.
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 1000
+    number_of_steps = 3000
     leak_rate = 0.2  # LEAKY INTEGRATOR
-    learning_rate = 0.005  # PERCEPTRON
+    affordance_learning_rate = 0.025
+    effect_learning_rate = 0.01
 
     # FLAGS
-    move_made = False
-
+    action_performed = False
     save_data = True
     plot_data = True
     print_statements_on = True
-    graphics_on = True
+    graphics_on = False
 
-    # INITIALIZE ENVIRONMENT AND PERCEPTRON
+    # INITIALIZE ENVIRONMENT
     fovea_center = [0.5, 0.5]
     fovea_size = 0.2
 
-    s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit, 0)
+    s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit)
     c1 = Circle([0.65, 0.35], 0.14, [0, 1, 0], unit)
-    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit)
-    c2 = Circle([0., 0.], 0.14, [0, 0, 1], unit, 0)
-    objects = [s1, c1, s2, c2]
+    r1 = Rectangle([0., 0.], 0.14, [1, 0, 0], unit, 0, 0)
+#    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit, 0)
+#    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
+    objects = [s1, c1, r1]  # s2, c2]
 
-    late_objects = np.array([[200, c2]
+    late_objects = np.array([[200, r1]
                              ]
                             )
 
     env, fovea, objects = environment.initialize(unit, fovea_center,
-                                                 fovea_size, objects)
-    p = Perceptron(np.array([fovea.get_focus_image(env).flatten('F')]).T.shape,
-                   (1, 1), learning_rate
-                   )
-#    p.initialize_weights()
+                                                 fovea_size, objects
+                                                 )
+
+    fov_img_shape = np.array([fovea.get_focus_image(env).flatten('F')]).T.shape
+
+    # ACTIONS
+    action_list = [actions.parameterised_skill,
+                   actions.activate,
+                   actions.deactivate,
+                   actions.neutralize
+                   ]
+
+    # PREDICTORS
+    affordance_predictors = []
+    effect_predictors = []
+
+    affordance_predictor_input_shape = fov_img_shape
+    affordance_predictor_output_shape = (1, 1)
+    effect_predictor_output_shape = np.array([2, 0]) + fov_img_shape
+    for action in action_list:
+        if action == actions.parameterised_skill:
+            effect_predictor_input_shape = np.array([4, 0]) + fov_img_shape
+        else:
+            effect_predictor_input_shape = np.array([2, 0]) + fov_img_shape
+
+        affordance_predictors.append(Perceptron(
+            affordance_predictor_input_shape,
+            affordance_predictor_output_shape,
+            affordance_learning_rate
+            ))
+        effect_predictors.append(Perceptron(
+            effect_predictor_input_shape,
+            effect_predictor_output_shape,
+            effect_learning_rate
+            ))
 
     if save_data:
         file_name = 'data_array.npy'
-        number_of_objects = len(objects)
-        ignorance = [1 for i in range(number_of_objects)]
-        p_out = [0.5 for i in range(number_of_objects)]
-        features = [ignorance, p_out]
+        object_images = environment.get_object_images(unit, fovea_size)
+        number_of_objects = len(object_images)
+        number_of_actions = len(action_list)
+        types = [[0 for i in range(number_of_actions)]
+                 for j in range(number_of_objects)]
+        colors = [[0 for i in range(number_of_actions)]
+                  for j in range(number_of_objects)]
+        ignorance = [[1 for i in range(number_of_actions)]
+                     for j in range(number_of_objects)]
+        p_out = [[0.5 for i in range(number_of_actions)]
+                 for j in range(number_of_objects)]
+        features = [types, colors, ignorance, p_out]
         number_of_features = len(features)
         data = np.zeros((number_of_steps,
                          number_of_features,
-                         number_of_objects
+                         number_of_objects,
+                         number_of_actions
                          )
                         )
 
     if graphics_on:
         graphics(env, fovea, objects, unit)
 
+    # MAIN LOOP
     for step in range(number_of_steps):
         if np.any(late_objects == step):
             for i in np.where(late_objects == step)[0]:
@@ -324,8 +372,13 @@ def main():
         current_position = np.copy(fovea.center)
         current_object = perception.check_sub_goal(current_position, objects)
 
-        p.set_input(np.array([fovea_im.flatten('F')]).T)
-        current_knowledge = p.get_output()
+        action = np.random.choice(action_list)  # RANDOM FOR NOW
+#        action = action_list[0]
+        affordance_predictor = affordance_predictors[action_list.index(action)]
+        effect_predictor = effect_predictors[action_list.index(action)]
+
+        affordance_predictor.set_input(np.array([fovea_im.flatten('F')]).T)
+        current_knowledge = affordance_predictor.get_output()
 
         # SHANNON ENTROPY
         current_ignorance = (- current_knowledge * np.log2(current_knowledge) -
@@ -333,55 +386,77 @@ def main():
                              np.log2(1-current_knowledge))
 
         if current_ignorance + ignorance_bias >= overall_ignorance:
-            move_made = True
-            before_image = np.copy(fovea_im)
-            new_position = get_random_position(limits)
-            fovea.move(new_position - fovea.center)
+            action_performed = True
 
-            if graphics_on:
-                graphics(env, fovea, objects, unit)
+            # PERFORM ACTION AND CHECK EFFECT
+            env_before_action = np.copy(env)
+            focus_image = fovea.get_focus_image(env)
 
-            while not check_free_space(env, new_position, fovea):
+            if action == actions.parameterised_skill:
+                old_position = np.copy(fovea.center)
                 new_position = get_random_position(limits)
                 fovea.move(new_position - fovea.center)
 
                 if graphics_on:
                     graphics(env, fovea, objects, unit)
 
-            actions.parameterised_skill(current_object.center, new_position,
-                                        current_object, limits
-                                        )
+                while not check_free_space(env, new_position, fovea):
+                    new_position = get_random_position(limits)
+                    fovea.move(new_position - fovea.center)
+
+                    if graphics_on:
+                        graphics(env, fovea, objects, unit)
+
+                effect_predictor_input = np.concatenate(
+                    (np.array([new_position]).T,
+                     np.array([old_position]).T,
+                     np.array([focus_image.flatten('F')]).T
+                     )
+                    )
+
+                action_input = (new_position, limits)
+
+            else:  # OTHER NON-PARAMETERISED ACTION
+                effect_predictor_input = np.concatenate(
+                    (np.array([fovea.center]).T,
+                     np.array([focus_image.flatten('F')]).T
+                     )
+                    )
+
+                action_input = ()
+
+            action(current_object, *action_input)
+            effect_predictor.set_input(effect_predictor_input)
             env = environment.redraw(env, unit, objects)
-            target_pos_image = check_target_position(env, new_position,
-                                                     fovea
-                                                     )
-            successful_action = check_action_success(before_image,
-                                                     target_pos_image
-                                                     )
-            if successful_action:
+
+            effect = perception.check_effect(env_before_action, env)
+
+            if effect:
                 target = 1
-                p.update_weights(target)
-            if not successful_action:
+                affordance_predictor.update_weights(target)
+
+                perception.hard_foveate(fovea,
+                                        (env - env_before_action).clip(0, 1),
+                                        objects
+                                        )
+                focus_image = fovea.get_focus_image(env)
+                effect_predictor.update_weights(
+                    np.concatenate((np.array([fovea.center]).T,
+                                    np.array([focus_image.flatten('F')]).T
+                                    )
+                                   )
+                    )
+
+            if not effect:
                 target = 0
-                p.update_weights(target)
-
-        if graphics_on:
-            graphics(env, fovea, objects, unit)
-
-        if save_data:
-            ignorance[objects.index(current_object)] = current_ignorance
-            p_out[objects.index(current_object)] = current_knowledge
-            data[step, 0] = ignorance
-            data[step, 1] = p_out
-
-            np.save(file_name, data)
+                affordance_predictor.update_weights(target)
 
         if print_statements_on:
             print('Step ', step)
             print(('Ignorance  {} vs overall {}').format(
                   str(current_ignorance), str(overall_ignorance))
                   )
-            if move_made:
+            if action_performed:
                 print('Move attempt on object #{}'.format(
                       str(objects.index(current_object) + 1))
                       )
@@ -390,15 +465,48 @@ def main():
                       str(objects.index(current_object) + 1))
                       )
 
-        move_made = False
-
         overall_ignorance = update_overall_ignorance(overall_ignorance,
                                                      current_ignorance,
                                                      leak_rate
                                                      )
 
+        action_performed = False
+
+        if graphics_on:
+            graphics(env, fovea, objects, unit)
+
+        if save_data:
+            action_number = action_list.index(action)
+            for object_number in range(len(object_images)):
+                object_type = int(object_images[object_number][0])
+                object_color = int(object_images[object_number][1])
+                types[object_number] = [object_type for i in
+                                        types[object_number]
+                                        ]
+                colors[object_number] = [object_color for i in
+                                         colors[object_number]
+                                         ]
+
+                image = object_images[object_number][2:]
+                affordance_predictor.set_input(
+                    np.array([image.flatten('F')]).T
+                    )
+                out = affordance_predictor.get_output()
+                obj_ign = (- out * np.log2(out) - (1-out) * np.log2(1-out))
+                ignorance[object_number][action_number] = obj_ign
+                p_out[object_number][action_number] = out
+
+            data[step, 0] = types
+            data[step, 1] = colors
+            data[step, 2] = ignorance
+            data[step, 3] = p_out
+
+    if save_data:
+        np.save(file_name, data)
+
     if plot_data:
         phase_1_data.plot(file_name)
+
 
 if __name__ == '__main__':
     """Main"""

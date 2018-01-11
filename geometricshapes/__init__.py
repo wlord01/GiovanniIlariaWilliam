@@ -165,8 +165,8 @@ class Rectangle(Square):
     """
     type_ = "Rectangle"
 
-    def __init__(self, center, size, color, unit, orientation):
-        super(Rectangle, self).__init__(center, size, color, unit)
+    def __init__(self, center, size, color, unit, orientation, movability=1):
+        super(Rectangle, self).__init__(center, size, color, unit, movability)
         self.orientation = orientation
 
     def get_corners(self):
