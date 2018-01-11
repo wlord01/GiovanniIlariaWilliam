@@ -29,7 +29,7 @@ class Perceptron(object):
     - read_weights_from_file -- read the weight matrix from a file and
         update the values
     """
-    def __init__(self, input_size, output_size, learning_rate):
+    def __init__(self, input_size, output_size, learning_rate, linear=False):
         """Allocate arrays for input and weights
 
         Keyword arguments:
@@ -44,6 +44,7 @@ class Perceptron(object):
         self.output = np.zeros(output_size)
         self.weights = np.zeros((output_size[0], input_size[0]+1))
         self.learning_rate = learning_rate
+        self.linear = linear
 
     def set_input(self, input_):
         """Add values to input array
@@ -60,8 +61,12 @@ class Perceptron(object):
         2. Compute sigmoidal output
         """
         self.out = np.matmul(self.weights, self.input)
-        # 0 / 1
-        self.output = 1 / (1 + np.exp(-self.out))
+
+        if self.linear:
+            self.output = self.out
+        else:
+            self.output = 1 / (1 + np.exp(-self.out))
+
         return self.output
 
     def initialize_weights(self):
@@ -71,12 +76,16 @@ class Perceptron(object):
     def update_weights(self, target):
         """Update the weights with delta rule"""
         self.get_output()
-        sigmoid_derivative = np.exp(self.out) / (1+np.exp(self.out))**2
-        self.weights += self.learning_rate * np.matmul((sigmoid_derivative *
-                                                        (target - self.output)
-                                                        ),
-                                                       self.input.T
-                                                       )
+
+        if self.linear:
+            _update = (target - self.output) * self.input.T
+        else:
+            sigmoid_derivative = np.exp(self.out) / (1+np.exp(self.out))**2
+            _update = np.matmul(sigmoid_derivative * (target - self.output),
+                                self.input.T
+                                )
+
+        self.weights += self.learning_rate * _update
 
     def write_weights_to_file(self, file):
         """Write the weight matrix to a text file
@@ -100,76 +109,76 @@ if __name__ == '__main__':
     # TESTS
     import matplotlib.pyplot as plt
 
-#    input_size = [10, 1]
-#    output_size = [1, 1]
-#    learning_rate = 0.001
-#    p = Perceptron(input_size, output_size, learning_rate)
+    input_size = [66*66*3, 1]
+    output_size = [66*66*3, 1]
+    learning_rate = 0.025
+    p = Perceptron(input_size, output_size, learning_rate)
 #    p.initialize_weights()
 #    p.get_output()
 #    p.update_weights(1)
 
     # GENERATE SAMPLE TRAINING DATA
-    classA = np.zeros([2, 100])
-    classB = np.zeros([2, 100])
-    patterns = np.zeros([2, 200])
-    targets = np.concatenate((np.ones([1, 100]), np.zeros([1, 100])), 1)
-    classA[0, :] = np.random.normal(loc=2.0, size=(1, 100))
-    classA[1, :] = np.random.normal(loc=2.0, size=(1, 100))
-    classB[0, :] = np.random.normal(loc=-2.0, size=(1, 100))
-    classB[1, :] = np.random.normal(loc=-2.0, size=(1, 100))
-    patterns[0, :] = np.concatenate((classA[0, :], classB[0, :]))
-    patterns[1, :] = np.concatenate((classA[1, :], classB[1, :]))
-    permute = np.random.permutation(200)
-    patterns = patterns[:, permute]
-    targets = targets[:, permute]
-
-    plt.plot(patterns[0, np.where(targets >= 1)],
-             patterns[1, np.where(targets >= 1)], '*',
-             patterns[0, np.where(targets <= 0)],
-             patterns[1, np.where(targets <= 0)], '+'
-             )
-
-    learning_rate = 0.001
-    p = Perceptron(patterns.shape, targets.shape, learning_rate)
-    p.set_input(patterns)
-    p.initialize_weights()
-
-    pp = p.weights[0, 0:2]
-    k = -p.weights[0, patterns.shape[0]] / (pp*pp.T)
-    l = np.sqrt(pp*pp.T)
-    plt.clf()
-    plt.xlim(-5, 5)
-    plt.ylim(-5, 5)
-    plt.plot(patterns[0, np.where(targets >= 1)],
-             patterns[1, np.where(targets >= 1)], '*',
-             patterns[0, np.where(targets <= 0)],
-             patterns[1, np.where(targets <= 0)], '+',
-             [pp[0], pp[0]]*k + [-pp[1], pp[1]]/l,
-             [pp[1], pp[1]]*k + [pp[0], -pp[0]]/l, '-'
-             )
-    plt.show()
-    plt.pause(0.1)
-
-    epochs = 20
-    for epoch in range(epochs):
-        p.update_weights(targets)
-
-        pp = p.weights[0, 0:2]
-        k = -p.weights[0, patterns.shape[0]] / (pp*pp.T)
-        l = np.sqrt(pp*pp.T)
-        plt.clf()
-        plt.xlim(-5, 5)
-        plt.ylim(-5, 5)
-        plt.plot(patterns[0, np.where(targets >= 1)],
-                 patterns[1, np.where(targets >= 1)], '*',
-                 patterns[0, np.where(targets <= 0)],
-                 patterns[1, np.where(targets <= 0)], '+',
-                 [pp[0], pp[0]]*k + [-pp[1], pp[1]]/l,
-                 [pp[1], pp[1]]*k + [pp[0], -pp[0]]/l, '-'
-                 )
-        plt.show()
-        plt.pause(0.1)
-        
-        diff = 0.5*abs(targets - p.output)
-        error = np.sum(diff)/patterns.shape[1]
-        print('Error: ', error*100, '%')
+#    classA = np.zeros([2, 100])
+#    classB = np.zeros([2, 100])
+#    patterns = np.zeros([2, 200])
+#    targets = np.concatenate((np.ones([1, 100]), np.zeros([1, 100])), 1)
+#    classA[0, :] = np.random.normal(loc=2.0, size=(1, 100))
+#    classA[1, :] = np.random.normal(loc=2.0, size=(1, 100))
+#    classB[0, :] = np.random.normal(loc=-2.0, size=(1, 100))
+#    classB[1, :] = np.random.normal(loc=-2.0, size=(1, 100))
+#    patterns[0, :] = np.concatenate((classA[0, :], classB[0, :]))
+#    patterns[1, :] = np.concatenate((classA[1, :], classB[1, :]))
+#    permute = np.random.permutation(200)
+#    patterns = patterns[:, permute]
+#    targets = targets[:, permute]
+#
+#    plt.plot(patterns[0, np.where(targets >= 1)],
+#             patterns[1, np.where(targets >= 1)], '*',
+#             patterns[0, np.where(targets <= 0)],
+#             patterns[1, np.where(targets <= 0)], '+'
+#             )
+#
+#    learning_rate = 0.001
+#    p = Perceptron(patterns.shape, targets.shape, learning_rate)
+#    p.set_input(patterns)
+#    p.initialize_weights()
+#
+#    pp = p.weights[0, 0:2]
+#    k = -p.weights[0, patterns.shape[0]] / (pp*pp.T)
+#    l = np.sqrt(pp*pp.T)
+#    plt.clf()
+#    plt.xlim(-5, 5)
+#    plt.ylim(-5, 5)
+#    plt.plot(patterns[0, np.where(targets >= 1)],
+#             patterns[1, np.where(targets >= 1)], '*',
+#             patterns[0, np.where(targets <= 0)],
+#             patterns[1, np.where(targets <= 0)], '+',
+#             [pp[0], pp[0]]*k + [-pp[1], pp[1]]/l,
+#             [pp[1], pp[1]]*k + [pp[0], -pp[0]]/l, '-'
+#             )
+#    plt.show()
+#    plt.pause(0.1)
+#
+#    epochs = 20
+#    for epoch in range(epochs):
+#        p.update_weights(targets)
+#
+#        pp = p.weights[0, 0:2]
+#        k = -p.weights[0, patterns.shape[0]] / (pp*pp.T)
+#        l = np.sqrt(pp*pp.T)
+#        plt.clf()
+#        plt.xlim(-5, 5)
+#        plt.ylim(-5, 5)
+#        plt.plot(patterns[0, np.where(targets >= 1)],
+#                 patterns[1, np.where(targets >= 1)], '*',
+#                 patterns[0, np.where(targets <= 0)],
+#                 patterns[1, np.where(targets <= 0)], '+',
+#                 [pp[0], pp[0]]*k + [-pp[1], pp[1]]/l,
+#                 [pp[1], pp[1]]*k + [pp[0], -pp[0]]/l, '-'
+#                 )
+#        plt.show()
+#        plt.pause(0.1)
+#        
+#        diff = 0.5*abs(targets - p.output)
+#        error = np.sum(diff)/patterns.shape[1]
+#        print('Error: ', error*100, '%')
