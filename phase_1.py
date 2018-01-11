@@ -262,7 +262,7 @@ def main():
     ignorance_bias = 0.
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 1000
+    number_of_steps = 3000
     leak_rate = 0.2  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.025
     effect_learning_rate = 0.01
@@ -298,7 +298,8 @@ def main():
     # ACTIONS
     action_list = [actions.parameterised_skill,
                    actions.activate,
-                   actions.deactivate
+                   actions.deactivate,
+                   actions.neutralize
                    ]
 
     # PREDICTORS

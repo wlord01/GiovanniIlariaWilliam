@@ -170,5 +170,15 @@ def deactivate(object_):
     """
     object_.color = np.array([1, 0, 0])
 
+
+def neutralize(object_):
+    """Neutralize object by making it blue
+
+    Keyword arguments:
+    - object_ -- The object (class instance) to neutralize
+    """
+    object_.color = np.array([0, 0, 1])
+
+
 if __name__ == '__main__':
     """Main"""
