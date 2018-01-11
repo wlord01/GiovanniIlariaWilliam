@@ -71,7 +71,7 @@ import matplotlib.pyplot as plt
 
 from perceptron import Perceptron
 import phase_1_data
-from geometricshapes import Square, Circle, Fovea
+from geometricshapes import Square, Circle, Fovea, Rectangle
 import actions
 import environment
 import perception
@@ -280,11 +280,12 @@ def main():
 
     s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit)
     c1 = Circle([0.65, 0.35], 0.14, [0, 1, 0], unit)
+    r1 = Rectangle([0., 0.], 0.14, [1, 0, 0], unit, 0, 0)
 #    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit, 0)
-    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
-    objects = [s1, c1, c2]  # s2, c2]
+#    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
+    objects = [s1, c1, r1]  # s2, c2]
 
-    late_objects = np.array([[200, c2]
+    late_objects = np.array([[200, r1]
                              ]
                             )
 
@@ -301,35 +302,28 @@ def main():
                    ]
 
     # PREDICTORS
-    affordance_predictor_1 = Perceptron(fov_img_shape, (1, 1),
-                                        affordance_learning_rate)
-    affordance_predictor_2 = Perceptron(fov_img_shape, (1, 1),
-                                        affordance_learning_rate)
-    affordance_predictor_3 = Perceptron(fov_img_shape, (1, 1),
-                                        affordance_learning_rate)
+    affordance_predictors = []
+    effect_predictors = []
 
-    affordance_predictors = [affordance_predictor_1,
-                             affordance_predictor_2,
-                             affordance_predictor_3
-                             ]
+    affordance_predictor_input_shape = fov_img_shape
+    affordance_predictor_output_shape = (1, 1)
+    effect_predictor_output_shape = np.array([2, 0]) + fov_img_shape
+    for action in action_list:
+        if action == actions.parameterised_skill:
+            effect_predictor_input_shape = np.array([4, 0]) + fov_img_shape
+        else:
+            effect_predictor_input_shape = np.array([2, 0]) + fov_img_shape
 
-    effect_predictor_1 = Perceptron(np.array([4, 0]) + fov_img_shape,
-                                    np.array([2, 0]) + fov_img_shape,
-                                    effect_learning_rate
-                                    )
-    effect_predictor_2 = Perceptron(np.array([2, 0]) + fov_img_shape,
-                                    np.array([2, 0]) + fov_img_shape,
-                                    effect_learning_rate
-                                    )
-    effect_predictor_3 = Perceptron(np.array([2, 0]) + fov_img_shape,
-                                    np.array([2, 0]) + fov_img_shape,
-                                    effect_learning_rate
-                                    )
-
-    effect_predictors = [effect_predictor_1,
-                         effect_predictor_2,
-                         effect_predictor_3
-                         ]
+        affordance_predictors.append(Perceptron(
+            affordance_predictor_input_shape,
+            affordance_predictor_output_shape,
+            affordance_learning_rate
+            ))
+        effect_predictors.append(Perceptron(
+            effect_predictor_input_shape,
+            effect_predictor_output_shape,
+            effect_learning_rate
+            ))
 
     if save_data:
         file_name = 'data_array.npy'
@@ -511,6 +505,7 @@ def main():
 
     if plot_data:
         phase_1_data.plot(file_name)
+
 
 if __name__ == '__main__':
     """Main"""
