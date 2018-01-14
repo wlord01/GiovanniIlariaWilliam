@@ -250,8 +250,11 @@ def main():
                     position of fovea center and the flattened focus
                     image (image vector)
             IF not effect
-                FUNCTION affordance_predictor.update_weihgts(0) updates
+                FUNCTION affordance_predictor.update_weights(0) updates
                     affordance predictor weights with target = 0
+            FUNCTION improvement_predictor.update_weights(target)
+                updates weights of improvement predictor using target
+                -(H_after_action - H_before_action)
         FUNCTION update_overall_ignorance updates the overall ignorance
             (leaky integrator)
         RESET action_performed to False
@@ -265,6 +268,7 @@ def main():
     number_of_steps = 3000
     leak_rate = 0.2  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.025
+    improvement_learning_rate = 0.01
     effect_learning_rate = 0.01
 
     # FLAGS
@@ -305,10 +309,13 @@ def main():
     # PREDICTORS
     affordance_predictors = []
     effect_predictors = []
+    improvement_predictors = []
 
     affordance_predictor_input_shape = fov_img_shape
     affordance_predictor_output_shape = (1, 1)
     effect_predictor_output_shape = np.array([2, 0]) + fov_img_shape
+    improvement_predictor_input_shape = fov_img_shape
+    improvement_predictor_output_shape = (1, 1)
     for action in action_list:
         if action == actions.parameterised_skill:
             effect_predictor_input_shape = np.array([4, 0]) + fov_img_shape
@@ -324,6 +331,12 @@ def main():
             effect_predictor_input_shape,
             effect_predictor_output_shape,
             effect_learning_rate
+            ))
+        improvement_predictors.append(Perceptron(
+            improvement_predictor_input_shape,
+            improvement_predictor_output_shape,
+            improvement_learning_rate,
+            linear=True
             ))
 
     if save_data:
@@ -374,10 +387,13 @@ def main():
 
         action = np.random.choice(action_list)  # RANDOM FOR NOW
 #        action = action_list[0]
-        affordance_predictor = affordance_predictors[action_list.index(action)]
-        effect_predictor = effect_predictors[action_list.index(action)]
+        action_number = action_list.index(action)
+        affordance_predictor = affordance_predictors[action_number]
+        improvement_predictor = improvement_predictors[action_number]
+        effect_predictor = effect_predictors[action_number]
 
         affordance_predictor.set_input(np.array([fovea_im.flatten('F')]).T)
+        improvement_predictor.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = affordance_predictor.get_output()
 
         # SHANNON ENTROPY
@@ -451,6 +467,16 @@ def main():
                 target = 0
                 affordance_predictor.update_weights(target)
 
+            # UPDATE IMPROVEMENT PREDICTOR
+            pre_action_ignorance = current_ignorance
+            p = affordance_predictor.get_output()
+            post_action_ignorance = (- p * np.log2(p) - (1-p) * np.log2(1-p))
+
+            target = - (post_action_ignorance - pre_action_ignorance)
+            improvement_predictor.update_weights(target)
+
+            improvement = improvement_predictor.get_output()
+
         if print_statements_on:
             print('Step ', step)
             print(('Ignorance  {} vs overall {}').format(
@@ -476,7 +502,6 @@ def main():
             graphics(env, fovea, objects, unit)
 
         if save_data:
-            action_number = action_list.index(action)
             for object_number in range(len(object_images)):
                 object_type = int(object_images[object_number][0])
                 object_color = int(object_images[object_number][1])
