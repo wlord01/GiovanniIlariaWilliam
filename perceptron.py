@@ -78,7 +78,7 @@ class Perceptron(object):
         self.get_output()
 
         if self.linear:
-            _update = (target - self.output) * self.input.T
+            _update = np.matmul((target - self.output), self.input.T)
         else:
             sigmoid_derivative = np.exp(self.out) / (1+np.exp(self.out))**2
             _update = np.matmul(sigmoid_derivative * (target - self.output),
