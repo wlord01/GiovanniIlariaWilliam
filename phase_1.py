@@ -77,20 +77,15 @@ import environment
 import perception
 
 
-def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
+def leaky_average(average, current_value, leak_rate=0.05):
     """Update the overall ignorance
 
     Keyword arguments:
-    - overall_ignorance -- float of current overall ignorance
-    - object_ignorance -- float value of ignorance in current position
-    - rate -- the update rate between 0 and 1 (float)
-
-    Update the overall ignorance using the formula:
-    I_ovrl_t = (1 - rate) * I_ovrl_t-1 + rate * I_t,
-    where I_ovrl_t-1 is the overall ignorance before update, rate is the
-    leak rate and I_t is the current ignorance of the object in focus.
+    - average -- float of current average value
+    - current_value -- float of current value
+    - leak_rate -- leak rate of update, between 0 and 1 (float)
     """
-    return (1-rate)*overall_ignorance + rate*object_ignorance
+    return (1-leak_rate) * average + leak_rate * current_value
 
 
 def check_target_position(environment, target_xy, fovea):
@@ -139,6 +134,34 @@ def get_random_position(limits):
     x = (limits[0][1]-limits[0][0])*np.random.random_sample() + limits[0][0]
     y = (limits[1][1]-limits[1][0])*np.random.random_sample() + limits[1][0]
     return np.array([x, y])
+
+
+def select_action(action_list, improvement_predictors, focus_image):
+    """Select action
+
+    Keyword arguments:
+    - action_list -- list of action functions
+    - improvement_predictors -- list of corresponding improvement
+      predictors
+    - focus image -- the fovea image array
+
+    Find which action has highest improvement prediction for object in
+    focus. Return action number and corresponding improvement
+    prediction.
+    """
+    improvement_predictions = []
+    for action_number in range(len(action_list)):
+        improvement_predictor = improvement_predictors[action_number]
+        improvement_predictor.set_input(
+            np.array([focus_image.flatten('F')]).T
+            )
+        improvement_prediction = improvement_predictor.get_output()
+        improvement_predictions.append(improvement_prediction)
+
+    improvement_prediction = max(improvement_predictions)
+    action_number = improvement_predictions.index(improvement_prediction)
+
+    return action_number, improvement_prediction
 
 
 def graphics(env, fovea, objects, unit):
@@ -220,13 +243,15 @@ def main():
         focus to an object
         OBJECT METHOD get_focus_image(environment) updates the fovea
             image
-        SELECT action (random for now, but by IM later)
-        FUCNTION affordance_predictor.set_input(input) sets affordance
+        FUNCTION select_action(action_list, improvement_predictors,
+            focus_image) finds maximum improvement and returns action
+            number and the corresponding improvement prediction
+        FUNCTION affordance_predictor.set_input(input) sets afforance
             predictor input to the flattened focus image (image vector)
-        FUNCTION affordance_predictor.get_output() checks prediction
-            for focus image
+        FUNCTION affordance_predictor.get_output() gets affordance
+            prediction output for the object in focus
         SET ignorance as Shannon entropy output of knowledge prediction
-        IF ignorance + ignorance_bias > overall_ignorance
+        IF improvement_prediction + selection_bias > overall_improvement
             IF action is move (parameterised_skill)
                 WHILE generated target position is not free
                     FUNCTION get_random_position() generates random xy
@@ -255,20 +280,21 @@ def main():
             FUNCTION improvement_predictor.update_weights(target)
                 updates weights of improvement predictor using target
                 -(H_after_action - H_before_action)
-        FUNCTION update_overall_ignorance updates the overall ignorance
-            (leaky integrator)
+        FUNCTION leaky_average(overall_improvement,
+            improvement_prediction, leak_rate) updates the overall
+            improvement
         RESET action_performed to False
     """
     # SET VARIABLES
     unit = 100
-    overall_ignorance = 1
-    ignorance_bias = 0.
+    overall_improvement = 0
+    selection_bias = 0.001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
     number_of_steps = 3000
     leak_rate = 0.2  # LEAKY INTEGRATOR
-    affordance_learning_rate = 0.025
-    improvement_learning_rate = 0.01
+    affordance_learning_rate = 0.0001
+    improvement_learning_rate = 0.0001
     effect_learning_rate = 0.01
 
     # FLAGS
@@ -385,15 +411,19 @@ def main():
         current_position = np.copy(fovea.center)
         current_object = perception.check_sub_goal(current_position, objects)
 
-        action = np.random.choice(action_list)  # RANDOM FOR NOW
-#        action = action_list[0]
-        action_number = action_list.index(action)
+        [action_number, improvement_prediction] = select_action(
+            action_list,
+            improvement_predictors,
+            fovea_im
+            )
+
+        action = action_list[action_number]
+
         affordance_predictor = affordance_predictors[action_number]
         improvement_predictor = improvement_predictors[action_number]
         effect_predictor = effect_predictors[action_number]
 
         affordance_predictor.set_input(np.array([fovea_im.flatten('F')]).T)
-        improvement_predictor.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = affordance_predictor.get_output()
 
         # SHANNON ENTROPY
@@ -401,7 +431,7 @@ def main():
                              (1-current_knowledge) *
                              np.log2(1-current_knowledge))
 
-        if current_ignorance + ignorance_bias >= overall_ignorance:
+        if improvement_prediction + selection_bias >= overall_improvement:
             action_performed = True
 
             # PERFORM ACTION AND CHECK EFFECT
@@ -475,26 +505,23 @@ def main():
             target = - (post_action_ignorance - pre_action_ignorance)
             improvement_predictor.update_weights(target)
 
-            improvement = improvement_predictor.get_output()
-
         if print_statements_on:
             print('Step ', step)
-            print(('Ignorance  {} vs overall {}').format(
-                  str(current_ignorance), str(overall_ignorance))
+            print(('Object {}').format(str(objects.index(current_object))))
+            print(('Action {}').format(str(action_list.index(action))))
+            print(('1st predictor output: {}').format(str(current_knowledge)))
+            print(('Improvement prediction: {} vs overall: {}').format(
+                  str(improvement_prediction), str(overall_improvement))
                   )
             if action_performed:
-                print('Move attempt on object #{}'.format(
-                      str(objects.index(current_object) + 1))
-                      )
+                print('Action performed')
             else:
-                print('No move attempt on object #{}'.format(
-                      str(objects.index(current_object) + 1))
-                      )
+                print('Action not performed')
 
-        overall_ignorance = update_overall_ignorance(overall_ignorance,
-                                                     current_ignorance,
-                                                     leak_rate
-                                                     )
+        overall_improvement = leaky_average(overall_improvement,
+                                            improvement_prediction,
+                                            leak_rate
+                                            )
 
         action_performed = False
 
