@@ -136,6 +136,34 @@ def get_random_position(limits):
     return np.array([x, y])
 
 
+def get_ignorance(value):
+    """Calculate ignorance
+
+    Keyword arguments:
+    - value -- current knowledge value (float)
+
+    Return ignorance as the distance from the current knowledge to the
+    closest of 0 or 1.
+    """
+    if value >= 0.5:
+        ignorance = 1 - value
+    else:
+        ignorance = value
+
+    return ignorance
+
+
+def get_entropy(value):
+    """Calculate entropy
+
+    Keyword arguments:
+    - value -- current knowledge value (float)
+
+    Return ignorance as Shannon entropy of current knowledge.
+    """
+    return (- value * np.log2(value) - (1 - value) * np.log2(1 - value))
+
+
 def select_action(action_list, improvement_predictors, focus_image):
     """Select action
 
@@ -374,7 +402,7 @@ def main():
                  for j in range(number_of_objects)]
         colors = [[0 for i in range(number_of_actions)]
                   for j in range(number_of_objects)]
-        ignorance = [[1 for i in range(number_of_actions)]
+        ignorance = [[0.5 for i in range(number_of_actions)]
                      for j in range(number_of_objects)]
         p_out = [[0.5 for i in range(number_of_actions)]
                  for j in range(number_of_objects)]
@@ -426,10 +454,7 @@ def main():
         affordance_predictor.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = affordance_predictor.get_output()
 
-        # SHANNON ENTROPY
-        current_ignorance = (- current_knowledge * np.log2(current_knowledge) -
-                             (1-current_knowledge) *
-                             np.log2(1-current_knowledge))
+        current_ignorance = get_ignorance(current_knowledge)
 
         if improvement_prediction + selection_bias >= overall_improvement:
             action_performed = True
@@ -499,8 +524,8 @@ def main():
 
             # UPDATE IMPROVEMENT PREDICTOR
             pre_action_ignorance = current_ignorance
-            p = affordance_predictor.get_output()
-            post_action_ignorance = (- p * np.log2(p) - (1-p) * np.log2(1-p))
+            post_action_prediction = affordance_predictor.get_output()
+            post_action_ignorance = get_ignorance(post_action_prediction)
 
             target = - (post_action_ignorance - pre_action_ignorance)
             improvement_predictor.update_weights(target)
@@ -544,7 +569,7 @@ def main():
                     np.array([image.flatten('F')]).T
                     )
                 out = affordance_predictor.get_output()
-                obj_ign = (- out * np.log2(out) - (1-out) * np.log2(1-out))
+                obj_ign = get_ignorance(out)
                 ignorance[object_number][action_number] = obj_ign
                 p_out[object_number][action_number] = out
 
