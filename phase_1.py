@@ -523,20 +523,18 @@ def main():
                 affordance_predictor.update_weights(target)
 
             # UPDATE IMPROVEMENT PREDICTOR
-            pre_action_ignorance = current_ignorance
             post_action_prediction = affordance_predictor.get_output()
-            post_action_ignorance = get_ignorance(post_action_prediction)
 
-            actual_improvement = - (post_action_ignorance
-                                    - pre_action_ignorance
-                                    )
-            improvement_predictor.update_weights(actual_improvement)
+            affordance_prediction_change = (post_action_prediction
+                                            - current_knowledge)
+            improvement_predictor.update_weights(affordance_prediction_change)
 
             old_overall_improvement = overall_improvement
-            overall_improvement = leaky_average(overall_improvement,
-                                                abs(actual_improvement),
-                                                leak_rate
-                                                )
+            overall_improvement = leaky_average(
+                overall_improvement,
+                abs(affordance_prediction_change),
+                leak_rate
+                )
 
         if print_statements_on:
             print('Step ', step)
