@@ -184,7 +184,7 @@ def select_action(action_list, improvement_predictors, focus_image):
             np.array([focus_image.flatten('F')]).T
             )
         improvement_prediction = improvement_predictor.get_output()
-        improvement_predictions.append(improvement_prediction)
+        improvement_predictions.append(abs(improvement_prediction))
 
     improvement_prediction = max(improvement_predictions)
     action_number = improvement_predictions.index(improvement_prediction)
