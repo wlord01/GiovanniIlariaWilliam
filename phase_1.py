@@ -316,7 +316,7 @@ def main():
     # SET VARIABLES
     unit = 100
     overall_improvement = 0
-    selection_bias = 0.001
+    selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
     number_of_steps = 3000
@@ -527,8 +527,16 @@ def main():
             post_action_prediction = affordance_predictor.get_output()
             post_action_ignorance = get_ignorance(post_action_prediction)
 
-            target = - (post_action_ignorance - pre_action_ignorance)
-            improvement_predictor.update_weights(target)
+            actual_improvement = - (post_action_ignorance
+                                    - pre_action_ignorance
+                                    )
+            improvement_predictor.update_weights(actual_improvement)
+
+            old_overall_improvement = overall_improvement
+            overall_improvement = leaky_average(overall_improvement,
+                                                abs(actual_improvement),
+                                                leak_rate
+                                                )
 
         if print_statements_on:
             print('Step ', step)
@@ -536,17 +544,18 @@ def main():
             print(('Action {}').format(str(action_list.index(action))))
             print(('1st predictor output: {}').format(str(current_knowledge)))
             print(('Improvement prediction: {} vs overall: {}').format(
-                  str(improvement_prediction), str(overall_improvement))
+                  str(improvement_prediction), str(old_overall_improvement))
                   )
             if action_performed:
                 print('Action performed')
             else:
                 print('Action not performed')
 
-        overall_improvement = leaky_average(overall_improvement,
-                                            improvement_prediction,
-                                            leak_rate
-                                            )
+        if not action_performed:
+            overall_improvement = leaky_average(overall_improvement,
+                                                0,
+                                                leak_rate
+                                                )
 
         action_performed = False
 
