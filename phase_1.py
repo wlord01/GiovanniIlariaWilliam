@@ -324,6 +324,7 @@ def main():
     affordance_learning_rate = 0.0001
     improvement_learning_rate = 0.0001
     effect_learning_rate = 0.01
+    improvement_predictor_weights = 0.01
 
     # FLAGS
     action_performed = False
@@ -386,14 +387,20 @@ def main():
             effect_predictor_output_shape,
             effect_learning_rate
             ))
-        improvement_predictors.append(Perceptron(
-            improvement_predictor_input_shape,
-            improvement_predictor_output_shape,
-            improvement_learning_rate,
-            linear=True
-            ))
+        improvement_predictor = Perceptron(improvement_predictor_input_shape,
+                                           improvement_predictor_output_shape,
+                                           improvement_learning_rate,
+                                           linear=True
+                                           )
+#        improvement_predictor.initialize_weights(improvement_predictor_weights)
+#        improvement_predictor.initialize_rand_weights()
+        improvement_predictor.initialize_rand_sign_weights(
+            improvement_predictor_weights
+            )
+        improvement_predictors.append(improvement_predictor)
 
     if save_data:
+#        im_signal = []
         file_name = 'data_array.npy'
         object_images = environment.get_object_images(unit, fovea_size)
         number_of_objects = len(object_images)
@@ -496,7 +503,10 @@ def main():
 
                 action_input = ()
 
-            action(current_object, *action_input)
+            p = np.random.rand()
+            p = 1
+            if p >= 0.3:
+                action(current_object, *action_input)
             effect_predictor.set_input(effect_predictor_input)
             env = environment.redraw(env, unit, objects)
 
@@ -561,6 +571,7 @@ def main():
             graphics(env, fovea, objects, unit)
 
         if save_data:
+#            im_signal.append(improvement_prediction[0])
             for object_number in range(len(object_images)):
                 object_type = int(object_images[object_number][0])
                 object_color = int(object_images[object_number][1])
@@ -590,6 +601,8 @@ def main():
 
     if plot_data:
         phase_1_data.plot(file_name)
+#        plt.figure()
+#        plt.plot(np.arange(len(im_signal)), im_signal)
 
 
 if __name__ == '__main__':

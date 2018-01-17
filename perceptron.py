@@ -69,9 +69,17 @@ class Perceptron(object):
 
         return self.output
 
-    def initialize_weights(self):
-        """Initialize the weights randomly"""
+    def initialize_rand_weights(self):
+        """Initialize the weights to random small numbers"""
         self.weights = np.random.normal(size=self.weights.shape)*0.001
+
+    def initialize_rand_sign_weights(self, value):
+        """Initialize weights to given value with random sign"""
+        self.weights = np.random.choice([-1, 1], size=self.weights.shape)*value
+
+    def initialize_weights(self, value):
+        """Initialize weights to given value"""
+        self.weights += np.ones(self.weights.shape) * value
 
     def update_weights(self, target):
         """Update the weights with delta rule"""
@@ -109,12 +117,24 @@ if __name__ == '__main__':
     # TESTS
     import matplotlib.pyplot as plt
 
-    input_size = [66*66*3, 1]
-    output_size = [66*66*3, 1]
-    learning_rate = 0.025
-    p = Perceptron(input_size, output_size, learning_rate)
-#    p.initialize_weights()
-#    p.get_output()
+    import environment
+
+    unit = 100
+    fovea_size = 0.2
+    object_images = environment.get_object_images(unit, fovea_size)
+
+    input_size = [20*20*3, 1]
+    output_size = [1, 1]
+    learning_rate = 0.0001
+    p = Perceptron(input_size, output_size, learning_rate, linear=True)
+#    p.initialize_weights(0.00001)
+#    p.initialize_rand_weights()
+    p.initialize_rand_sign_weights(0.001)
+    image = object_images[0][2:]
+    image = np.reshape(image, (20, 20, 3), 'F')
+#    plt.imshow(image)
+    p.set_input(np.array([image.flatten('F')]).T)
+    out = p.get_output()
 #    p.update_weights(1)
 
     # GENERATE SAMPLE TRAINING DATA
