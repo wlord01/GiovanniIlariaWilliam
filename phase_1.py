@@ -325,6 +325,7 @@ def main():
     improvement_learning_rate = 0.001
     effect_learning_rate = 0.01
     improvement_predictor_weights = 0.00005
+    rand_weights_init = 0.00075
 
     # FLAGS
     action_performed = False
@@ -396,9 +397,8 @@ def main():
         improvement_predictor.initialize_weights(improvement_predictor_weights)
 #        improvement_predictor.initialize_rand_weights()
         # WEIGHT INITIALISATION FOR AFFORDANCE IM SIGNAL
-#        improvement_predictor.initialize_rand_sign_weights(
-#            improvement_predictor_weights
-#            )
+        improvement_predictor.initialize_rand_sign_weights(rand_weights_init)
+
         improvement_predictors.append(improvement_predictor)
 
     if save_data:
@@ -540,9 +540,9 @@ def main():
             post_action_ignorance = get_ignorance(post_action_prediction)
             prediction_change = (post_action_prediction
                                  - current_knowledge)
-            # COMMENT OUT THIS ROW BELOW FOR USING CHANGE IN 1ST PREDICTOR
-            prediction_change = - (post_action_ignorance
-                                   - current_ignorance)
+            # COMMENT THE ROWs BELOW FOR USING CHANGE IN AFFORDANCE PRED
+#            prediction_change = - (post_action_ignorance
+#                                   - current_ignorance)
 
             improvement_predictor.update_weights(prediction_change)
 
@@ -601,7 +601,7 @@ def main():
                     np.array([image.flatten('F')]).T
                     )
                 im_pred = improvement_predictor.get_output()
-                motivation_signal[object_number][action_number] = im_pred
+                motivation_signal[object_number][action_number] = abs(im_pred)
 
             for i in range(len(features)):
                 data[step, i] = features[i]
@@ -611,8 +611,6 @@ def main():
 
     if plot_data:
         phase_1_data.plot(file_name)
-#        plt.figure()
-#        plt.plot(np.arange(len(im_signal)), im_signal)
 
 
 if __name__ == '__main__':
