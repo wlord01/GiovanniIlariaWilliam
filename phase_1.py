@@ -319,12 +319,12 @@ def main():
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 3000
+    number_of_steps = 10000
     leak_rate = 0.2  # LEAKY INTEGRATOR
-    affordance_learning_rate = 0.0001
-    improvement_learning_rate = 0.0001
+    affordance_learning_rate = 0.001
+    improvement_learning_rate = 0.001
     effect_learning_rate = 0.01
-    improvement_predictor_weights = 0.01
+    improvement_predictor_weights = 0.001
 
     # FLAGS
     action_performed = False
@@ -338,13 +338,13 @@ def main():
     fovea_size = 0.2
 
     s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit)
-    c1 = Circle([0.65, 0.35], 0.14, [0, 1, 0], unit)
-    r1 = Rectangle([0., 0.], 0.14, [1, 0, 0], unit, 0, 0)
+    c1 = Circle([0.65, 0.35], 0.14, [1, 0, 0], unit)
+    r1 = Rectangle([0.35, 0.35], 0.14, [1, 0, 0], unit, 0, 0)
 #    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit, 0)
 #    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
     objects = [s1, c1, r1]  # s2, c2]
 
-    late_objects = np.array([[200, r1]
+    late_objects = np.array([   # [1000, c1]
                              ]
                             )
 
@@ -392,11 +392,13 @@ def main():
                                            improvement_learning_rate,
                                            linear=True
                                            )
-#        improvement_predictor.initialize_weights(improvement_predictor_weights)
+        # WEIGHT INITIALISATION FOR IGNORANCE IM SIGNAL
+        improvement_predictor.initialize_weights(improvement_predictor_weights)
 #        improvement_predictor.initialize_rand_weights()
-        improvement_predictor.initialize_rand_sign_weights(
-            improvement_predictor_weights
-            )
+        # WEIGHT INITIALISATION FOR AFFORDANCE IM SIGNAL
+#        improvement_predictor.initialize_rand_sign_weights(
+#            improvement_predictor_weights
+#            )
         improvement_predictors.append(improvement_predictor)
 
     if save_data:
@@ -534,26 +536,31 @@ def main():
 
             # UPDATE IMPROVEMENT PREDICTOR
             post_action_prediction = affordance_predictor.get_output()
+            post_action_ignorance = get_ignorance(post_action_prediction)
+            prediction_change = (post_action_prediction
+                                 - current_knowledge)
+            # COMMENT OUT THIS ROW BELOW FOR USING CHANGE IN 1ST PREDICTOR
+            prediction_change = - (post_action_ignorance
+                                   - current_ignorance)
 
-            affordance_prediction_change = (post_action_prediction
-                                            - current_knowledge)
-            improvement_predictor.update_weights(affordance_prediction_change)
+            improvement_predictor.update_weights(prediction_change)
 
             old_overall_improvement = overall_improvement
             overall_improvement = leaky_average(
                 overall_improvement,
-                abs(affordance_prediction_change),
+                abs(prediction_change),
                 leak_rate
                 )
 
         if print_statements_on:
             print('Step ', step)
             print(('Object {}').format(str(objects.index(current_object))))
-            print(('Action {}').format(str(action_list.index(action))))
+            print(('Action {}').format(str(action_number)))
             print(('1st predictor output: {}').format(str(current_knowledge)))
             print(('Improvement prediction: {} vs overall: {}').format(
                   str(improvement_prediction), str(old_overall_improvement))
                   )
+            print(('Actual improvement: {}').format(str(prediction_change)))
             if action_performed:
                 print('Action performed')
             else:
