@@ -123,15 +123,17 @@ if __name__ == '__main__':
     fovea_size = 0.2
     object_images = environment.get_object_images(unit, fovea_size)
 
-    input_size = [20*20*3, 1]
+    fovea_pixel_amount = int(fovea_size * unit)
+    input_size = [fovea_pixel_amount**2 * 3, 1]
     output_size = [1, 1]
     learning_rate = 0.0001
     p = Perceptron(input_size, output_size, learning_rate, linear=True)
-#    p.initialize_weights(0.00001)
+#    p.initialize_weights(0.00005)
 #    p.initialize_rand_weights()
-    p.initialize_rand_sign_weights(0.001)
+    p.initialize_rand_sign_weights(0.00075)
     image = object_images[0][2:]
-    image = np.reshape(image, (20, 20, 3), 'F')
+    image = np.reshape(image, (fovea_pixel_amount, fovea_pixel_amount, 3), 'F')
+#    plt.figure()
 #    plt.imshow(image)
     p.set_input(np.array([image.flatten('F')]).T)
     out = p.get_output()
