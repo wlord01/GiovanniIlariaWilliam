@@ -324,7 +324,7 @@ def main():
     affordance_learning_rate = 0.001
     improvement_learning_rate = 0.001
     effect_learning_rate = 0.01
-    improvement_predictor_weights = 0.001
+    improvement_predictor_weights = 0.00005
 
     # FLAGS
     action_performed = False
@@ -338,13 +338,13 @@ def main():
     fovea_size = 0.2
 
     s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit)
-    c1 = Circle([0.65, 0.35], 0.14, [1, 0, 0], unit)
-    r1 = Rectangle([0.35, 0.35], 0.14, [1, 0, 0], unit, 0, 0)
+    c1 = Circle([0.65, 0.35], 0.14, [0, 1, 0], unit)
+    r1 = Rectangle([0., 0.], 0.14, [1, 0, 0], unit, 0, 0)
 #    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit, 0)
 #    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
     objects = [s1, c1, r1]  # s2, c2]
 
-    late_objects = np.array([   # [1000, c1]
+    late_objects = np.array([[200, r1]
                              ]
                             )
 
@@ -402,7 +402,6 @@ def main():
         improvement_predictors.append(improvement_predictor)
 
     if save_data:
-#        im_signal = []
         file_name = 'data_array.npy'
         object_images = environment.get_object_images(unit, fovea_size)
         number_of_objects = len(object_images)
@@ -415,7 +414,9 @@ def main():
                      for j in range(number_of_objects)]
         p_out = [[0.5 for i in range(number_of_actions)]
                  for j in range(number_of_objects)]
-        features = [types, colors, ignorance, p_out]
+        motivation_signal = [[0 for i in range(number_of_actions)]
+                             for j in range(number_of_objects)]
+        features = [types, colors, ignorance, p_out, motivation_signal]
         number_of_features = len(features)
         data = np.zeros((number_of_steps,
                          number_of_features,
@@ -578,7 +579,6 @@ def main():
             graphics(env, fovea, objects, unit)
 
         if save_data:
-#            im_signal.append(improvement_prediction[0])
             for object_number in range(len(object_images)):
                 object_type = int(object_images[object_number][0])
                 object_color = int(object_images[object_number][1])
@@ -597,11 +597,14 @@ def main():
                 obj_ign = get_ignorance(out)
                 ignorance[object_number][action_number] = obj_ign
                 p_out[object_number][action_number] = out
+                improvement_predictor.set_input(
+                    np.array([image.flatten('F')]).T
+                    )
+                im_pred = improvement_predictor.get_output()
+                motivation_signal[object_number][action_number] = im_pred
 
-            data[step, 0] = types
-            data[step, 1] = colors
-            data[step, 2] = ignorance
-            data[step, 3] = p_out
+            for i in range(len(features)):
+                data[step, i] = features[i]
 
     if save_data:
         np.save(file_name, data)

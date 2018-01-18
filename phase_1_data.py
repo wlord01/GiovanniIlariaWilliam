@@ -66,6 +66,7 @@ def plot(file_name):
     for i in range(len(data_array[0, 0, 0, :])):
         # PLOT IGNORANCE FOR ALL OBJECTS
         plt.figure()
+        plt.subplot(311)
         plt.title('Action ' + str(i) + ' ignorance')
         for j in range(len(data_array[0, 0, :])):
             line_color, marker, marker_points, label = get_details(data_array,
@@ -78,10 +79,11 @@ def plot(file_name):
                      marker, label=label
                      )
 
-        plt.legend()
+#        plt.legend()
 
         # PLOT PERCEPTRON OUTPUT FOR ALL OBJECTS
-        plt.figure()
+#        plt.figure()
+        plt.subplot(312)
         plt.title('Action'+str(i)+' perceptron output')
         for j in range(len(data_array[0, 0, :])):
             line_color, marker, marker_points, label = get_details(data_array,
@@ -94,9 +96,24 @@ def plot(file_name):
                      marker, label=label
                      )
 
-        plt.legend()
+#        plt.legend()
+
+        # PLOT MOTIVATION SIGNAL FOR ALL OBJECTS
+        plt.subplot(313)
+        plt.title('Motivation signal')
+        for j in range(len(data_array[0, 0, :])):
+            line_color, marker, marker_points, label = get_details(data_array,
+                                                                   i, j
+                                                                   )
+            plt.plot(np.arange(data_array.shape[0]), data_array[:, 4, j, i],
+                     line_color
+                     )
+            plt.plot(marker_points, data_array[marker_points, 4, j, i],
+                     marker, label=label
+                     )
 
 
 if __name__ == '__main__':
     """Main"""
     # TESTS
+    plot('data_array.npy')
