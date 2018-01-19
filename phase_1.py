@@ -373,7 +373,6 @@ def main():
         current_object = perception.check_sub_goal(current_position, objects)
 
         action = np.random.choice(action_list)  # RANDOM FOR NOW
-#        action = action_list[0]
         affordance_predictor = affordance_predictors[action_list.index(action)]
         effect_predictor = effect_predictors[action_list.index(action)]
 
