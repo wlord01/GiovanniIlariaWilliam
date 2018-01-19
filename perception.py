@@ -8,6 +8,7 @@ Functions:
 - get_intensity_image() -- Translate RGB image into intensity image
 - foveate() -- Foveate fovea
 - hard_foveate() -- Hard foveation of fovea to center of object
+- check_effect() -- Check effect of action
 """
 
 import numpy as np
@@ -118,6 +119,28 @@ def hard_foveate(fovea, image, objects):
     foveate(fovea, image)
     found_object = check_sub_goal(fovea.center, objects)
     fovea.move(found_object.center - fovea.center)
+
+
+def check_effect(before_image, after_image):
+    """Check effect of action
+
+    Keyword arguments:
+    - before_image -- image array of enviroment before action.
+    - after_image -- image array of environment after action.
+
+    Checks the difference image (after - before) for any change. If the change
+    is above a threshold, the system notes an effect. If the system notes an
+    effect if foveates to the positive pixels (things added after action) and
+    returns this state. If change is below threshold False is returned.
+    """
+    difference_image = after_image - before_image
+
+    if check_images(difference_image, np.zeros(difference_image.shape), 1E-5):
+        # IF DIFFERENCE IMAGE IS ALL BLACK THERE WAS NO EFFECT
+        return False
+    else:
+        # THERE WAS AN EFFECT
+        return True
 
 
 if __name__ == '__main__':
