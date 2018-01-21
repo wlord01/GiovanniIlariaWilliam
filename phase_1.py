@@ -320,9 +320,9 @@ def main():
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
     number_of_steps = 10000
-    leak_rate = 0.2  # LEAKY INTEGRATOR
-    affordance_learning_rate = 0.001
-    improvement_learning_rate = 0.001
+    leak_rate = 0.3  # LEAKY INTEGRATOR
+    affordance_learning_rate = 0.01
+    improvement_learning_rate = 0.005
     effect_learning_rate = 0.01
     improvement_predictor_weights = 0.00005
     rand_weights_init = 0.00075
@@ -345,7 +345,7 @@ def main():
 #    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
     objects = [s1, c1, r1]  # s2, c2]
 
-    late_objects = np.array([[200, r1]
+    late_objects = np.array([[6000, r1]
                              ]
                             )
 
@@ -424,6 +424,7 @@ def main():
                          number_of_actions
                          )
                         )
+        overall_improvement_data = []
 
     if graphics_on:
         graphics(env, fovea, objects, unit)
@@ -606,11 +607,15 @@ def main():
             for i in range(len(features)):
                 data[step, i] = features[i]
 
+        overall_improvement_data.append(overall_improvement[0])
+
     if save_data:
         np.save(file_name, data)
 
     if plot_data:
         phase_1_data.plot(file_name)
+        plt.figure()
+        plt.plot(overall_improvement_data)
 
 
 if __name__ == '__main__':
