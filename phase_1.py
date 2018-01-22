@@ -323,7 +323,8 @@ def main():
     leak_rate = 0.3  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.01
     improvement_learning_rate = 0.005
-    effect_learning_rate = 0.1
+    where_effect_learning_rate = 0.1
+    what_effect_learning_rate = 0.1
     improvement_predictor_weights = 0.00005
     rand_weights_init = 0.00075
 
@@ -340,7 +341,7 @@ def main():
 
     s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit)
     c1 = Circle([0.65, 0.35], 0.14, [0, 1, 0], unit)
-    r1 = Rectangle([0., 0.], 0.14, [1, 0, 0], unit, 0, 0)
+    r1 = Rectangle([0., 0.], 0.14, [1, 0, 0], unit, 0)
 #    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit, 0)
 #    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
     objects = [s1, c1, r1]  # s2, c2]
@@ -364,29 +365,38 @@ def main():
 
     # PREDICTORS
     affordance_predictors = []
-    effect_predictors = []
+    where_effect_predictors = []
+    what_effect_predictors = []
     improvement_predictors = []
 
     affordance_predictor_input_shape = fov_img_shape
     affordance_predictor_output_shape = (1, 1)
-    effect_predictor_output_shape = np.array([2, 0]) + fov_img_shape
+    where_effect_predictor_output_shape = (2, 1)
+    what_effect_predictor_input_shape = fov_img_shape
+    what_effect_predictor_output_shape = fov_img_shape
     improvement_predictor_input_shape = fov_img_shape
     improvement_predictor_output_shape = (1, 1)
     for action in action_list:
         if action == actions.parameterised_skill:
-            effect_predictor_input_shape = np.array([4, 0]) + fov_img_shape
+            where_effect_predictor_input_shape = np.array([4, 0])
         else:
-            effect_predictor_input_shape = np.array([2, 0]) + fov_img_shape
+            where_effect_predictor_input_shape = np.array([2, 0])
 
         affordance_predictors.append(Perceptron(
             affordance_predictor_input_shape,
             affordance_predictor_output_shape,
             affordance_learning_rate
             ))
-        effect_predictors.append(Perceptron(
-            effect_predictor_input_shape,
-            effect_predictor_output_shape,
-            effect_learning_rate,
+        where_effect_predictors.append(Perceptron(
+            where_effect_predictor_input_shape,
+            where_effect_predictor_output_shape,
+            where_effect_learning_rate,
+            linear=True
+            ))
+        what_effect_predictors.append(Perceptron(
+            what_effect_predictor_input_shape,
+            what_effect_predictor_output_shape,
+            what_effect_learning_rate,
 #            binary=True
             ))
         improvement_predictor = Perceptron(improvement_predictor_input_shape,
@@ -461,7 +471,8 @@ def main():
 
         affordance_predictor = affordance_predictors[action_number]
         improvement_predictor = improvement_predictors[action_number]
-        effect_predictor = effect_predictors[action_number]
+        where_effect_predictor = where_effect_predictors[action_number]
+        what_effect_predictor = what_effect_predictors[action_number]
 
         affordance_predictor.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = affordance_predictor.get_output()
@@ -490,21 +501,20 @@ def main():
                     if graphics_on:
                         graphics(env, fovea, objects, unit)
 
-                effect_predictor_input = np.concatenate(
+                where_effect_predictor_input = np.concatenate(
                     (np.array([new_position]).T,
-                     np.array([old_position]).T,
-                     np.array([focus_image.flatten('F')]).T
+                     np.array([old_position]).T
                      )
                     )
+                what_effect_predictor_input = np.array(
+                    [focus_image.flatten('F')]).T
 
                 action_input = (new_position, limits)
 
             else:  # OTHER NON-PARAMETERISED ACTION
-                effect_predictor_input = np.concatenate(
-                    (np.array([fovea.center]).T,
-                     np.array([focus_image.flatten('F')]).T
-                     )
-                    )
+                where_effect_predictor_input = np.array([fovea.center]).T
+                what_effect_predictor_input = np.array(
+                    [focus_image.flatten('F')]).T
 
                 action_input = ()
 
@@ -512,7 +522,8 @@ def main():
             p = 1
             if p >= 0.3:
                 action(current_object, *action_input)
-            effect_predictor.set_input(effect_predictor_input)
+            where_effect_predictor.set_input(where_effect_predictor_input)
+            what_effect_predictor.set_input(what_effect_predictor_input)
             env = environment.redraw(env, unit, objects)
 
             effect = perception.check_effect(env_before_action, env)
@@ -526,11 +537,11 @@ def main():
                                         objects
                                         )
                 focus_image = fovea.get_focus_image(env)
-                effect_predictor.update_weights(
-                    np.concatenate((np.array([fovea.center]).T,
-                                    np.array([focus_image.flatten('F')]).T
-                                    )
-                                   )
+                where_effect_predictor.update_weights(np.array(
+                    [fovea.center]).T
+                    )
+                what_effect_predictor.update_weights(np.array(
+                    [focus_image.flatten('F')]).T
                     )
 
             if not effect:
@@ -619,6 +630,10 @@ def main():
         plt.figure()
         plt.plot(overall_improvement_data)
 
+    # CHECK EFFECT PREDICTORS
+    import tests
+    tests.effect_predictors(where_effect_predictors, what_effect_predictors,
+                            unit, fovea_size)
 
 if __name__ == '__main__':
     """Main"""
