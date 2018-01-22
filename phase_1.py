@@ -607,12 +607,13 @@ def main():
             for i in range(len(features)):
                 data[step, i] = features[i]
 
-        overall_improvement_data.append(overall_improvement[0])
+        if save_data:
+            overall_improvement_data.append(overall_improvement[0])
 
     if save_data:
         np.save(file_name, data)
 
-    if plot_data:
+    if save_data and plot_data:
         phase_1_data.plot(file_name)
         plt.figure()
         plt.plot(overall_improvement_data)
