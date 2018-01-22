@@ -323,14 +323,14 @@ def main():
     leak_rate = 0.3  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.01
     improvement_learning_rate = 0.005
-    effect_learning_rate = 0.01
+    effect_learning_rate = 0.1
     improvement_predictor_weights = 0.00005
     rand_weights_init = 0.00075
 
     # FLAGS
     action_performed = False
-    save_data = True
-    plot_data = True
+    save_data = False
+    plot_data = False
     print_statements_on = True
     graphics_on = False
 
@@ -386,7 +386,8 @@ def main():
         effect_predictors.append(Perceptron(
             effect_predictor_input_shape,
             effect_predictor_output_shape,
-            effect_learning_rate
+            effect_learning_rate,
+#            binary=True
             ))
         improvement_predictor = Perceptron(improvement_predictor_input_shape,
                                            improvement_predictor_output_shape,
