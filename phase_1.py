@@ -77,20 +77,15 @@ import environment
 import perception
 
 
-def update_overall_ignorance(overall_ignorance, object_ignorance, rate=0.05):
+def leaky_average(average, current_value, leak_rate=0.05):
     """Update the overall ignorance
 
     Keyword arguments:
-    - overall_ignorance -- float of current overall ignorance
-    - object_ignorance -- float value of ignorance in current position
-    - rate -- the update rate between 0 and 1 (float)
-
-    Update the overall ignorance using the formula:
-    I_ovrl_t = (1 - rate) * I_ovrl_t-1 + rate * I_t,
-    where I_ovrl_t-1 is the overall ignorance before update, rate is the
-    leak rate and I_t is the current ignorance of the object in focus.
+    - average -- float of current average value
+    - current_value -- float of current value
+    - leak_rate -- leak rate of update, between 0 and 1 (float)
     """
-    return (1-rate)*overall_ignorance + rate*object_ignorance
+    return (1-leak_rate) * average + leak_rate * current_value
 
 
 def check_target_position(environment, target_xy, fovea):
@@ -139,6 +134,62 @@ def get_random_position(limits):
     x = (limits[0][1]-limits[0][0])*np.random.random_sample() + limits[0][0]
     y = (limits[1][1]-limits[1][0])*np.random.random_sample() + limits[1][0]
     return np.array([x, y])
+
+
+def get_ignorance(value):
+    """Calculate ignorance
+
+    Keyword arguments:
+    - value -- current knowledge value (float)
+
+    Return ignorance as the distance from the current knowledge to the
+    closest of 0 or 1.
+    """
+    if value >= 0.5:
+        ignorance = 1 - value
+    else:
+        ignorance = value
+
+    return ignorance
+
+
+def get_entropy(value):
+    """Calculate entropy
+
+    Keyword arguments:
+    - value -- current knowledge value (float)
+
+    Return ignorance as Shannon entropy of current knowledge.
+    """
+    return (- value * np.log2(value) - (1 - value) * np.log2(1 - value))
+
+
+def select_action(action_list, improvement_predictors, focus_image):
+    """Select action
+
+    Keyword arguments:
+    - action_list -- list of action functions
+    - improvement_predictors -- list of corresponding improvement
+      predictors
+    - focus image -- the fovea image array
+
+    Find which action has highest improvement prediction for object in
+    focus. Return action number and corresponding improvement
+    prediction.
+    """
+    improvement_predictions = []
+    for action_number in range(len(action_list)):
+        improvement_predictor = improvement_predictors[action_number]
+        improvement_predictor.set_input(
+            np.array([focus_image.flatten('F')]).T
+            )
+        improvement_prediction = improvement_predictor.get_output()
+        improvement_predictions.append(abs(improvement_prediction))
+
+    improvement_prediction = max(improvement_predictions)
+    action_number = improvement_predictions.index(improvement_prediction)
+
+    return action_number, improvement_prediction
 
 
 def graphics(env, fovea, objects, unit):
@@ -220,13 +271,15 @@ def main():
         focus to an object
         OBJECT METHOD get_focus_image(environment) updates the fovea
             image
-        SELECT action (random for now, but by IM later)
-        FUCNTION affordance_predictor.set_input(input) sets affordance
+        FUNCTION select_action(action_list, improvement_predictors,
+            focus_image) finds maximum improvement and returns action
+            number and the corresponding improvement prediction
+        FUNCTION affordance_predictor.set_input(input) sets afforance
             predictor input to the flattened focus image (image vector)
-        FUNCTION affordance_predictor.get_output() checks prediction
-            for focus image
+        FUNCTION affordance_predictor.get_output() gets affordance
+            prediction output for the object in focus
         SET ignorance as Shannon entropy output of knowledge prediction
-        IF ignorance + ignorance_bias > overall_ignorance
+        IF improvement_prediction + selection_bias > overall_improvement
             IF action is move (parameterised_skill)
                 WHILE generated target position is not free
                     FUNCTION get_random_position() generates random xy
@@ -250,22 +303,29 @@ def main():
                     position of fovea center and the flattened focus
                     image (image vector)
             IF not effect
-                FUNCTION affordance_predictor.update_weihgts(0) updates
+                FUNCTION affordance_predictor.update_weights(0) updates
                     affordance predictor weights with target = 0
-        FUNCTION update_overall_ignorance updates the overall ignorance
-            (leaky integrator)
+            FUNCTION improvement_predictor.update_weights(target)
+                updates weights of improvement predictor using target
+                -(H_after_action - H_before_action)
+        FUNCTION leaky_average(overall_improvement,
+            improvement_prediction, leak_rate) updates the overall
+            improvement
         RESET action_performed to False
     """
     # SET VARIABLES
     unit = 100
-    overall_ignorance = 1
-    ignorance_bias = 0.
+    overall_improvement = 0
+    selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 3000
-    leak_rate = 0.2  # LEAKY INTEGRATOR
-    affordance_learning_rate = 0.025
+    number_of_steps = 10000
+    leak_rate = 0.3  # LEAKY INTEGRATOR
+    affordance_learning_rate = 0.01
+    improvement_learning_rate = 0.005
     effect_learning_rate = 0.01
+    improvement_predictor_weights = 0.00005
+    rand_weights_init = 0.00075
 
     # FLAGS
     action_performed = False
@@ -285,7 +345,7 @@ def main():
 #    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
     objects = [s1, c1, r1]  # s2, c2]
 
-    late_objects = np.array([[200, r1]
+    late_objects = np.array([[6000, r1]
                              ]
                             )
 
@@ -305,10 +365,13 @@ def main():
     # PREDICTORS
     affordance_predictors = []
     effect_predictors = []
+    improvement_predictors = []
 
     affordance_predictor_input_shape = fov_img_shape
     affordance_predictor_output_shape = (1, 1)
     effect_predictor_output_shape = np.array([2, 0]) + fov_img_shape
+    improvement_predictor_input_shape = fov_img_shape
+    improvement_predictor_output_shape = (1, 1)
     for action in action_list:
         if action == actions.parameterised_skill:
             effect_predictor_input_shape = np.array([4, 0]) + fov_img_shape
@@ -325,6 +388,18 @@ def main():
             effect_predictor_output_shape,
             effect_learning_rate
             ))
+        improvement_predictor = Perceptron(improvement_predictor_input_shape,
+                                           improvement_predictor_output_shape,
+                                           improvement_learning_rate,
+                                           linear=True
+                                           )
+        # WEIGHT INITIALISATION FOR IGNORANCE IM SIGNAL
+        improvement_predictor.initialize_weights(improvement_predictor_weights)
+#        improvement_predictor.initialize_rand_weights()
+        # WEIGHT INITIALISATION FOR AFFORDANCE IM SIGNAL
+        improvement_predictor.initialize_rand_sign_weights(rand_weights_init)
+
+        improvement_predictors.append(improvement_predictor)
 
     if save_data:
         file_name = 'data_array.npy'
@@ -335,11 +410,13 @@ def main():
                  for j in range(number_of_objects)]
         colors = [[0 for i in range(number_of_actions)]
                   for j in range(number_of_objects)]
-        ignorance = [[1 for i in range(number_of_actions)]
+        ignorance = [[0.5 for i in range(number_of_actions)]
                      for j in range(number_of_objects)]
         p_out = [[0.5 for i in range(number_of_actions)]
                  for j in range(number_of_objects)]
-        features = [types, colors, ignorance, p_out]
+        motivation_signal = [[0 for i in range(number_of_actions)]
+                             for j in range(number_of_objects)]
+        features = [types, colors, ignorance, p_out, motivation_signal]
         number_of_features = len(features)
         data = np.zeros((number_of_steps,
                          number_of_features,
@@ -347,6 +424,7 @@ def main():
                          number_of_actions
                          )
                         )
+        overall_improvement_data = []
 
     if graphics_on:
         graphics(env, fovea, objects, unit)
@@ -372,19 +450,24 @@ def main():
         current_position = np.copy(fovea.center)
         current_object = perception.check_sub_goal(current_position, objects)
 
-        action = np.random.choice(action_list)  # RANDOM FOR NOW
-        affordance_predictor = affordance_predictors[action_list.index(action)]
-        effect_predictor = effect_predictors[action_list.index(action)]
+        [action_number, improvement_prediction] = select_action(
+            action_list,
+            improvement_predictors,
+            fovea_im
+            )
+
+        action = action_list[action_number]
+
+        affordance_predictor = affordance_predictors[action_number]
+        improvement_predictor = improvement_predictors[action_number]
+        effect_predictor = effect_predictors[action_number]
 
         affordance_predictor.set_input(np.array([fovea_im.flatten('F')]).T)
         current_knowledge = affordance_predictor.get_output()
 
-        # SHANNON ENTROPY
-        current_ignorance = (- current_knowledge * np.log2(current_knowledge) -
-                             (1-current_knowledge) *
-                             np.log2(1-current_knowledge))
+        current_ignorance = get_ignorance(current_knowledge)
 
-        if current_ignorance + ignorance_bias >= overall_ignorance:
+        if improvement_prediction + selection_bias >= overall_improvement:
             action_performed = True
 
             # PERFORM ACTION AND CHECK EFFECT
@@ -424,7 +507,10 @@ def main():
 
                 action_input = ()
 
-            action(current_object, *action_input)
+            p = np.random.rand()
+            p = 1
+            if p >= 0.3:
+                action(current_object, *action_input)
             effect_predictor.set_input(effect_predictor_input)
             env = environment.redraw(env, unit, objects)
 
@@ -450,24 +536,43 @@ def main():
                 target = 0
                 affordance_predictor.update_weights(target)
 
+            # UPDATE IMPROVEMENT PREDICTOR
+            post_action_prediction = affordance_predictor.get_output()
+            post_action_ignorance = get_ignorance(post_action_prediction)
+            prediction_change = (post_action_prediction
+                                 - current_knowledge)
+            # COMMENT THE ROWs BELOW FOR USING CHANGE IN AFFORDANCE PRED
+#            prediction_change = - (post_action_ignorance
+#                                   - current_ignorance)
+
+            improvement_predictor.update_weights(prediction_change)
+
+            old_overall_improvement = overall_improvement
+            overall_improvement = leaky_average(
+                overall_improvement,
+                abs(prediction_change),
+                leak_rate
+                )
+
         if print_statements_on:
             print('Step ', step)
-            print(('Ignorance  {} vs overall {}').format(
-                  str(current_ignorance), str(overall_ignorance))
+            print(('Object {}').format(str(objects.index(current_object))))
+            print(('Action {}').format(str(action_number)))
+            print(('1st predictor output: {}').format(str(current_knowledge)))
+            print(('Improvement prediction: {} vs overall: {}').format(
+                  str(improvement_prediction), str(old_overall_improvement))
                   )
+            print(('Actual improvement: {}').format(str(prediction_change)))
             if action_performed:
-                print('Move attempt on object #{}'.format(
-                      str(objects.index(current_object) + 1))
-                      )
+                print('Action performed')
             else:
-                print('No move attempt on object #{}'.format(
-                      str(objects.index(current_object) + 1))
-                      )
+                print('Action not performed')
 
-        overall_ignorance = update_overall_ignorance(overall_ignorance,
-                                                     current_ignorance,
-                                                     leak_rate
-                                                     )
+        if not action_performed:
+            overall_improvement = leaky_average(overall_improvement,
+                                                0,
+                                                leak_rate
+                                                )
 
         action_performed = False
 
@@ -475,7 +580,6 @@ def main():
             graphics(env, fovea, objects, unit)
 
         if save_data:
-            action_number = action_list.index(action)
             for object_number in range(len(object_images)):
                 object_type = int(object_images[object_number][0])
                 object_color = int(object_images[object_number][1])
@@ -491,20 +595,27 @@ def main():
                     np.array([image.flatten('F')]).T
                     )
                 out = affordance_predictor.get_output()
-                obj_ign = (- out * np.log2(out) - (1-out) * np.log2(1-out))
+                obj_ign = get_ignorance(out)
                 ignorance[object_number][action_number] = obj_ign
                 p_out[object_number][action_number] = out
+                improvement_predictor.set_input(
+                    np.array([image.flatten('F')]).T
+                    )
+                im_pred = improvement_predictor.get_output()
+                motivation_signal[object_number][action_number] = abs(im_pred)
 
-            data[step, 0] = types
-            data[step, 1] = colors
-            data[step, 2] = ignorance
-            data[step, 3] = p_out
+            for i in range(len(features)):
+                data[step, i] = features[i]
+
+        overall_improvement_data.append(overall_improvement[0])
 
     if save_data:
         np.save(file_name, data)
 
     if plot_data:
         phase_1_data.plot(file_name)
+        plt.figure()
+        plt.plot(overall_improvement_data)
 
 
 if __name__ == '__main__':
