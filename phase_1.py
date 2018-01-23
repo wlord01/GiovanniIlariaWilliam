@@ -630,10 +630,21 @@ def main():
         plt.figure()
         plt.plot(overall_improvement_data)
 
+    for p in where_effect_predictors:
+        file_name = 'where_{}.npy'.format(
+            str(where_effect_predictors.index(p))
+            )
+        p.write_weights_to_file(file_name)
+    for p in what_effect_predictors:
+        file_name = 'what_{}.npy'.format(
+            str(what_effect_predictors.index(p))
+            )
+        p.write_weights_to_file(file_name)
+
     # CHECK EFFECT PREDICTORS
-    import tests
-    tests.effect_predictors(where_effect_predictors, what_effect_predictors,
-                            unit, fovea_size)
+#    import tests
+#    tests.effect_predictors(where_effect_predictors, what_effect_predictors,
+#                            unit, fovea_size)
 
 if __name__ == '__main__':
     """Main"""

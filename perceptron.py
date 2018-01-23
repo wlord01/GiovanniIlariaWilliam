@@ -99,21 +99,21 @@ class Perceptron(object):
 
         self.weights += self.learning_rate * _update
 
-    def write_weights_to_file(self, file):
-        """Write the weight matrix to a text file
+    def write_weights_to_file(self, file_name):
+        """Save the weight matrix in a file
 
         Keyword arguments:
-        - file -- text file to write to
+        - file_name -- npy file to write weights to
         """
-        pass
+        np.save(file_name, self.weights)
 
-    def read_weights_from_file(self, file):
+    def read_weights_from_file(self, file_name):
         """Read weights from file and update weight matrix
 
         Keyword arguments:
-        - file -- text file to read from
+        - file_name -- npy file to read weights from
         """
-        pass
+        self.weights = np.load(file_name)
 
 
 if __name__ == '__main__':
