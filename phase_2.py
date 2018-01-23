@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 """
-Main simulation script.
+Phase 2 script.
 
-Here the main simulation of the system is run. Graphics are plotted for
-the simulation if desired. This should be decided by button-clicks. One
-button for starting/stopping the graphics. One button for showing
-discrete steps in the simulation.
+Here the simulation of phase 2 is run. Graphics are plotted for the simulation
+if desired (graphics_on = True/False). With this script we can run different
+experiments to test the system on what it has learned in phase 1.
 """
 
 import numpy as np
@@ -167,36 +166,59 @@ def main():
     SET sub_goal = None
     SET sub_goal_accomplished = False
     SET sub_goal_achievable = False
+
+    sub_goal <-- check_sub_goal(internal_fovea_center, internal_objects)
+    IF sub_goal
+        sub_goal_accomplished <-- goal_accomplished_classifier(
+            internal_focus_image,
+            external_focus_image,
+            accomplished_threshold
+            )
+
     FOR step = 1 to number_of_steps
         IF search_step >= max_search_steps
-            SET search_step = 0 # Avoid endless search in external environment
-        FUNCTION check_sub_goal() checks if sub_goal is found
-        IF not sub_goal or search_step = 0
+            search_step <-- 0 # Avoid endless search in external environment
+            sub_goal <-- None
+        IF not sub_goal
             FUNCTION foveate(internal_fovea) moves internal fovea
-            FUNCTION check_sub_goal() checks if sub_goal is found
-            # MAYBE THIS BELOW SHOULD BE OUTSIDE ANYWAY? JUST CHECK EXTERNAL
-            # ENVIRONMENT IF A SUB-GOAL IS FOUND IN INTERNAL ENVIRONMENT?
-            SET external_fovea position to match internal_fovea position
+            sub_goal <-- check_sub_goal(internal_fovea_center,
+                                        internal_objects
+                                        )
+            external_fovea.center <-- internal_fovea.center
             IF sub_goal
-                FUNCTION goal_accomplished_classifier() checks if
-                    sub_goal_accomplished
+                sub_goal_accomplished <-- goal_accomplished_classifier(
+                    internal_focus_image,
+                    external_focus_image,
+                    accomplished_threshold
+                    )
         IF sub_goal and not sub_goal_accomplished
             search_step += 1
-            FUNCTION foveate(external_rfovea) updates the position of
+            FUNCTION foveate(external_fovea) updates the position of
                 external_fovea
-            FUNCTION goal_achievable_classifier() checks if sub_goal_achievable
-                from current position
+            sub_goal_achievable <-- goal_achievable_classifier(
+                internal_focus_image,
+                external_focus_image,
+                achievable_threshold
+                )
             IF sub_goal_achievable
-                FUNCTION parameterised_skill(x0, y0, x1, y1) moves polygon
-                    in external environment using hand
-                FUNCTION goal_accomplished_classifier checks if
-                    sub_goal_accomplished
+                FUNCTION parameterised_skill(object, end_position, limits)
+                    moves polygon in external environment
+                sub_goal_accomplished <-- goal_accomplished_classifier(
+                    internal_focus_image,
+                    external_focus_image,
+                    accomplished_threshold
+                    )
         IF sub_goal_accomplished
             SET sub_goal = None
             SET sub_goal_accomplished = False
             SET sub_goal_achievable = False
 
-    # HERE GOES GRAPHICS/OUTPUT!
+        # HERE GOES GRAPHICS/OUTPUT!
+        IF graphics_on
+            FUNCTION graphics(internal_environment, internal_objects,
+                              internal_focus_image, external_environment,
+                              external_objects, external_focus_image, unit
+                              ) plots the graphics of the simulation
     """
     # SET VARIABLES
     number_of_steps = 100
@@ -259,7 +281,7 @@ def main():
     for step in range(1, number_of_steps+1):
         if search_step >= max_search_steps:
             search_step = 0
-            sub_goal = False
+            sub_goal = None
         if not sub_goal:
             perception.foveate(int_fov, int_env)
 #            perception.hard_foveate(int_fov, int_env, int_objects)
