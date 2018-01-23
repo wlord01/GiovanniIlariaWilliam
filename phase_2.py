@@ -151,7 +151,7 @@ def main():
     Main simulation
 
     # FLAGS
-    sub_goal_found = True/False
+    sub_goal = geometricshapes Object/None
     sub_goal_accomplished = True/False
     sub_goal_achievable = True/False
     max_search_steps = integer
@@ -164,23 +164,23 @@ def main():
     search_step
 
     # PSEUDO-CODE OF MAIN FUNCTIONING
-    SET sub_goal_found = False
+    SET sub_goal = None
     SET sub_goal_accomplished = False
     SET sub_goal_achievable = False
     FOR step = 1 to number_of_steps
         IF search_step >= max_search_steps
             SET search_step = 0 # Avoid endless search in external environment
-        FUNCTION check_sub_goal() checks if sub_goal_found  # This messes up!
-        IF not sub_goal_found or search_step = 0
+        FUNCTION check_sub_goal() checks if sub_goal is found
+        IF not sub_goal or search_step = 0
             FUNCTION foveate(internal_fovea) moves internal fovea
-            FUNCTION check_sub_goal() checks if sub_goal_found
+            FUNCTION check_sub_goal() checks if sub_goal is found
             # MAYBE THIS BELOW SHOULD BE OUTSIDE ANYWAY? JUST CHECK EXTERNAL
             # ENVIRONMENT IF A SUB-GOAL IS FOUND IN INTERNAL ENVIRONMENT?
             SET external_fovea position to match internal_fovea position
-            IF sub_goal_found
+            IF sub_goal
                 FUNCTION goal_accomplished_classifier() checks if
                     sub_goal_accomplished
-        IF sub_goal_found and not sub_goal_accomplished
+        IF sub_goal and not sub_goal_accomplished
             search_step += 1
             FUNCTION foveate(external_rfovea) updates the position of
                 external_fovea
@@ -192,7 +192,7 @@ def main():
                 FUNCTION goal_accomplished_classifier checks if
                     sub_goal_accomplished
         IF sub_goal_accomplished
-            SET sub_goal_found = False
+            SET sub_goal = None
             SET sub_goal_accomplished = False
             SET sub_goal_achievable = False
 
@@ -207,7 +207,7 @@ def main():
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
 
     # FLAGS
-    sub_goal_found = False
+    sub_goal = None
     sub_goal_accomplished = False
     sub_goal_achievable = False
     graphics_on = True
@@ -250,8 +250,6 @@ def main():
     # MAIN FUNCTIONING
     sub_goal = perception.check_sub_goal(int_fov.center, int_objects)
     if sub_goal:
-        sub_goal_found = True
-    if sub_goal_found:
         sub_goal_accomplished = goal_accomplished_classifier(
             int_fov.get_focus_image(int_env),
             ext_fov.get_focus_image(ext_env),
@@ -261,21 +259,21 @@ def main():
     for step in range(1, number_of_steps+1):
         if search_step >= max_search_steps:
             search_step = 0
-            sub_goal_found = False
-        if not sub_goal_found:
+            sub_goal = False
+        if not sub_goal:
             perception.foveate(int_fov, int_env)
 #            perception.hard_foveate(int_fov, int_env, int_objects)
             ext_fov.move(int_fov.center - ext_fov.center)
-            sub_goal = True  # perception.check_sub_goal(int_fov.center, int_objects)
+            sub_goal = perception.check_sub_goal(int_fov.center,
+                                                 int_objects
+                                                 )
             if sub_goal:
-                sub_goal_found = True
-            if sub_goal_found:
                 sub_goal_accomplished = goal_accomplished_classifier(
                     int_fov.get_focus_image(int_env),
                     ext_fov.get_focus_image(ext_env),
                     accomplished_threshold
                     )
-        if sub_goal_found and not sub_goal_accomplished:
+        if sub_goal and not sub_goal_accomplished:
             search_step += 1
             perception.foveate(ext_fov, ext_env)
 #            perception.hard_foveate(ext_fov, ext_env, ext_objects)
@@ -295,7 +293,7 @@ def main():
                     accomplished_threshold
                     )
         if sub_goal_accomplished:
-            sub_goal_found = False
+            sub_goal = None
             sub_goal_accomplished = False
             sub_goal_achievable = False
             search_step = 0
