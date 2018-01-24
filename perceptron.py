@@ -29,7 +29,8 @@ class Perceptron(object):
     - read_weights_from_file -- read the weight matrix from a file and
         update the values
     """
-    def __init__(self, input_size, output_size, learning_rate, linear=False):
+    def __init__(self, input_size, output_size, learning_rate, linear=False,
+                 binary=False):
         """Allocate arrays for input and weights
 
         Keyword arguments:
@@ -45,6 +46,7 @@ class Perceptron(object):
         self.weights = np.zeros((output_size[0], input_size[0]+1))
         self.learning_rate = learning_rate
         self.linear = linear
+        self.binary = binary
 
     def set_input(self, input_):
         """Add values to input array
@@ -64,6 +66,8 @@ class Perceptron(object):
 
         if self.linear:
             self.output = self.out
+        elif self.binary:
+            self.output = np.heaviside(self.out, 0)
         else:
             self.output = 1 / (1 + np.exp(-self.out))
 
@@ -85,7 +89,7 @@ class Perceptron(object):
         """Update the weights with delta rule"""
         self.get_output()
 
-        if self.linear:
+        if self.linear or self.binary:
             _update = np.matmul((target - self.output), self.input.T)
         else:
             sigmoid_derivative = np.exp(self.out) / (1+np.exp(self.out))**2
@@ -95,21 +99,21 @@ class Perceptron(object):
 
         self.weights += self.learning_rate * _update
 
-    def write_weights_to_file(self, file):
-        """Write the weight matrix to a text file
+    def write_weights_to_file(self, file_name):
+        """Save the weight matrix in a file
 
         Keyword arguments:
-        - file -- text file to write to
+        - file_name -- npy file to write weights to
         """
-        pass
+        np.save(file_name, self.weights)
 
-    def read_weights_from_file(self, file):
+    def read_weights_from_file(self, file_name):
         """Read weights from file and update weight matrix
 
         Keyword arguments:
-        - file -- text file to read from
+        - file_name -- npy file to read weights from
         """
-        pass
+        self.weights = np.load(file_name)
 
 
 if __name__ == '__main__':
