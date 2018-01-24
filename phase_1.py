@@ -330,8 +330,8 @@ def main():
 
     # FLAGS
     action_performed = False
-    save_data = False
-    plot_data = False
+    save_data = True
+    plot_data = True
     print_statements_on = True
     graphics_on = False
 
@@ -339,11 +339,11 @@ def main():
     fovea_center = [0.5, 0.5]
     fovea_size = 0.2
 
-    s1 = Square([0.35, 0.65], 0.14, [1, 0, 0], unit)
-    c1 = Circle([0.65, 0.35], 0.14, [0, 1, 0], unit)
-    r1 = Rectangle([0., 0.], 0.14, [1, 0, 0], unit, 0)
-#    s2 = Square([0.35, 0.35], 0.14, [0, 0, 1], unit, 0)
-#    c2 = Circle([0., 0.], 0.14, [1, 0, 0], unit)
+    s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
+    c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
+    r1 = Rectangle([0., 0.], 0.15, [1, 0, 0], unit, 0)
+#    s2 = Square([0.35, 0.35], 0.15, [0, 0, 1], unit, 0)
+#    c2 = Circle([0., 0.], 0.15, [1, 0, 0], unit)
     objects = [s1, c1, r1]  # s2, c2]
 
     late_objects = np.array([[6000, r1]
