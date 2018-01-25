@@ -407,6 +407,12 @@ def main():
             sub_goal = perception.check_sub_goal(int_fov.center,
                                                  int_objects
                                                  )
+
+            if graphics_on:
+                graphics(int_env, int_objects, int_fov, ext_env, ext_objects,
+                         ext_fov, unit
+                         )
+
             if sub_goal:
                 sub_goal_accomplished = goal_accomplished_classifier(
                     int_fov.get_focus_image(int_env),
@@ -420,6 +426,11 @@ def main():
             ext_object = perception.check_sub_goal(ext_fov.center, ext_objects)
             ext_focus_image = ext_fov.get_focus_image(ext_env)
             int_focus_image = int_fov.get_focus_image(int_env)
+
+            if graphics_on:
+                graphics(int_env, int_objects, int_fov, ext_env, ext_objects,
+                         ext_fov, unit
+                         )
 
             goal_state = np.array([np.concatenate(
                 (int_fov.center, int_focus_image.flatten('F'))
