@@ -640,6 +640,11 @@ def main():
             str(what_effect_predictors.index(p))
             )
         p.write_weights_to_file(file_name)
+    for p in affordance_predictors:
+        file_name = 'affordance_{}.npy'.format(
+            str(affordance_predictors.index(p))
+            )
+        p.write_weights_to_file(file_name)
 
     # CHECK EFFECT PREDICTORS
 #    import tests

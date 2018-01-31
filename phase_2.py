@@ -18,6 +18,17 @@ import environment
 import perception
 
 
+def leaky_average(average, current_value, leak_rate=0.05):
+    """Update the overall ignorance
+
+    Keyword arguments:
+    - average -- float of current average value
+    - current_value -- float of current value
+    - leak_rate -- leak rate of update, between 0 and 1 (float)
+    """
+    return (1-leak_rate) * average + leak_rate * current_value
+
+
 def goal_accomplished_classifier(internal_fovea_image, external_fovea_image,
                                  threshold
                                  ):
@@ -289,21 +300,70 @@ def main():
                               internal_focus_image, external_environment,
                               external_objects, external_focus_image, unit
                               ) plots the graphics of the simulation
+
+    If utility_reasoning_on is set to True the initial part of the
+    simulation will run the following algorithm for the number of steps
+    defined by THINKING_STEPS:
+
+    sub_goal <-- SCAN(goal_image)
+    current_state <-- SCAN(environment)
+    goal_achievable <-- GOAL_ACHIEVABLE_CHECK(current_state)
+    IF goal_achievable
+        current_utility <-- COMPUTE_UTILITY(affordance_prediction,
+                                            goal_utility
+                                            )
+        sub_goal <-- False
+        goal_accomplished <-- False
+        goal_achievable <-- False
+    IF current_utility >= overall_utility
+        overall_utility <-- LEAKY_AVERAGE(overall_utility, current_utility)
+
+    After this thinking phase an acting phase is run for the number of
+    actions defined by ACTION_ATTEMPTS, according to the following
+    algorithm:
+
+    IF not sub_goal
+        sub_goal <-- SCAN(goal_image)
+        goal_accomplished <-- GOAL_ACCOMPLISHED_CHECK(goal_image, environment)
+    IF sub_goal and not goal_accomplished
+        current_state <-- SCAN(environment)
+        goal_achievable <-- GOAL_ACHIEVABLE_CHECK(current_state)
+        IF goal_achievable
+            current_utility <-- COMPUTE_UTILITY(affordance_prediction, goal_)
+            IF current_utility >= overall_utility
+                ACTION(current_state)
+                goal_accomplished <-- GOAL_ACCOMPLISHED_CHECK(goal_image,
+                                                              environment
+                                                              )
+            IF goal_accomplished
+                sub_goal <-- False
+                goal_accopmlished <-- False
+                goal_achievable <-- False
+    overall_utility <-- LEAKY_AVERAGE(overall_utility, 0)
+
     """
-    # SET VARIABLES
+    # SET CONSTANTS
     number_of_steps = 100
     max_search_steps = 10
-    search_step = 0
+    THINKING_STEPS = 10
+    ACTION_ATTEMPTS = 1
     accomplished_threshold = 0.01
     where_success_threshold = 0.01
     what_success_threshold = 0.005
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
+
+    # SET VARIABLES
+    search_step = 0
+    overall_utility = 0
+    actions_made = 0
+    reward = 0
 
     # FLAGS
     sub_goal = None
     sub_goal_accomplished = False
     sub_goal_achievable = False
     graphics_on = True
+    utility_reasoning_on = False
 
     # INITIALIZE ENVIRONMENT
     unit = 100  # SIZE OF SIDES OF ENVIRONMENT
@@ -311,10 +371,10 @@ def main():
     fovea_size = 0.2
 
     # INTERNAL ENVIRONMENT
-    int_s1 = Square([0.3, 0.3], 0.15, [1, 0, 0], unit)
-    int_c1 = Circle([0.7, 0.7], 0.15, [0, 0, 1], unit)
-    int_s2 = Square([0.7, 0.3], 0.15, [0, 1, 0], unit)
-    int_c2 = Circle([0.5, 0.5], 0.15, [1, 0, 0], unit)
+    int_s1 = Square([0.3, 0.3], 0.15, [1, 0, 0], unit, 10)
+    int_c1 = Circle([0.7, 0.7], 0.15, [0, 0, 1], unit, 3)
+    int_s2 = Square([0.7, 0.3], 0.15, [0, 1, 0], unit, 3)
+    int_c2 = Circle([0.5, 0.5], 0.15, [1, 0, 0], unit, 8)
     int_objects = [int_s1, int_c1, int_s2, int_c2]
 
     int_env, int_fov, int_objects = environment.initialize(unit, fovea_center,
@@ -344,6 +404,12 @@ def main():
     # PREDICTORS
     focus_image = int_fov.get_focus_image(int_env)
     focus_image_shape = np.array([focus_image.flatten('F')]).T.shape
+
+    affordance_predictors = []
+
+    affordance_predictor_input_shape = focus_image_shape
+    affordance_predictor_output_shape = (1, 1)
+
     where_effect_predictors = []
     what_effect_predictors = []
     where_effect_predictor_output_shape = (2, 1)
@@ -368,14 +434,26 @@ def main():
 #            binary=True
             )
 
+        affordance_predictor = Perceptron(
+            affordance_predictor_input_shape,
+            affordance_predictor_output_shape,
+            0
+            )
+
         action_number = action_list.index(action)
         where_effect_predictor.read_weights_from_file('where_{}.npy'.format(
-            str(action_number)))
+            str(action_number))
+            )
         what_effect_predictor.read_weights_from_file('what_{}.npy'.format(
-            str(action_number)))
+            str(action_number))
+            )
+        affordance_predictor.read_weights_from_file('affordance_{}.npy'.format(
+            str(action_number))
+            )
 
         where_effect_predictors.append(where_effect_predictor)
         what_effect_predictors.append(what_effect_predictor)
+        affordance_predictors.append(affordance_predictor)
 
     # PROVISORY GRAPHICS
     if graphics_on:
@@ -453,20 +531,57 @@ def main():
             sub_goal_achievable = goal_achievable_classifier(successful_action)
 
             if sub_goal_achievable:
-                action = action_list[successful_action]
-                if action == actions.parameterised_skill:
-                    action_input = (int_fov.center, limits)
-                else:
-                    action_input = ()
+                if utility_reasoning_on:
+                    affordance_predictor = affordance_predictors[
+                        successful_action
+                        ]
+                    affordance_predictor_input = np.array(
+                        [ext_focus_image.flatten('F')]
+                        ).T
+                    affordance_predictor.set_input(affordance_predictor_input)
+                    success_prediction = affordance_predictor.get_output()
+                    current_utility = success_prediction * sub_goal.value
 
-                action(ext_object, *action_input)
-                ext_env = environment.redraw(ext_env, unit, ext_objects)
-                ext_fov.move(int_fov.center - ext_fov.center)
-                sub_goal_accomplished = goal_accomplished_classifier(
-                    int_fov.get_focus_image(int_env),
-                    ext_fov.get_focus_image(ext_env),
-                    accomplished_threshold
-                    )
+                if utility_reasoning_on and step <= THINKING_STEPS:
+                    if current_utility >= overall_utility:
+                        overall_utility = leaky_average(overall_utility,
+                                                        current_utility,
+                                                        leak_rate=0.8
+                                                        )
+                    sub_goal = None
+                    sub_goal_accomplished = False
+                    sub_goal_achievable = False
+                    search_step = 0
+                else:
+                    if (not utility_reasoning_on or
+                            current_utility >= overall_utility):
+                        action = action_list[successful_action]
+                        if action == actions.parameterised_skill:
+                            action_input = (int_fov.center, limits)
+                        else:
+                            action_input = ()
+
+                        action(ext_object, *action_input)
+                        ext_env = environment.redraw(ext_env, unit,
+                                                     ext_objects
+                                                     )
+                        ext_fov.move(int_fov.center - ext_fov.center)
+                        sub_goal_accomplished = goal_accomplished_classifier(
+                            int_fov.get_focus_image(int_env),
+                            ext_fov.get_focus_image(ext_env),
+                            accomplished_threshold
+                            )
+
+                        actions_made += 1
+                        reward += sub_goal.value
+                    else:
+                        sub_goal = None
+                        sub_goal_accomplished = False
+                        sub_goal_achievable = False
+
+                    overall_utility = leaky_average(overall_utility, 0,
+                                                    leak_rate=0.1)
+
         if sub_goal_accomplished:
             sub_goal = None
             sub_goal_accomplished = False
@@ -482,6 +597,9 @@ def main():
         if perception.check_images(int_env, ext_env, 0.0000005):
             print('Goal accomplished at step {}!'.format(str(step)))
             break
+        elif utility_reasoning_on and actions_made >= ACTION_ATTEMPTS:
+            print('Reward: ', reward)
+            break
 
 
 if __name__ == '__main__':
@@ -494,7 +612,6 @@ if __name__ == '__main__':
     graphics!
     """
     main()
-
     # Run tests
 
 #    plt.clf()
