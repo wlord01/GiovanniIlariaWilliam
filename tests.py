@@ -39,3 +39,23 @@ def effect_predictors(where_effect_predictors, what_effect_predictors, unit,
             plt.subplot(122)
             plt.title(str(where_out))
             plt.imshow(np.reshape(what_out, (pixels, pixels, 3), 'F'))
+
+
+# FOR TESTING UTILITY PLANNER IN PHASE 2
+# SET OUTPUT OF MAIN TO reward/utility AND INPUTS TO ACTION_ATTEMPTS
+# AND THINK_TIME
+#    ACTION_ATTEMPTS = 1
+##    THINK_TIME = 5
+#    print('Five objects with rewards 3, 3, 8 and 10')
+#    for THINK_TIME in [0, 5, 10, 20, 30]:
+#        rewards = []
+#        for i in range(100):
+#            reward = main(ACTION_ATTEMPTS, THINK_TIME)
+#            if reward is not None:
+#                rewards.append(reward)
+#        average_reward = sum(rewards) / len(rewards)
+#        s = 'Average reward {} for {} action, given {} steps to think'.format(
+#                average_reward, ACTION_ATTEMPTS, THINK_TIME
+#                )
+#        print(s)
+
