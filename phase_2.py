@@ -479,7 +479,7 @@ def main():
             search_step = 0
             sub_goal = None
         if not sub_goal:
-#            perception.foveate(int_fov, int_env)
+#            perception.foveate(int_fov, int_env, int_objects)
             perception.hard_foveate(int_fov, int_env, int_objects)
             ext_fov.move(int_fov.center - ext_fov.center)
             sub_goal = perception.check_sub_goal(int_fov.center,
@@ -499,7 +499,7 @@ def main():
                     )
         if sub_goal and not sub_goal_accomplished:
             search_step += 1
-#            perception.foveate(ext_fov, ext_env)
+#            perception.foveate(ext_fov, ext_env, ext_objects)
             perception.hard_foveate(ext_fov, ext_env, ext_objects)
             ext_object = perception.check_sub_goal(ext_fov.center, ext_objects)
             ext_focus_image = ext_fov.get_focus_image(ext_env)

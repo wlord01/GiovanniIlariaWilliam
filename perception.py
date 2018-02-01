@@ -82,25 +82,38 @@ def get_intensity_image(image):
     return clipped
 
 
-def foveate(fovea, image):
+def foveate(fovea, image, objects):
     """
     Foveate fovea.
 
     Keyword arguments:
     - fovea -- Fovea object
     - image -- Numpy array of the image the fovea is scanning
+    - objects -- List of objects in the image
 
     Uses bottom-up attention (the {RGB --> Black/White --> Add noise
     --> (smooth) --> foveate} procedure). That is, RGB image is turned
     into an intensity image, then the fovea is moved to the coordinates
     of the most salient pixel in the image.
     """
+    current_object = check_sub_goal(fovea.center, objects)
+
     intensity_image = get_intensity_image(image)
     max_index = np.unravel_index(intensity_image.argmax(),
                                  intensity_image.shape
                                  )
     max_pos = np.flipud(np.array(max_index))/image.shape[0]
     fovea.move(max_pos - fovea.center)
+    new_object = check_sub_goal(fovea.center, objects)
+
+    while new_object == current_object:
+        intensity_image = get_intensity_image(image)
+        max_index = np.unravel_index(intensity_image.argmax(),
+                                     intensity_image.shape
+                                     )
+        max_pos = np.flipud(np.array(max_index))/image.shape[0]
+        fovea.move(max_pos - fovea.center)
+        new_object = check_sub_goal(fovea.center, objects)
 
 
 def hard_foveate(fovea, image, objects):
@@ -116,7 +129,7 @@ def hard_foveate(fovea, image, objects):
     is found, gets its center coordinates and foveates the fovea
     to those coordinates.
     """
-    foveate(fovea, image)
+    foveate(fovea, image, objects)
     found_object = check_sub_goal(fovea.center, objects)
     fovea.move(found_object.center - fovea.center)
 
