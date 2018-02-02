@@ -8,7 +8,7 @@ Script for phase I of system.
 
 In phase I the system should be able to form a sort of meta cognition.
 This phase is driven by epistemic (associated to knowledge)/intrinsic
-motivations. The system should log an overall ignorance of the objects
+motivations. The system should log an overall motivation of the objects
 in the environment. When observing an object, if the systems ignorance
 of this object is higher than the average, then the system wants to
 apply action to it to learn about it. If the ignorance is lower than
@@ -30,8 +30,8 @@ VARIABLES
 - environment -- the environment image array
 - fovea -- the fovea image array
 - objects -- list of objects
-- overall_ignorance -- float number between 0 and 1 indicating the
-    overall ignorance of objects in the system
+- overall_motivation -- float number between 0 and 1 indicating the
+  overall motivation of object exploration in the system
 - ignorance -- float number between 0 and 1 indicating the ignorance
     of the object in focus
 - number_of_steps -- int number of how many loops should be run
@@ -47,7 +47,7 @@ FOR step in range number_of_steps
     PERCEPTRON checks the knowledge about the focus image using
         (p.get_output)
     SET ignorance as the absolute distance from the knowledge to 1 or 0
-    IF ignorance + 0.05 > overall_ignorance
+    IF motivation_signal + selection_bias >= overall_motivation
         FUNCTION get_random_position() generates random xy coordinates
            as target position
         FUNCTION check_free_space() checks if the chosen target
@@ -61,7 +61,7 @@ FOR step in range number_of_steps
             PERCEPTRON is updated (p.update_weights) with target = 1
         IF not effect
             PERCEPTRON is updated (p.update_weights) with target = 0
-    FUNCTION update_overall_ignorance updates the overall ignorance
+    FUNCTION update_overall_motivaion updates the overall motivation
         (leaky integrator)
 """
 
@@ -78,7 +78,7 @@ import perception
 
 
 def leaky_average(average, current_value, leak_rate=0.05):
-    """Update the overall ignorance
+    """Update the overall motivation
 
     Keyword arguments:
     - average -- float of current average value
@@ -247,8 +247,8 @@ def main():
     - objects -- list of objects in environment
     - late_objects -- list of late objects and the step number they
       are introduced (geomtericshape, int)
-    - overall_ignorance -- float value of overall ignorance
-    - leak_rate -- leak rate (float) of the overall ignorance
+    - overall_motivation -- float value of overall motivation
+    - leak_rate -- leak rate (float) of the overall motivation
     - ignorance -- float number between 0 and 1 indicating the
       ignorance of the object in focus
     - ignorance_bias -- float value of bias added in ignorance
@@ -284,7 +284,7 @@ def main():
         FUNCTION affordance_predictor.get_output() gets affordance
             prediction output for the object in focus
         SET ignorance as Shannon entropy output of knowledge prediction
-        IF improvement_prediction + selection_bias > overall_improvement
+        IF motivation_signal + selection_bias >= overall_motivation
             IF action is move (parameterised_skill)
                 WHILE generated target position is not free
                     FUNCTION get_random_position() generates random xy
@@ -313,14 +313,13 @@ def main():
             FUNCTION improvement_predictor.update_weights(target)
                 updates weights of improvement predictor using target
                 -(H_after_action - H_before_action)
-        FUNCTION leaky_average(overall_improvement,
-            improvement_prediction, leak_rate) updates the overall
-            improvement
+        FUNCTION leaky_average(overall_motivation, motivation_signal,
+            leak_rate) updates the overall motivation
         RESET action_performed to False
     """
     # SET VARIABLES
     unit = 100
-    overall_improvement = 0
+    overall_motivation = 0
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
@@ -431,9 +430,9 @@ def main():
                      for j in range(number_of_objects)]
         p_out = [[0.5 for i in range(number_of_actions)]
                  for j in range(number_of_objects)]
-        motivation_signal = [[0 for i in range(number_of_actions)]
-                             for j in range(number_of_objects)]
-        features = [types, colors, ignorance, p_out, motivation_signal]
+        predicted_improvement = [[0 for i in range(number_of_actions)]
+                                 for j in range(number_of_objects)]
+        features = [types, colors, ignorance, p_out, predicted_improvement]
         number_of_features = len(features)
         data = np.zeros((number_of_steps,
                          number_of_features,
@@ -441,7 +440,7 @@ def main():
                          number_of_actions
                          )
                         )
-        overall_improvement_data = []
+        overall_motivation_data = []
 
     if graphics_on:
         graphics(env, fovea, objects, unit)
@@ -472,7 +471,7 @@ def main():
         else:
             predictors = improvement_predictors
 
-        [action_number, improvement_prediction] = select_action(
+        [action_number, motivation_signal] = select_action(
             action_list,
             predictors,
             fovea_im,
@@ -491,7 +490,7 @@ def main():
 
         current_ignorance = get_ignorance(current_knowledge)
 
-        if improvement_prediction + selection_bias >= overall_improvement:
+        if motivation_signal + selection_bias >= overall_motivation:
             action_performed = True
 
             # PERFORM ACTION AND CHECK EFFECT
@@ -571,9 +570,9 @@ def main():
 
             improvement_predictor.update_weights(prediction_change)
 
-            old_overall_improvement = overall_improvement
-            overall_improvement = leaky_average(
-                overall_improvement,
+            old_overall_motivation = overall_motivation
+            overall_motivation = leaky_average(
+                overall_motivation,
                 abs(prediction_change),
                 leak_rate
                 )
@@ -583,8 +582,8 @@ def main():
             print(('Object {}').format(str(objects.index(current_object))))
             print(('Action {}').format(str(action_number)))
             print(('1st predictor output: {}').format(str(current_knowledge)))
-            print(('Improvement prediction: {} vs overall: {}').format(
-                  str(improvement_prediction), str(old_overall_improvement))
+            print(('Motivation signal: {} vs overall: {}').format(
+                  str(motivation_signal), str(old_overall_motivation))
                   )
             print(('Actual improvement: {}').format(str(prediction_change)))
             if action_performed:
@@ -593,7 +592,7 @@ def main():
                 print('Action not performed')
 
         if not action_performed:
-            overall_improvement = leaky_average(overall_improvement,
+            overall_motivation = leaky_average(overall_motivation,
                                                 0,
                                                 leak_rate
                                                 )
@@ -626,13 +625,15 @@ def main():
                     np.array([image.flatten('F')]).T
                     )
                 im_pred = improvement_predictor.get_output()
-                motivation_signal[object_number][action_number] = abs(im_pred)
+                predicted_improvement[object_number][action_number] = abs(
+                    im_pred
+                    )
 
             for i in range(len(features)):
                 data[step, i] = features[i]
 
         if save_data:
-            overall_improvement_data.append(overall_improvement[0])
+            overall_motivation_data.append(overall_motivation[0])
 
     if save_data:
         np.save(file_name, data)
@@ -640,7 +641,7 @@ def main():
     if save_data and plot_data:
         phase_1_data.plot(file_name)
         plt.figure()
-        plt.plot(overall_improvement_data)
+        plt.plot(overall_motivation_data)
 
     for p in where_effect_predictors:
         file_name = 'where_{}.npy'.format(
