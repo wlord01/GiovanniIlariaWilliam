@@ -164,32 +164,33 @@ def get_entropy(value):
     return (- value * np.log2(value) - (1 - value) * np.log2(1 - value))
 
 
-def select_action(action_list, improvement_predictors, focus_image):
+def select_action(action_list, predictors, focus_image, ignorance_signal):
     """Select action
 
     Keyword arguments:
     - action_list -- list of action functions
-    - improvement_predictors -- list of corresponding improvement
-      predictors
+    - predictors -- list of corresponding predictors
     - focus image -- the fovea image array
 
-    Find which action has highest improvement prediction for object in
-    focus. Return action number and corresponding improvement
-    prediction.
+    Find which action has highest motivation signal (prediction) for
+    object in focus. Return action number and corresponding motivation
+    signal.
     """
-    improvement_predictions = []
+    motivation_signals = []
     for action_number in range(len(action_list)):
-        improvement_predictor = improvement_predictors[action_number]
-        improvement_predictor.set_input(
-            np.array([focus_image.flatten('F')]).T
-            )
-        improvement_prediction = improvement_predictor.get_output()
-        improvement_predictions.append(abs(improvement_prediction))
+        predictor = predictors[action_number]
+        predictor.set_input(np.array([focus_image.flatten('F')]).T)
+        prediction = predictor.get_output()
+        if ignorance_signal:
+            motivation_signal = get_entropy(prediction)
+        else:
+            motivation_signal = prediction
+        motivation_signals.append(abs(motivation_signal))
 
-    improvement_prediction = max(improvement_predictions)
-    action_number = improvement_predictions.index(improvement_prediction)
+    motivation_signal = max(motivation_signals)
+    action_number = motivation_signals.index(motivation_signal)
 
-    return action_number, improvement_prediction
+    return action_number, motivation_signal
 
 
 def graphics(env, fovea, objects, unit):
@@ -265,6 +266,10 @@ def main():
     - plot_data -- Plot saved data or not
     - print_statements_on -- Print statements on or off at each step
     - graphics_on -- Simulation graphics or not
+    - ignorance_signal -- True/False for use of ignorance as motivation
+      signal. This is the first type. If set to False, improvement
+      prediction is used instead, which is needed in a stochastic
+      environment.
 
     FOR step in range number_of_steps
         FUNCTION hard_foveate(fovea, environment, objects) moves
@@ -334,6 +339,7 @@ def main():
     plot_data = True
     print_statements_on = True
     graphics_on = False
+    ignorance_signal = False
 
     # INITIALIZE ENVIRONMENT
     fovea_center = [0.5, 0.5]
@@ -461,10 +467,16 @@ def main():
         current_position = np.copy(fovea.center)
         current_object = perception.check_sub_goal(current_position, objects)
 
+        if ignorance_signal:
+            predictors = affordance_predictors
+        else:
+            predictors = improvement_predictors
+
         [action_number, improvement_prediction] = select_action(
             action_list,
-            improvement_predictors,
-            fovea_im
+            predictors,
+            fovea_im,
+            ignorance_signal
             )
 
         action = action_list[action_number]
