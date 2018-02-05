@@ -576,9 +576,14 @@ def main():
             improvement_predictor.update_weights(prediction_change)
 
             old_overall_motivation = overall_motivation
+            if ignorance_signal:
+                motivation_leaky_input = motivation_signal
+            else:
+                motivation_leaky_input = abs(prediction_change)
+
             overall_motivation = leaky_average(
                 overall_motivation,
-                abs(prediction_change),
+                motivation_leaky_input,
                 leak_rate
                 )
 
@@ -598,9 +603,9 @@ def main():
 
         if not action_performed:
             overall_motivation = leaky_average(overall_motivation,
-                                                0,
-                                                leak_rate
-                                                )
+                                               0,
+                                               leak_rate
+                                               )
 
         action_performed = False
 
@@ -637,7 +642,6 @@ def main():
             for i in range(len(features)):
                 data[step, i] = features[i]
 
-        if save_data:
             overall_motivation_data.append(overall_motivation[0])
 
     if save_data:
