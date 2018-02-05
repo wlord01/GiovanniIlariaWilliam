@@ -317,9 +317,16 @@ def main():
             leak_rate) updates the overall motivation
         RESET action_performed to False
     """
-    # SET VARIABLES
+    # FLAGS
+    action_performed = False
+    save_data = True
+    plot_data = True
+    print_statements_on = True
+    graphics_on = False
+    ignorance_signal = False
+
+    # SET CONSTANTS
     unit = 100
-    overall_motivation = 0
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
@@ -332,13 +339,11 @@ def main():
     improvement_predictor_weights = 0.00005
     rand_weights_init = 0.00075
 
-    # FLAGS
-    action_performed = False
-    save_data = True
-    plot_data = True
-    print_statements_on = True
-    graphics_on = False
-    ignorance_signal = False
+    # SET VARIABLES
+    if ignorance_signal:
+        overall_motivation = 1
+    else:
+        overall_motivation = 0
 
     # INITIALIZE ENVIRONMENT
     fovea_center = [0.5, 0.5]
