@@ -180,7 +180,7 @@ def select_action(action_list, predictors, focus_image, ignorance_signal):
     for action_number in range(len(action_list)):
         predictor = predictors[action_number]
         predictor.set_input(np.array([focus_image.flatten('F')]).T)
-        prediction = predictor.get_output()
+        prediction = predictor.get_output()[0]
         if ignorance_signal:
             motivation_signal = get_entropy(prediction)
         else:
@@ -237,29 +237,6 @@ def graphics(env, fovea, objects, unit):
 def main():
     """Main simulation
 
-    VARIABLES:
-    - number_of_steps -- int number of how many loops should be run
-    - unit -- Side size (int) of the square environment array
-    - environment -- image array of environment
-    - fovea -- fovea object
-    - fovea_center -- position of fovea center (float)
-    - fovea_size -- size of fovea (float)
-    - objects -- list of objects in environment
-    - late_objects -- list of late objects and the step number they
-      are introduced (geomtericshape, int)
-    - overall_motivation -- float value of overall motivation
-    - leak_rate -- leak rate (float) of the overall motivation
-    - ignorance -- float number between 0 and 1 indicating the
-      ignorance of the object in focus
-    - ignorance_bias -- float value of bias added in ignorance
-      comparison
-    - limits -- array of coordinate limits [[x_min, x_max],
-      [y_min, y_max]]
-    - affordance_leak_rate -- learning rate (float) of affordance
-      predictors
-    - effect_learning_rate -- learning rate (float) of effect
-      predictors
-
     FLAGS
     - action_performed -- True/False if action is performed
     - save_data -- Save data of simulation or not
@@ -270,6 +247,33 @@ def main():
       signal. This is the first type. If set to False, improvement
       prediction is used instead, which is needed in a stochastic
       environment.
+    - fix_threshold_on -- True/False. If this and ignorance_signal are
+      True, the action selection threshold is fix with value
+      fix_threshold.
+
+    CONSTANTS:
+    - number_of_steps -- int number of how many loops should be run
+    - unit -- Side size (int) of the square environment array
+    - environment -- image array of environment
+    - fovea -- fovea object
+    - fovea_center -- position of fovea center (float)
+    - fovea_size -- size of fovea (float)
+    - objects -- list of objects in environment
+    - late_objects -- list of late objects and the step number they
+      are introduced (geomtericshape, int)
+    - leak_rate -- leak rate (float) of the overall motivation
+    - ignorance_bias -- float value of bias added in ignorance
+      comparison
+    - limits -- array of coordinate limits [[x_min, x_max],
+      [y_min, y_max]]
+    - affordance_leak_rate -- learning rate (float) of affordance
+      predictors
+    - effect_learning_rate -- learning rate (float) of effect
+      predictors
+    - fix_threshold -- float value of fix ation selection threshold
+
+    VARIABLES:
+    - overall_motivation -- float value of overall motivation
 
     FOR step in range number_of_steps
         FUNCTION hard_foveate(fovea, environment, objects) moves
@@ -277,8 +281,8 @@ def main():
         OBJECT METHOD get_focus_image(environment) updates the fovea
             image
         FUNCTION select_action(action_list, improvement_predictors,
-            focus_image) finds maximum improvement and returns action
-            number and the corresponding improvement prediction
+            focus_image) finds action with max motivation signal and
+            returns action number and the corresponding motivation
         FUNCTION affordance_predictor.set_input(input) sets afforance
             predictor input to the flattened focus image (image vector)
         FUNCTION affordance_predictor.get_output() gets affordance
@@ -314,7 +318,9 @@ def main():
                 updates weights of improvement predictor using target
                 -(H_after_action - H_before_action)
         FUNCTION leaky_average(overall_motivation, motivation_signal,
-            leak_rate) updates the overall motivation
+            leak_rate) updates the overall motivation with current
+            motivation signal if action is performed and with 0 if
+            no action is performed
         RESET action_performed to False
     """
     # FLAGS
@@ -324,7 +330,7 @@ def main():
     print_statements_on = True
     graphics_on = False
     ignorance_signal = False
-
+    fix_threshold_on = False
     # SET CONSTANTS
     unit = 100
     selection_bias = 0.00001
@@ -338,6 +344,7 @@ def main():
     what_effect_learning_rate = 0.1
     improvement_predictor_weights = 0.00005
     rand_weights_init = 0.00075
+    fix_threshold = 0.2
 
     # SET VARIABLES
     if ignorance_signal:
@@ -495,6 +502,9 @@ def main():
 
         current_ignorance = get_ignorance(current_knowledge)
 
+        if ignorance_signal and fix_threshold_on:
+            overall_motivation = fix_threshold
+
         if motivation_signal + selection_bias >= overall_motivation:
             action_performed = True
 
@@ -579,7 +589,7 @@ def main():
             if ignorance_signal:
                 motivation_leaky_input = motivation_signal
             else:
-                motivation_leaky_input = abs(prediction_change)
+                motivation_leaky_input = abs(prediction_change[0])
 
             overall_motivation = leaky_average(
                 overall_motivation,
@@ -642,7 +652,7 @@ def main():
             for i in range(len(features)):
                 data[step, i] = features[i]
 
-            overall_motivation_data.append(overall_motivation[0])
+            overall_motivation_data.append(overall_motivation)
 
     if save_data:
         np.save(file_name, data)
