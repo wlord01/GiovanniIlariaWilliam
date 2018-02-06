@@ -104,16 +104,18 @@ def foveate(fovea, image, objects):
                                  )
     max_pos = np.flipud(np.array(max_index))/image.shape[0]
     fovea.move(max_pos - fovea.center)
-    new_object = check_sub_goal(fovea.center, objects)
 
-    while new_object == current_object:
-        intensity_image = get_intensity_image(image)
-        max_index = np.unravel_index(intensity_image.argmax(),
-                                     intensity_image.shape
-                                     )
-        max_pos = np.flipud(np.array(max_index))/image.shape[0]
-        fovea.move(max_pos - fovea.center)
+    if len(objects) >> 1:
         new_object = check_sub_goal(fovea.center, objects)
+
+        while new_object == current_object:
+            intensity_image = get_intensity_image(image)
+            max_index = np.unravel_index(intensity_image.argmax(),
+                                         intensity_image.shape
+                                         )
+            max_pos = np.flipud(np.array(max_index))/image.shape[0]
+            fovea.move(max_pos - fovea.center)
+            new_object = check_sub_goal(fovea.center, objects)
 
 
 def hard_foveate(fovea, image, objects):
