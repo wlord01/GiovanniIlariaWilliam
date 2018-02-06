@@ -243,6 +243,8 @@ def main():
     - plot_data -- Plot saved data or not
     - print_statements_on -- Print statements on or off at each step
     - graphics_on -- Simulation graphics or not
+    - save_weights_on -- True/False for saving predictor weights to
+      files.
     - ignorance_signal -- True/False for use of ignorance as motivation
       signal. This is the first type. If set to False, improvement
       prediction is used instead, which is needed in a stochastic
@@ -329,6 +331,7 @@ def main():
     plot_data = True
     print_statements_on = True
     graphics_on = False
+    save_weights_on = False
     ignorance_signal = False
     fix_threshold_on = False
 
@@ -663,21 +666,22 @@ def main():
         plt.figure()
         plt.plot(overall_motivation_data)
 
-    for p in where_effect_predictors:
-        file_name = 'where_{}.npy'.format(
-            str(where_effect_predictors.index(p))
-            )
-        p.write_weights_to_file(file_name)
-    for p in what_effect_predictors:
-        file_name = 'what_{}.npy'.format(
-            str(what_effect_predictors.index(p))
-            )
-        p.write_weights_to_file(file_name)
-    for p in affordance_predictors:
-        file_name = 'affordance_{}.npy'.format(
-            str(affordance_predictors.index(p))
-            )
-        p.write_weights_to_file(file_name)
+    if save_weights_on:
+        for p in where_effect_predictors:
+            file_name = 'where_{}.npy'.format(
+                str(where_effect_predictors.index(p))
+                )
+            p.write_weights_to_file(file_name)
+        for p in what_effect_predictors:
+            file_name = 'what_{}.npy'.format(
+                str(what_effect_predictors.index(p))
+                )
+            p.write_weights_to_file(file_name)
+        for p in affordance_predictors:
+            file_name = 'affordance_{}.npy'.format(
+                str(affordance_predictors.index(p))
+                )
+            p.write_weights_to_file(file_name)
 
     # CHECK EFFECT PREDICTORS
 #    import tests
