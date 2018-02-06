@@ -642,7 +642,7 @@ def main():
                     np.array([image.flatten('F')]).T
                     )
                 out = affordance_predictor.get_output()
-                obj_ign = get_ignorance(out)
+                obj_ign = get_entropy(out)
                 ignorance[object_number][action_number] = obj_ign
                 p_out[object_number][action_number] = out
                 improvement_predictor.set_input(
