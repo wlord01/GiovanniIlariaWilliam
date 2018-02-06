@@ -559,10 +559,10 @@ def main():
                 target = 1
                 affordance_predictor.update_weights(target)
 
-                perception.hard_foveate(fovea,
-                                        (env - env_before_action).clip(0, 1),
-                                        objects
-                                        )
+                perception.effect_foveate(fovea,
+                                          (env - env_before_action).clip(0, 1),
+                                          objects
+                                          )
                 focus_image = fovea.get_focus_image(env)
                 where_effect_predictor.update_weights(np.array(
                     [fovea.center]).T

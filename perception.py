@@ -95,6 +95,9 @@ def foveate(fovea, image, objects):
     --> (smooth) --> foveate} procedure). That is, RGB image is turned
     into an intensity image, then the fovea is moved to the coordinates
     of the most salient pixel in the image.
+
+    The if- and while-loops make sure the system foveates to a new
+    object if there are more than one object in the environment.
     """
     current_object = check_sub_goal(fovea.center, objects)
 
@@ -133,6 +136,28 @@ def hard_foveate(fovea, image, objects):
     """
     foveate(fovea, image, objects)
     found_object = check_sub_goal(fovea.center, objects)
+    fovea.move(found_object.center - fovea.center)
+
+
+def effect_foveate(fovea, image, objects):
+    """
+    Foveation on effect image
+
+    Keyword arguments:
+    - fovea -- Fovea object
+    - image -- Effect image numpy array
+    - objects -- List of objects in environment
+
+    This works like hard_foveate() but without the requirement of
+    moving to a new object, since the effect is always on one object
+    only.
+    """
+    intensity_image = get_intensity_image(image)
+    max_index = np.unravel_index(intensity_image.argmax(),
+                                 intensity_image.shape
+                                 )
+    max_pos = np.flipud(np.array(max_index))/image.shape[0]
+    found_object = check_sub_goal(max_pos, objects)
     fovea.move(found_object.center - fovea.center)
 
 
