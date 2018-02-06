@@ -84,7 +84,7 @@ def plot(file_name):
         # PLOT PERCEPTRON OUTPUT FOR ALL OBJECTS
 #        plt.figure()
         plt.subplot(312)
-        plt.title('Action'+str(i)+' perceptron output')
+        plt.title('Action'+str(i)+' affordance prediction')
         for j in range(len(data_array[0, 0, :])):
             line_color, marker, marker_points, label = get_details(data_array,
                                                                    i, j
@@ -100,7 +100,7 @@ def plot(file_name):
 
         # PLOT MOTIVATION SIGNAL FOR ALL OBJECTS
         plt.subplot(313)
-        plt.title('Motivation signal')
+        plt.title('Improvement prediction')
         for j in range(len(data_array[0, 0, :])):
             line_color, marker, marker_points, label = get_details(data_array,
                                                                    i, j
