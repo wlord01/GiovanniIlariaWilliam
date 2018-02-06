@@ -331,6 +331,7 @@ def main():
     graphics_on = False
     ignorance_signal = False
     fix_threshold_on = False
+
     # SET CONSTANTS
     unit = 100
     selection_bias = 0.00001
