@@ -51,7 +51,7 @@ def redraw(environment, unit, objects):
     return environment
 
 
-def get_object_images(unit, fovea_size):
+def get_object_images(unit, fovea_size, object_size):
     """Get images of all object shape/color combinations
 
     Keyword arguments:
@@ -64,15 +64,15 @@ def get_object_images(unit, fovea_size):
     env = np.zeros([unit, unit, 3])
     fov = Fovea([0.35, 0.65], fovea_size, [1, 1, 1], unit)
 
-    s1 = Square([0.2, 0.2], 0.14, [1, 0, 0], unit)
-    s2 = Square([0.2, 0.5], 0.14, [0, 1, 0], unit)
-    s3 = Square([0.2, 0.8], 0.14, [0, 0, 1], unit)
-    c1 = Circle([0.5, 0.2], 0.14, [1, 0, 0], unit)
-    c2 = Circle([0.5, 0.5], 0.14, [0, 1, 0], unit)
-    c3 = Circle([0.5, 0.8], 0.14, [0, 0, 1], unit)
-    b1 = Rectangle([0.8, 0.2], 0.14, [1, 0, 0], unit, 0)
-    b2 = Rectangle([0.8, 0.5], 0.14, [0, 1, 0], unit, 0)
-    b3 = Rectangle([0.8, 0.8], 0.14, [0, 0, 1], unit, 0)
+    s1 = Square([0.2, 0.2], object_size, [1, 0, 0], unit)
+    s2 = Square([0.2, 0.5], object_size, [0, 1, 0], unit)
+    s3 = Square([0.2, 0.8], object_size, [0, 0, 1], unit)
+    c1 = Circle([0.5, 0.2], object_size, [1, 0, 0], unit)
+    c2 = Circle([0.5, 0.5], object_size, [0, 1, 0], unit)
+    c3 = Circle([0.5, 0.8], object_size, [0, 0, 1], unit)
+    b1 = Rectangle([0.8, 0.2], object_size, [1, 0, 0], unit, 0)
+    b2 = Rectangle([0.8, 0.5], object_size, [0, 1, 0], unit, 0)
+    b3 = Rectangle([0.8, 0.8], object_size, [0, 0, 1], unit, 0)
 
     object_images = []
     objects = [s1, s2, s3, c1, c2, c3, b1, b2, b3]
@@ -109,4 +109,4 @@ def get_object_images(unit, fovea_size):
 
 if __name__ == '__main__':
     """Main"""
-    object_images = get_object_images(100, 0.2)
+    object_images = get_object_images(100, 0.2, 0.15)

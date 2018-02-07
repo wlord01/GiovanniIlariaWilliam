@@ -343,6 +343,9 @@ def main():
 
     """
     # SET CONSTANTS
+    unit = 100  # SIZE OF SIDES OF ENVIRONMENT
+    fovea_size = 0.2
+    object_size = 0.15
     number_of_steps = 100
     max_search_steps = 10
     THINKING_STEPS = 10
@@ -353,6 +356,7 @@ def main():
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
 
     # SET VARIABLES
+    fovea_center = [0.54, 0.38]
     search_step = 0
     overall_utility = 0
     actions_made = 0
@@ -365,16 +369,11 @@ def main():
     graphics_on = True
     utility_reasoning_on = False
 
-    # INITIALIZE ENVIRONMENT
-    unit = 100  # SIZE OF SIDES OF ENVIRONMENT
-    fovea_center = [0.54, 0.38]
-    fovea_size = 0.2
-
-    # INTERNAL ENVIRONMENT
-    int_s1 = Square([0.3, 0.3], 0.15, [1, 0, 0], unit, 10)
-    int_c1 = Circle([0.7, 0.7], 0.15, [0, 0, 1], unit, 3)
-    int_s2 = Square([0.7, 0.3], 0.15, [0, 1, 0], unit, 3)
-    int_c2 = Circle([0.5, 0.5], 0.15, [1, 0, 0], unit, 8)
+    # INITIALIZE INTERNAL ENVIRONMENT
+    int_s1 = Square([0.3, 0.3], object_size, [1, 0, 0], unit, 10)
+    int_c1 = Circle([0.7, 0.7], object_size, [0, 0, 1], unit, 3)
+    int_s2 = Square([0.7, 0.3], object_size, [0, 1, 0], unit, 3)
+    int_c2 = Circle([0.5, 0.5], object_size, [1, 0, 0], unit, 8)
     int_objects = [int_s1, int_c1, int_s2, int_c2]
 
     int_env, int_fov, int_objects = environment.initialize(unit, fovea_center,
@@ -382,11 +381,11 @@ def main():
                                                            int_objects
                                                            )
 
-    # EXTERNAL ENVIRONMENT
-    ext_s1 = Square([0.3, 0.7], 0.15, [1, 0, 0], unit)
-    ext_c1 = Circle([0.7, 0.7], 0.15, [0, 1, 0], unit)
-    ext_s2 = Square([0.7, 0.3], 0.15, [0, 0, 1], unit)
-    ext_c2 = Circle([0.4, 0.5], 0.15, [1, 0, 0], unit)
+    # INITIALIZE EXTERNAL ENVIRONMENT
+    ext_s1 = Square([0.3, 0.7], object_size, [1, 0, 0], unit)
+    ext_c1 = Circle([0.7, 0.7], object_size, [0, 1, 0], unit)
+    ext_s2 = Square([0.7, 0.3], object_size, [0, 0, 1], unit)
+    ext_c2 = Circle([0.4, 0.5], object_size, [1, 0, 0], unit)
     ext_objects = [ext_s1, ext_c1, ext_s2, ext_c2]
 
     ext_env, ext_fov, ext_objects = environment.initialize(unit, fovea_center,

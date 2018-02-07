@@ -337,6 +337,8 @@ def main():
 
     # SET CONSTANTS
     unit = 100
+    fovea_size = 0.2
+    object_size = 0.15
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
@@ -351,20 +353,18 @@ def main():
     fix_threshold = 0.2
 
     # SET VARIABLES
+    fovea_center = [0.5, 0.5]
     if ignorance_signal:
         overall_motivation = 1
     else:
         overall_motivation = 0
 
     # INITIALIZE ENVIRONMENT
-    fovea_center = [0.5, 0.5]
-    fovea_size = 0.2
-
-    s1 = Square([0.35, 0.65], 0.15, [1, 0, 0], unit)
-    c1 = Circle([0.65, 0.35], 0.15, [0, 1, 0], unit)
-    r1 = Rectangle([0., 0.], 0.15, [1, 0, 0], unit, 0)
-#    s2 = Square([0.35, 0.35], 0.15, [0, 0, 1], unit, 0)
-#    c2 = Circle([0., 0.], 0.15, [1, 0, 0], unit)
+    s1 = Square([0.35, 0.65], object_size, [1, 0, 0], unit)
+    c1 = Circle([0.65, 0.35], object_size, [0, 1, 0], unit)
+    r1 = Rectangle([0., 0.], object_size, [1, 0, 0], unit, 0)
+#    s2 = Square([0.35, 0.35], object_size, [0, 0, 1], unit, 0)
+#    c2 = Circle([0., 0.], object_size, [1, 0, 0], unit)
     objects = [s1, c1, r1]  # s2, c2]
 
     late_objects = np.array([[6000, r1]
@@ -435,7 +435,9 @@ def main():
 
     if save_data:
         file_name = 'data_array.npy'
-        object_images = environment.get_object_images(unit, fovea_size)
+        object_images = environment.get_object_images(unit, fovea_size,
+                                                      object_size
+                                                      )
         number_of_objects = len(object_images)
         number_of_actions = len(action_list)
         types = [[0 for i in range(number_of_actions)]
