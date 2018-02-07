@@ -442,7 +442,7 @@ def main():
                  for j in range(number_of_objects)]
         colors = [[0 for i in range(number_of_actions)]
                   for j in range(number_of_objects)]
-        ignorance = [[0.5 for i in range(number_of_actions)]
+        ignorance = [[1 for i in range(number_of_actions)]
                      for j in range(number_of_objects)]
         p_out = [[0.5 for i in range(number_of_actions)]
                  for j in range(number_of_objects)]
