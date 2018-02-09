@@ -367,7 +367,7 @@ def main():
 #    c2 = Circle([0., 0.], object_size, [1, 0, 0], unit)
     objects = [s1, c1, r1]  # s2, c2]
 
-    late_objects = np.array([[6000, r1]
+    late_objects = np.array([[6000, r1],
                              ]
                             )
 
@@ -605,7 +605,11 @@ def main():
 
         if print_statements_on:
             print('Step ', step)
-            print(('Object {}').format(str(objects.index(current_object))))
+            print(('Object: {} with color {}').format(
+                   str(current_object.type_),
+                   str(current_object.color)
+                   )
+                  )
             print(('Action {}').format(str(action_number)))
             print(('1st predictor output: {}').format(str(current_knowledge)))
             print(('Motivation signal: {} vs overall: {}').format(
