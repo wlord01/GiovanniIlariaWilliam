@@ -336,9 +336,9 @@ def main():
     fix_threshold_on = False
 
     # SET CONSTANTS
-    unit = 100
-    fovea_size = 0.2
-    object_size = 0.15
+    unit = 150
+    fovea_size = 0.14
+    object_size = 0.10
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
