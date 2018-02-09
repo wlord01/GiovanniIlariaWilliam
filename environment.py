@@ -109,4 +109,12 @@ def get_object_images(unit, fovea_size, object_size):
 
 if __name__ == '__main__':
     """Main"""
-    object_images = get_object_images(100, 0.2, 0.15)
+    import matplotlib.pyplot as plt
+    object_images = get_object_images(150, 0.14, 0.1)
+    focus_image_pixels = int(0.14*150)
+    for image in object_images:
+        plt.figure()
+        image = np.reshape(image[2:], (focus_image_pixels, focus_image_pixels,
+                           3), 'F'
+                           )
+        plt.imshow(image)
