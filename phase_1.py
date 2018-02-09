@@ -354,10 +354,7 @@ def main():
 
     # SET VARIABLES
     fovea_center = [0.5, 0.5]
-    if ignorance_signal:
-        overall_motivation = 1
-    else:
-        overall_motivation = 0
+    overall_motivation = 0
 
     # INITIALIZE ENVIRONMENT
     s1 = Square([0.2, 0.2], object_size, [1, 0, 0], unit)
