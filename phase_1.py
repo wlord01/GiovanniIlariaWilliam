@@ -342,7 +342,7 @@ def main():
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 10000
+    number_of_steps = 1000
     leak_rate = 0.3  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.01
     improvement_learning_rate = 0.005
@@ -360,14 +360,18 @@ def main():
         overall_motivation = 0
 
     # INITIALIZE ENVIRONMENT
-    s1 = Square([0.35, 0.65], object_size, [1, 0, 0], unit)
-    c1 = Circle([0.65, 0.35], object_size, [0, 1, 0], unit)
-    r1 = Rectangle([0., 0.], object_size, [1, 0, 0], unit, 0)
-#    s2 = Square([0.35, 0.35], object_size, [0, 0, 1], unit, 0)
-#    c2 = Circle([0., 0.], object_size, [1, 0, 0], unit)
-    objects = [s1, c1, r1]  # s2, c2]
+    s1 = Square([0.2, 0.2], object_size, [1, 0, 0], unit)
+    s2 = Square([0.2, 0.5], object_size, [0, 1, 0], unit)
+    s3 = Square([0.2, 0.8], object_size, [0, 0, 1], unit)
+    c1 = Circle([0.5, 0.2], object_size, [1, 0, 0], unit)
+    c2 = Circle([0.5, 0.5], object_size, [0, 1, 0], unit)
+    c3 = Circle([0.5, 0.8], object_size, [0, 0, 1], unit)
+    r1 = Rectangle([0.8, 0.2], object_size, [1, 0, 0], unit, 0)
+    r2 = Rectangle([0.8, 0.5], object_size, [0, 1, 0], unit, 0)
+    r3 = Rectangle([0.8, 0.8], object_size, [0, 0, 1], unit, 0)
 
-    late_objects = np.array([[6000, r1],
+    objects = [s1, s2, s3, c1, c2, c3, r1, r2, r3]
+    late_objects = np.array([  # [6000, r1],
                              ]
                             )
 
