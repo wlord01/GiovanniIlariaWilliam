@@ -234,7 +234,7 @@ def graphics(env, fovea, objects, unit):
     plt.pause(0.01)
 
 
-def main():
+def main(simulation_number=0):
     """Main simulation
 
     FLAGS
@@ -435,7 +435,7 @@ def main():
         improvement_predictors.append(improvement_predictor)
 
     if save_data:
-        file_name = 'data_array.npy'
+        file_name = 's{}data_array.npy'.format(str(simulation_number))
         object_images = environment.get_object_images(unit, fovea_size,
                                                       object_size
                                                       )
@@ -675,17 +675,20 @@ def main():
 
     if save_weights_on:
         for p in where_effect_predictors:
-            file_name = 'where_{}.npy'.format(
+            file_name = 's{}where_{}.npy'.format(
+                str(simulation_number),
                 str(where_effect_predictors.index(p))
                 )
             p.write_weights_to_file(file_name)
         for p in what_effect_predictors:
-            file_name = 'what_{}.npy'.format(
+            file_name = 's{}what_{}.npy'.format(
+                str(simulation_number),
                 str(what_effect_predictors.index(p))
                 )
             p.write_weights_to_file(file_name)
         for p in affordance_predictors:
-            file_name = 'affordance_{}.npy'.format(
+            file_name = 's{}affordance_{}.npy'.format(
+                str(simulation_number),
                 str(affordance_predictors.index(p))
                 )
             p.write_weights_to_file(file_name)
@@ -698,4 +701,6 @@ def main():
 if __name__ == '__main__':
     """Main"""
     main()
-    print('END')
+#    for simulation_number in range(10, 11):
+#        main(simulation_number)
+#        print('End of simulation {}'.format(str(simulation_number)))
