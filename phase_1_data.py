@@ -17,29 +17,33 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def get_average_data(number_of_simulations):
+def get_average_data(number_of_simulations, model_type='IMP'):
     """Calculate average data over many simulations
 
     Keyword_arguments:
     - number_of_simulations -- Number of simulations (int) over which
       to calculate average data
+    - model_type -- Model type name/data file suffix (string). This
+      can be 'IGN', 'FIX' or 'IMP' for ignorance motivation signal,
+      fix threshold version or improvement signal version.
 
     Concatenates the data from all the simulations and calculates
     average values for ignorance and predictor outputs at each time
     step over the simulations. A data file is created and saved with
     the average data.
     """
-    all_data = np.load('s1data_array.npy')
+    all_data = np.load('s1data_array_{}.npy'.format(str(model_type)))
 
     for i in range(2, number_of_simulations + 1):
-        file_name = 's{}data_array.npy'.format(str(i))
+        file_name = 's{}data_array_{}.npy'.format(str(i), str(model_type))
         simulation_data = np.load(file_name)
         all_data[:, 2:5] += simulation_data[:, 2:5]
 
     average_data = all_data
     average_data[:, 2:5] = average_data[:, 2:5] / number_of_simulations
-    average_data_file_name = '{}sim_average_data.npy'.format(
-        str(number_of_simulations)
+    average_data_file_name = '{}sim_average_data_{}.npy'.format(
+        str(number_of_simulations),
+        str(model_type)
         )
     np.save(average_data_file_name, average_data)
 
