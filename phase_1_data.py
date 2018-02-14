@@ -5,12 +5,43 @@ Created on Fri Dec  1 16:15:38 2017
 @author: William
 
 Functions:
-- plot - plots the ignorance and perceptron outpot of the objects
+- get_average_data(number_of_simulations) - Averages the data over the
+  number of simulations defined by the function argument
+  number_of_simulations.
+- plot(file_name) - plots the ignorance and predictor outputs for the
+  objects.
 """
 
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+def get_average_data(number_of_simulations):
+    """Calculate average data over many simulations
+
+    Keyword_arguments:
+    - number_of_simulations -- Number of simulations (int) over which
+      to calculate average data
+
+    Concatenates the data from all the simulations and calculates
+    average values for ignorance and predictor outputs at each time
+    step over the simulations. A data file is created and saved with
+    the average data.
+    """
+    all_data = np.load('s1data_array.npy')
+
+    for i in range(2, number_of_simulations + 1):
+        file_name = 's{}data_array.npy'.format(str(i))
+        simulation_data = np.load(file_name)
+        all_data[:, 2:5] += simulation_data[:, 2:5]
+
+    average_data = all_data
+    average_data[:, 2:5] = average_data[:, 2:5] / number_of_simulations
+    average_data_file_name = '{}sim_average_data.npy'.format(
+        str(number_of_simulations)
+        )
+    np.save(average_data_file_name, average_data)
 
 
 def plot(file_name):
@@ -116,4 +147,5 @@ def plot(file_name):
 if __name__ == '__main__':
     """Main"""
     # TESTS
-    plot('data_array.npy')
+#    plot('s1data_array.npy')
+    get_average_data(10)
