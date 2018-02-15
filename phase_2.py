@@ -343,16 +343,16 @@ def main():
 
     """
     # SET CONSTANTS
-    unit = 100  # SIZE OF SIDES OF ENVIRONMENT
-    fovea_size = 0.2
-    object_size = 0.15
+    unit = 150  # SIZE OF SIDES OF ENVIRONMENT
+    fovea_size = 0.14
+    object_size = 0.10
     number_of_steps = 100
     max_search_steps = 10
     THINKING_STEPS = 10
     ACTION_ATTEMPTS = 1
     accomplished_threshold = 0.01
     where_success_threshold = 0.01
-    what_success_threshold = 0.005
+    what_success_threshold = 0.003
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
 
     # SET VARIABLES
@@ -370,9 +370,9 @@ def main():
     utility_reasoning_on = False
 
     # INITIALIZE INTERNAL ENVIRONMENT
-    int_s1 = Square([0.3, 0.3], object_size, [1, 0, 0], unit, 10)
-    int_c1 = Circle([0.7, 0.7], object_size, [0, 0, 1], unit, 3)
-    int_s2 = Square([0.7, 0.3], object_size, [0, 1, 0], unit, 3)
+    int_s1 = Square([0.2, 0.2], object_size, [1, 0, 0], unit, 10)
+    int_c1 = Circle([0.8, 0.8], object_size, [0, 0, 1], unit, 3)
+    int_s2 = Square([0.8, 0.2], object_size, [0, 1, 0], unit, 3)
     int_c2 = Circle([0.5, 0.5], object_size, [1, 0, 0], unit, 8)
     int_objects = [int_s1, int_c1, int_s2, int_c2]
 
@@ -382,9 +382,9 @@ def main():
                                                            )
 
     # INITIALIZE EXTERNAL ENVIRONMENT
-    ext_s1 = Square([0.3, 0.7], object_size, [1, 0, 0], unit)
-    ext_c1 = Circle([0.7, 0.7], object_size, [0, 1, 0], unit)
-    ext_s2 = Square([0.7, 0.3], object_size, [0, 0, 1], unit)
+    ext_s1 = Square([0.2, 0.8], object_size, [1, 0, 0], unit)
+    ext_c1 = Circle([0.8, 0.8], object_size, [0, 1, 0], unit)
+    ext_s2 = Square([0.8, 0.2], object_size, [0, 0, 1], unit)
     ext_c2 = Circle([0.4, 0.5], object_size, [1, 0, 0], unit)
     ext_objects = [ext_s1, ext_c1, ext_s2, ext_c2]
 
@@ -593,7 +593,7 @@ def main():
                      )
 
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
-        if perception.check_images(int_env, ext_env, 0.0000005):
+        if perception.check_images(int_env, ext_env, 1e-4):
             print('Goal accomplished at step {}!'.format(str(step)))
             break
         elif utility_reasoning_on and actions_made >= ACTION_ATTEMPTS:
