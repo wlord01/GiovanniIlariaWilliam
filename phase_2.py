@@ -354,6 +354,12 @@ def main():
     where_success_threshold = 0.01
     what_success_threshold = 0.003
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
+    model_type = 'IMP'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
+    where_weights_file = './Data/s0where_{action_number}_{file_suffix}.npy'
+    what_weights_file = './Data/s0what_{action_number}_{file_suffix}.npy'
+    affordance_weights_file = ('./Data/s0affordance_{action_number}_'
+                               '{file_suffix}.npy'
+                               )
 
     # SET VARIABLES
     fovea_center = [0.54, 0.38]
@@ -440,14 +446,20 @@ def main():
             )
 
         action_number = action_list.index(action)
-        where_effect_predictor.read_weights_from_file('where_{}.npy'.format(
-            str(action_number))
+        where_effect_predictor.read_weights_from_file(where_weights_file
+            .format(action_number=str(action_number),
+                    file_suffix=str(model_type)
+                    )
             )
-        what_effect_predictor.read_weights_from_file('what_{}.npy'.format(
-            str(action_number))
+        what_effect_predictor.read_weights_from_file(what_weights_file\
+            .format(action_number=str(action_number),
+                    file_suffix=str(model_type)
+                    )
             )
-        affordance_predictor.read_weights_from_file('affordance_{}.npy'.format(
-            str(action_number))
+        affordance_predictor.read_weights_from_file(affordance_weights_file\
+            .format(action_number=str(action_number),
+                    file_suffix=str(model_type)
+                    )
             )
 
         where_effect_predictors.append(where_effect_predictor)
