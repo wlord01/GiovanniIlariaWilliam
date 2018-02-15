@@ -7,13 +7,15 @@ Created on Mon Jan 22 19:02:22 2018
 
 
 def effect_predictors(where_effect_predictors, what_effect_predictors, unit,
-                      fovea_size):
+                      fovea_size, object_size):
     # CHECK EFFECT PREDICTORS
     import numpy as np
     import matplotlib.pyplot as plt
     import environment
 
-    object_images = environment.get_object_images(unit, fovea_size)
+    object_images = environment.get_object_images(unit, fovea_size,
+                                                  object_size
+                                                  )
     what_effect_predictor = what_effect_predictors[1]
     where_effect_predictor = where_effect_predictors[1]
     for k in range(len(where_effect_predictors)):

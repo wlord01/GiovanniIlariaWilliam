@@ -691,9 +691,9 @@ def main():
             p.write_weights_to_file(file_name)
 
     # CHECK EFFECT PREDICTORS
-#    import tests
-#    tests.effect_predictors(where_effect_predictors, what_effect_predictors,
-#                            unit, fovea_size)
+    import tests
+    tests.effect_predictors(where_effect_predictors, what_effect_predictors,
+                            unit, fovea_size, object_size)
 
 if __name__ == '__main__':
     """Main"""
