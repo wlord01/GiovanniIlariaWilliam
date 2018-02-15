@@ -234,7 +234,7 @@ def graphics(env, fovea, objects, unit):
     plt.pause(0.01)
 
 
-def main():
+def main(simulation_number=0):
     """Main simulation
 
     FLAGS
@@ -385,6 +385,43 @@ def main():
                    actions.neutralize
                    ]
 
+    if save_data:
+        if ignorance_signal:
+            file_name_suffix = 'IGN'
+            if fix_threshold_on:
+                file_name_suffix = 'FIX'
+        else:
+            file_name_suffix = 'IMP'
+
+        file_name = './Data/s{}data_array_{}.npy'.format(
+            str(simulation_number),
+            str(file_name_suffix)
+            )
+        object_images = environment.get_object_images(unit, fovea_size,
+                                                      object_size
+                                                      )
+        number_of_objects = len(object_images)
+        number_of_actions = len(action_list)
+        types = [[0 for i in range(number_of_actions)]
+                 for j in range(number_of_objects)]
+        colors = [[0 for i in range(number_of_actions)]
+                  for j in range(number_of_objects)]
+        ignorance = [[1 for i in range(number_of_actions)]
+                     for j in range(number_of_objects)]
+        p_out = [[0.5 for i in range(number_of_actions)]
+                 for j in range(number_of_objects)]
+        predicted_improvement = [[0 for i in range(number_of_actions)]
+                                 for j in range(number_of_objects)]
+        features = [types, colors, ignorance, p_out, predicted_improvement]
+        number_of_features = len(features)
+        data = np.zeros((number_of_steps,
+                         number_of_features,
+                         number_of_objects,
+                         number_of_actions
+                         )
+                        )
+        overall_motivation_data = []
+
     # PREDICTORS
     affordance_predictors = []
     where_effect_predictors = []
@@ -433,33 +470,6 @@ def main():
         improvement_predictor.initialize_rand_sign_weights(rand_weights_init)
 
         improvement_predictors.append(improvement_predictor)
-
-    if save_data:
-        file_name = 'data_array.npy'
-        object_images = environment.get_object_images(unit, fovea_size,
-                                                      object_size
-                                                      )
-        number_of_objects = len(object_images)
-        number_of_actions = len(action_list)
-        types = [[0 for i in range(number_of_actions)]
-                 for j in range(number_of_objects)]
-        colors = [[0 for i in range(number_of_actions)]
-                  for j in range(number_of_objects)]
-        ignorance = [[1 for i in range(number_of_actions)]
-                     for j in range(number_of_objects)]
-        p_out = [[0.5 for i in range(number_of_actions)]
-                 for j in range(number_of_objects)]
-        predicted_improvement = [[0 for i in range(number_of_actions)]
-                                 for j in range(number_of_objects)]
-        features = [types, colors, ignorance, p_out, predicted_improvement]
-        number_of_features = len(features)
-        data = np.zeros((number_of_steps,
-                         number_of_features,
-                         number_of_objects,
-                         number_of_actions
-                         )
-                        )
-        overall_motivation_data = []
 
     if graphics_on:
         graphics(env, fovea, objects, unit)
@@ -675,18 +685,24 @@ def main():
 
     if save_weights_on:
         for p in where_effect_predictors:
-            file_name = 'where_{}.npy'.format(
-                str(where_effect_predictors.index(p))
+            file_name = './Data/s{}where_{}_{}.npy'.format(
+                str(simulation_number),
+                str(where_effect_predictors.index(p)),
+                str(file_name_suffix)
                 )
             p.write_weights_to_file(file_name)
         for p in what_effect_predictors:
-            file_name = 'what_{}.npy'.format(
-                str(what_effect_predictors.index(p))
+            file_name = './Data/s{}what_{}_{}.npy'.format(
+                str(simulation_number),
+                str(what_effect_predictors.index(p)),
+                str(file_name_suffix)
                 )
             p.write_weights_to_file(file_name)
         for p in affordance_predictors:
-            file_name = 'affordance_{}.npy'.format(
-                str(affordance_predictors.index(p))
+            file_name = './Data/s{}affordance_{}_{}.npy'.format(
+                str(simulation_number),
+                str(affordance_predictors.index(p)),
+                str(file_name_suffix)
                 )
             p.write_weights_to_file(file_name)
 
@@ -698,4 +714,6 @@ def main():
 if __name__ == '__main__':
     """Main"""
     main()
-    print('END')
+#    for simulation_number in range(1, 11):
+#        main(simulation_number)
+#        print('End of simulation {}'.format(str(simulation_number)))
