@@ -32,16 +32,18 @@ def get_average_data(number_of_simulations, model_type='IMP'):
     step over the simulations. A data file is created and saved with
     the average data.
     """
-    all_data = np.load('s1data_array_{}.npy'.format(str(model_type)))
+    all_data = np.load('./Data/s1data_array_{}.npy'.format(str(model_type)))
 
     for i in range(2, number_of_simulations + 1):
-        file_name = 's{}data_array_{}.npy'.format(str(i), str(model_type))
+        file_name = './Data/s{}data_array_{}.npy'.format(str(i),
+                                                         str(model_type)
+                                                         )
         simulation_data = np.load(file_name)
         all_data[:, 2:5] += simulation_data[:, 2:5]
 
     average_data = all_data
     average_data[:, 2:5] = average_data[:, 2:5] / number_of_simulations
-    average_data_file_name = '{}sim_average_data_{}.npy'.format(
+    average_data_file_name = './Data/{}sim_average_data_{}.npy'.format(
         str(number_of_simulations),
         str(model_type)
         )

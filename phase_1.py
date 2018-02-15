@@ -393,9 +393,10 @@ def main(simulation_number=0):
         else:
             file_name_suffix = 'IMP'
 
-        file_name = 's{}data_array_{}.npy'.format(str(simulation_number),
-                                                  str(file_name_suffix)
-                                                  )
+        file_name = './Data/s{}data_array_{}.npy'.format(
+            str(simulation_number),
+            str(file_name_suffix)
+            )
         object_images = environment.get_object_images(unit, fovea_size,
                                                       object_size
                                                       )
@@ -684,21 +685,21 @@ def main(simulation_number=0):
 
     if save_weights_on:
         for p in where_effect_predictors:
-            file_name = 's{}where_{}_{}.npy'.format(
+            file_name = './Data/s{}where_{}_{}.npy'.format(
                 str(simulation_number),
                 str(where_effect_predictors.index(p)),
                 str(file_name_suffix)
                 )
             p.write_weights_to_file(file_name)
         for p in what_effect_predictors:
-            file_name = 's{}what_{}_{}.npy'.format(
+            file_name = './Data/s{}what_{}_{}.npy'.format(
                 str(simulation_number),
                 str(what_effect_predictors.index(p)),
                 str(file_name_suffix)
                 )
             p.write_weights_to_file(file_name)
         for p in affordance_predictors:
-            file_name = 's{}affordance_{}_{}.npy'.format(
+            file_name = './Data/s{}affordance_{}_{}.npy'.format(
                 str(simulation_number),
                 str(affordance_predictors.index(p)),
                 str(file_name_suffix)
