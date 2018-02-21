@@ -352,7 +352,7 @@ def main():
     ACTION_ATTEMPTS = 1
     accomplished_threshold = 0.01
     where_success_threshold = 0.01
-    what_success_threshold = 0.003
+    what_success_threshold = 0.0035
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
     model_type = 'IMP'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
     where_weights_file = './Data/s0where_{action_number}_{file_suffix}.npy'
