@@ -5,9 +5,16 @@ Created on Fri Dec  1 16:15:38 2017
 @author: William
 
 Functions:
-- get_average_data(number_of_simulations) - Averages the data over the
-  number of simulations defined by the function argument
-  number_of_simulations.
+- get_end_predictions(number_of_simulations, model_type) - Gets the
+  final predicted action success probability from all simulations
+  defined by number_of_simulations and model_type and saves to file.
+- plot_bar_charts(number_of_simulations) - Gets files produced by
+  get_end_predictions, calculates means and standard deviations for
+  each object and plots these in bar charts for each model and each
+  action.
+- get_average_data(number_of_simulations, model_type) - Averages the
+  data over the number of simulations defined by the function argument
+  number_of_simulations. Argument model_type choses which files to use.
 - plot(file_name) - plots the ignorance and predictor outputs for the
   objects.
 """
@@ -15,6 +22,105 @@ Functions:
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+def get_end_predictions(number_of_simulations, model_type):
+    """Get average end affordance prediction
+
+    Keyword arguments:
+    - number_of_simulations -- Number of simulations (int) over which
+      to calculate average data.
+    - model_type -- Model type name/data file suffix (string). This
+      can be 'IGN', 'FIX' or 'IMP' for ignorance motivation signal,
+      fix threshold version or improvement signal version.
+
+    Concatenates the final affordance predictions from all the
+    simulations and saves to files. These can be used for plotting
+    bar charts on mean final predictions.
+    """
+    number_of_objects = 9
+    number_of_actions = 4
+    final_predictions = np.empty((number_of_simulations, number_of_objects,
+                                  number_of_actions
+                                  ), dtype=float
+                                 )
+
+    for i in range(1, number_of_simulations + 1):
+        file_name = './Data/s{}data_array_{}.npy'.format(str(i),
+                                                         str(model_type)
+                                                         )
+        simulation_data = np.load(file_name)
+        final_predictions[i - 1] = simulation_data[-1, 3]
+
+    file_name = './Data/{}sim_average_end_prediction_{}'.format(
+        str(number_of_simulations), str(model_type)
+        )
+
+    np.save(file_name, final_predictions)
+
+
+def plot_bar_charts(number_of_simulations=10):
+    """Plot bar charts for end predictions
+
+    Keyword arguments:
+    - number_of_simulations - number of simulations (int) to average
+      over.
+
+    Calculates the mean final action success predictions and standard
+    deviations for each object, for each model and for each action.
+    Plots bar charts for each action with bars for each model, showing
+    the mean final affordance prediction for each object.
+
+    FOR each action
+      GET final predictions
+      CALC mean and stdev
+      PLOT bars
+    """
+    number_of_objects = 9
+    number_of_actions = 4
+
+    names = ['O{}'.format(i) for i in range(1, number_of_objects + 1)]
+    w = 0.3
+
+    for action in range(number_of_actions):
+        plt.figure()
+
+        model_type = 'IGN'
+        file_name = 'Data/{}sim_average_end_prediction_{}.npy'.format(
+            str(number_of_simulations), str(model_type)
+            )
+        final_predictions = np.load(file_name)
+        mean_predictions = np.mean(final_predictions, 0)
+        stdev = np.std(final_predictions, 0)
+        plt.bar(np.arange(0, number_of_objects) - w,
+                mean_predictions[:, action], width=w, color='r',
+                yerr=stdev[:, action], ecolor='black', capsize=5,
+                align='center', tick_label=names
+                )
+
+        model_type = 'FIX'
+        file_name = 'Data/{}sim_average_end_prediction_{}.npy'.format(
+            str(number_of_simulations), str(model_type)
+            )
+        final_predictions = np.load(file_name)
+        mean_predictions = np.mean(final_predictions, 0)
+        stdev = np.std(final_predictions, 0)
+        plt.bar(np.arange(0, number_of_objects), mean_predictions[:, action],
+                width=w, color='g', yerr=stdev[:, action], ecolor='black',
+                capsize=5, align='center', tick_label=names
+                )
+
+        model_type = 'IMP'
+        file_name = 'Data/{}sim_average_end_prediction_{}.npy'.format(
+            str(number_of_simulations), str(model_type)
+            )
+        final_predictions = np.load(file_name)
+        mean_predictions = np.mean(final_predictions, 0)
+        stdev = np.std(final_predictions, 0)
+        plt.bar(np.arange(0, number_of_objects) + w,
+                mean_predictions[:, action], width=w, yerr=stdev[:, action],
+                ecolor='black', capsize=5, align='center'
+                )
 
 
 def get_average_data(number_of_simulations, model_type='IMP'):
@@ -153,5 +259,9 @@ def plot(file_name):
 if __name__ == '__main__':
     """Main"""
     # TESTS
-#    plot('s1data_array.npy')
-    get_average_data(10)
+#    plot('Data/s0data_array_IGN.npy')
+#    get_average_data(10)
+    get_end_predictions(10, model_type='IGN')
+    get_end_predictions(10, model_type='FIX')
+    get_end_predictions(10, model_type='IMP')
+    plot_bar_charts(10)
