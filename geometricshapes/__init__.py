@@ -173,15 +173,15 @@ class Rectangle(Square):
     def get_corners(self):
         """Return corner coordinates"""
         if self.orientation == 0:
-            _min_1 = (self.center[0] - self.size/3.5)
-            _max_1 = (self.center[0] + self.size/3.5)
-            _min_2 = (self.center[1] - self.size/1.15)
-            _max_2 = (self.center[1] + self.size/1.15)
+            _min_1 = (self.center[0] - self.size/3)
+            _max_1 = (self.center[0] + self.size/3)
+            _min_2 = (self.center[1] - 3*self.size/4)
+            _max_2 = (self.center[1] + 3*self.size/4)
         elif self.orientation == 1:
-            _min_1 = (self.center[0] - self.size/1.15)
-            _max_1 = (self.center[0] + self.size/1.15)
-            _min_2 = (self.center[1] - self.size/3.5)
-            _max_2 = (self.center[1] + self.size/3.5)
+            _min_1 = (self.center[0] - 3*self.size/4)
+            _max_1 = (self.center[0] + 3*self.size/4)
+            _min_2 = (self.center[1] - self.size/3)
+            _max_2 = (self.center[1] + self.size/3)
 
         return np.array([[_min_1, _max_1], [_min_2, _max_2]])
 
@@ -248,7 +248,7 @@ class Circle(Shape):
 
     def __init__(self, center, size, color, unit, value=1):
         super(Circle, self).__init__(center, size, color, unit, value)
-        self.radius = self.size/2
+        self.radius = self.size/np.sqrt(np.pi)
 
     def draw(self, image_array):
         """Draw circle object in image array.
@@ -299,19 +299,19 @@ if __name__ == '__main__':
     """Main"""
     # RUN TESTS
     import matplotlib.pyplot as plt
-    unit = 256
+    unit = 150
     env = np.zeros([unit, unit, 3])
-    fov = Fovea([0.35, 0.65], 0.26, [1, 1, 1], unit)
+    fov = Fovea([0.35, 0.65], 0.14, [1, 1, 1], unit)
 
-    s1 = Square([0.2, 0.2], 0.14, [1, 0, 0], unit)
-    s2 = Square([0.2, 0.5], 0.14, [0, 1, 0], unit)
-    s3 = Square([0.2, 0.8], 0.14, [0, 0, 1], unit)
-    c1 = Circle([0.5, 0.2], 0.14, [1, 0, 0], unit)
-    c2 = Circle([0.5, 0.5], 0.14, [0, 1, 0], unit)
-    c3 = Circle([0.5, 0.8], 0.14, [0, 0, 1], unit)
-    b1 = Rectangle([0.8, 0.2], 0.14, [1, 0, 0], unit, 0)
-    b2 = Rectangle([0.8, 0.5], 0.14, [0, 1, 0], unit, 0)
-    b3 = Rectangle([0.8, 0.8], 0.14, [0, 0, 1], unit, 0)
+    s1 = Square([0.2, 0.2], 0.1, [1, 0, 0], unit)
+    s2 = Square([0.2, 0.5], 0.1, [0, 1, 0], unit)
+    s3 = Square([0.2, 0.8], 0.1, [0, 0, 1], unit)
+    c1 = Circle([0.5, 0.2], 0.1, [1, 0, 0], unit)
+    c2 = Circle([0.5, 0.5], 0.1, [0, 1, 0], unit)
+    c3 = Circle([0.5, 0.8], 0.1, [0, 0, 1], unit)
+    b1 = Rectangle([0.8, 0.2], 0.1, [1, 0, 0], unit, 0)
+    b2 = Rectangle([0.8, 0.5], 0.1, [0, 1, 0], unit, 0)
+    b3 = Rectangle([0.8, 0.8], 0.1, [0, 0, 1], unit, 0)
 
     objects = [s1, s2, s3, c1, c2, c3, b1, b2, b3]
     for obj in objects:

@@ -328,7 +328,7 @@ def main(simulation_number=0):
     # FLAGS
     action_performed = False
     save_data = True
-    plot_data = False
+    plot_data = True
     print_statements_on = False
     graphics_on = False
     save_weights_on = True
@@ -342,12 +342,12 @@ def main(simulation_number=0):
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 6000
+    number_of_steps = 5000
     leak_rate = 0.3  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.01
     improvement_learning_rate = 0.005
-    where_effect_learning_rate = 0.1
-    what_effect_learning_rate = 0.1
+    where_effect_learning_rate = 0.5
+    what_effect_learning_rate = 0.05
     improvement_predictor_weights = 0.00005
     rand_weights_init = 0.00075
     fix_threshold = 0.45
@@ -707,13 +707,13 @@ def main(simulation_number=0):
             p.write_weights_to_file(file_name)
 
     # CHECK EFFECT PREDICTORS
-#    import tests
-#    tests.effect_predictors(where_effect_predictors, what_effect_predictors,
-#                            unit, fovea_size, object_size)
+    import tests
+    tests.effect_predictors(where_effect_predictors, what_effect_predictors,
+                            unit, fovea_size, object_size)
 
 if __name__ == '__main__':
     """Main"""
-#    main()
-    for simulation_number in range(1, 11):
-        main(simulation_number)
-        print('End of simulation {}'.format(str(simulation_number)))
+    main()
+#    for simulation_number in range(1, 11):
+#        main(simulation_number)
+#        print('End of simulation {}'.format(str(simulation_number)))
