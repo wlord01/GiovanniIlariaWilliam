@@ -342,12 +342,12 @@ def main(simulation_number=0):
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 10000
+    number_of_steps = 5000
     leak_rate = 0.3  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.01
     improvement_learning_rate = 0.005
     where_effect_learning_rate = 0.5
-    what_effect_learning_rate = 0.01
+    what_effect_learning_rate = 0.05
     improvement_predictor_weights = 0.00005
     rand_weights_init = 0.00075
     fix_threshold = 0.45
