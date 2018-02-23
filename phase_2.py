@@ -174,7 +174,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.title('Internal image')
     plt.xlim(0, unit)
     plt.ylim(0, unit)
-    plt.imshow(int_env)
+    plt.imshow(int_env, origin='lower')
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
              [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit], 'w-'
@@ -189,7 +189,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
 
     plt.subplot(222)
     plt.title('Internal fovea')
-    plt.imshow(int_fov_im)
+    plt.imshow(int_fov_im, origin='lower')
 
     ext_env = environment.redraw(ext_env, unit, ext_objects)
     ext_fov_im = ext_fov.get_focus_image(ext_env)
@@ -198,7 +198,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.title('External image')
     plt.xlim(0, unit)
     plt.ylim(0, unit)
-    plt.imshow(ext_env)
+    plt.imshow(ext_env, origin='lower')
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
              [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit], 'w-'
@@ -213,7 +213,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
 
     plt.subplot(224)
     plt.title('External fovea')
-    plt.imshow(ext_fov_im)
+    plt.imshow(ext_fov_im, origin='lower')
 
     plt.draw()
     plt.pause(0.2)
@@ -643,11 +643,11 @@ if __name__ == '__main__':
 #                                                         )
 #
 #    plt.figure(1)
-#    plt.imshow(environment)
+#    plt.imshow(environment, origin='lower')
 #
 #    s2.move([0.2, 0.6])
 #    plt.pause(2)
 #
 #    environment = redraw_environment(environment, unit, objects)
 #
-#    plt.imshow(environment)
+#    plt.imshow(environment, origin='lower')
