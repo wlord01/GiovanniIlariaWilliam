@@ -132,6 +132,9 @@ def plot_bar_charts(number_of_simulations=10):
 
     for action in range(number_of_actions):
         plt.figure()
+        plt.title('Action {} average affordance prediction'.format(action + 1))
+        plt.xlabel('Objects')
+        plt.ylabel('Prediction')
 
         model_type = 'IGN'
         file_name = 'Data/{}sim_average_end_prediction_{}.npy'.format(
@@ -312,5 +315,5 @@ if __name__ == '__main__':
 #    get_end_predictions(10, model_type='IGN')
 #    get_end_predictions(10, model_type='FIX')
 #    get_end_predictions(10, model_type='IMP')
-#    plot_bar_charts(10)
-    get_average_weights(10, 'IGN')
+    plot_bar_charts(10)
+#    get_average_weights(10, 'IGN')
