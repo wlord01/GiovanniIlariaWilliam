@@ -174,6 +174,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.title('Internal image')
     plt.xlim(0, unit)
     plt.ylim(0, unit)
+    plt.axis('off')
     plt.imshow(int_env, origin='lower')
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
@@ -189,6 +190,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
 
     plt.subplot(222)
     plt.title('Internal fovea')
+    plt.axis('off')
     plt.imshow(int_fov_im, origin='lower')
 
     ext_env = environment.redraw(ext_env, unit, ext_objects)
@@ -198,6 +200,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.title('External image')
     plt.xlim(0, unit)
     plt.ylim(0, unit)
+    plt.axis('off')
     plt.imshow(ext_env, origin='lower')
     # PLOT DESK EDGES
     plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
@@ -213,6 +216,7 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
 
     plt.subplot(224)
     plt.title('External fovea')
+    plt.axis('off')
     plt.imshow(ext_fov_im, origin='lower')
 
     plt.draw()

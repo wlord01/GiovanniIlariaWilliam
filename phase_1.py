@@ -211,6 +211,7 @@ def graphics(env, fovea, objects, unit):
     plt.title('Training environment')
     plt.xlim(0, unit)
     plt.ylim(0, unit)
+    plt.axis('off')
     plt.imshow(env, origin='lower')
 
     # PLOT DESK EDGES
@@ -228,6 +229,7 @@ def graphics(env, fovea, objects, unit):
 
     plt.subplot(122)
     plt.title('Focus image')
+    plt.axis('off')
     plt.imshow(fovea_im, origin='lower')
 
     plt.draw()
