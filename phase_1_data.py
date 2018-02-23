@@ -5,6 +5,9 @@ Created on Fri Dec  1 16:15:38 2017
 @author: William
 
 Functions:
+- get_average_weights(number_of_simulations, model_type) - Averages
+  the predictor weights over the simulations specified by
+  number_of_simulations and model_type. Saves averaged weighs to file.
 - get_end_predictions(number_of_simulations, model_type) - Gets the
   final predicted action success probability from all simulations
   defined by number_of_simulations and model_type and saves to file.
@@ -22,6 +25,51 @@ Functions:
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+def get_average_weights(number_of_simulations, model_type):
+    """Get average predictor weights
+
+    Keyword arguments:
+    - number_of_simulations -- Number of simulations (int) over which
+      to calculate average data.
+    - model_type -- Model type name/data file suffix (string). This
+      can be 'IGN', 'FIX' or 'IMP' for ignorance motivation signal,
+      fix threshold version or improvement signal version.
+
+    Gets weights from all simulations, calculates mean of these and
+    saves to new file. This is done for all predictors (affordance,
+    where and what) for each action, for the model type.
+    """
+    number_of_actions = 4
+    predictor_types = ['affordance', 'where', 'what']
+    for predictor_type in predictor_types:
+        for action_number in range(number_of_actions):
+            file_name = 'Data/s1{}_{}_{}.npy'.format(
+                str(predictor_type), str(action_number), str(model_type)
+                )
+            simulation_weights = np.load(file_name)
+            predictor_weights = np.empty((number_of_simulations,
+                                          simulation_weights.shape[0],
+                                          simulation_weights.shape[1]
+                                          ), dtype=float
+                                         )
+            predictor_weights[0] = simulation_weights
+            for simulation_number in range(2, number_of_simulations + 1):
+                file_name = 'Data/s{}{}_{}_{}.npy'.format(
+                    str(simulation_number), str(predictor_type),
+                    str(action_number), str(model_type)
+                    )
+                simulation_weights = np.load(file_name)
+                predictor_weights[simulation_number - 1] = simulation_weights
+
+            average_weights = np.mean(predictor_weights, 0)
+            file_name = 'Data/{}sim_average_{}_{}_{}.npy'.format(
+                str(number_of_simulations), str(predictor_type),
+                str(action_number), str(model_type)
+                )
+
+            np.save(file_name, average_weights)
 
 
 def get_end_predictions(number_of_simulations, model_type):
@@ -261,7 +309,8 @@ if __name__ == '__main__':
     # TESTS
 #    plot('Data/s0data_array_IGN.npy')
 #    get_average_data(10)
-    get_end_predictions(10, model_type='IGN')
-    get_end_predictions(10, model_type='FIX')
-    get_end_predictions(10, model_type='IMP')
-    plot_bar_charts(10)
+#    get_end_predictions(10, model_type='IGN')
+#    get_end_predictions(10, model_type='FIX')
+#    get_end_predictions(10, model_type='IMP')
+#    plot_bar_charts(10)
+    get_average_weights(10, 'IGN')
