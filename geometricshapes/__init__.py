@@ -217,9 +217,10 @@ class Fovea(Square):
         and return array of pixels of the fovea.
         """
         _corner_index_values = self.get_index_values()
+        pixels = round(self.size*self.unit)
         _fov_image = environment[
-            _corner_index_values[1][0]:_corner_index_values[1][1],
-            _corner_index_values[0][0]:_corner_index_values[0][1]
+            _corner_index_values[1][0]:_corner_index_values[1][0] + pixels,
+            _corner_index_values[0][0]:_corner_index_values[0][0] + pixels
             ]
         return _fov_image
 
