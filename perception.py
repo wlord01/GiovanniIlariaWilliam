@@ -111,7 +111,7 @@ def foveate(fovea, image, objects):
     if len(objects) >> 1:
         new_object = check_sub_goal(fovea.center, objects)
 
-        while new_object == current_object:
+        while not new_object or new_object == current_object:
             intensity_image = get_intensity_image(image)
             max_index = np.unravel_index(intensity_image.argmax(),
                                          intensity_image.shape
