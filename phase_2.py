@@ -405,6 +405,7 @@ def main():
     sub_goal_achievable = False
     graphics_on = True
     utility_reasoning_on = False
+    restricted_search_on = True  # Toggle restriced forward model search
 
     # INITIALIZE INTERNAL ENVIRONMENT
     int_s1 = Square([0.2, 0.2], object_size, [1, 0, 0], unit, 10)
@@ -561,12 +562,12 @@ def main():
                 )]
                 ).T
 
-            # Add function that checks afforded actions and sends their index
-            # values into goal_achievable_check()
-            afforded_actions = afforded_actions_check(current_state,
-                                                      affordance_predictors,
-                                                      threshold=0.5
-                                                      )
+            if restricted_search_on:
+                afforded_actions = afforded_actions_check(
+                    current_state, affordance_predictors, threshold=0.5
+                    )
+            else:
+                afforded_actions = [i for i in range(len(action_list))]
 
             successful_action = goal_achievable_check(
                 afforded_actions,
