@@ -80,12 +80,14 @@ def afforded_actions_check(current_state, affordance_predictors, threshold):
     return afforded_actions
 
 
-def goal_achievable_check(where_effect_predictors, what_effect_predictors,
-                          goal_state, current_state, where_success_threshold,
-                          what_success_threshold):
+def goal_achievable_check(afforded_actions, where_effect_predictors,
+                          what_effect_predictors, goal_state, current_state,
+                          where_success_threshold, what_success_threshold):
     """Check if goal is achievable by any action
 
     Keyword arguments:
+    - afforded_actions -- integer index numbers of afforded actions in
+      current state
     - where_effect_predictors -- Where effect predictors (list of
       Perceptron objects)
     - what_effect_predictors -- What effect predictors (list of
@@ -102,9 +104,9 @@ def goal_achievable_check(where_effect_predictors, what_effect_predictors,
     Output:
     - int or None
 
-    Uses forward model to check effects of actions on current state
-    (external_focus_image). Compares (perception.check_images()) the
-    predicted effects to the goal state (internal_focus_image) and
+    Uses forward model to check effects of afforded actions on current
+    state (external_focus_image). Compares (perception.check_images())
+    the predicted effects to the goal state (internal_focus_image) and
     returns action index number if there is a match. Returns None if no
     predicted effect matches the goal state.
 
@@ -131,7 +133,7 @@ def goal_achievable_check(where_effect_predictors, what_effect_predictors,
 
         return None
     """
-    for i in range(len(where_effect_predictors)):
+    for i in afforded_actions:
         where_predictor = where_effect_predictors[i]
         what_predictor = what_effect_predictors[i]
 
@@ -383,10 +385,10 @@ def main():
     where_success_threshold = 0.01
     what_success_threshold = 0.00375
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    model_type = 'IGN'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
-    where_weights_file = './Data/s6where_{action_number}_{file_suffix}.npy'
-    what_weights_file = './Data/s6what_{action_number}_{file_suffix}.npy'
-    affordance_weights_file = ('./Data/s6affordance_{action_number}_'
+    model_type = 'IMP'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
+    where_weights_file = './Data/s0where_{action_number}_{file_suffix}.npy'
+    what_weights_file = './Data/s0what_{action_number}_{file_suffix}.npy'
+    affordance_weights_file = ('./Data/s0affordance_{action_number}_'
                                '{file_suffix}.npy'
                                )
 
@@ -567,6 +569,7 @@ def main():
                                                       )
 
             successful_action = goal_achievable_check(
+                afforded_actions,
                 where_effect_predictors,
                 what_effect_predictors,
                 goal_state,
