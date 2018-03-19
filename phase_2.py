@@ -55,12 +55,39 @@ def goal_accomplished_classifier(internal_fovea_image, external_fovea_image,
         return False
 
 
-def goal_achievable_check(where_effect_predictors, what_effect_predictors,
-                          goal_state, current_state, where_success_threshold,
-                          what_success_threshold):
+def afforded_actions_check(current_state, affordance_predictors, threshold):
+    """
+    Check which actions are afforded
+
+    Keyword arguments:
+    - current_state -- current state of the system (fovea coordinates
+      and focus image)
+    - affordance_predictors -- affordance predictors (Perceptron
+      objects)
+    - threshold -- float number above which the affordance prediction
+      has to be for the action to be considered afforded
+
+    Checks with the affordance predictors which actions are afforded in
+    the current state by comparing affordance prediction to threshold.
+    """
+    afforded_actions = []
+    for predictor in affordance_predictors:
+        predictor.set_input(current_state[2:])
+        prediction = predictor.get_output()
+        if prediction >= threshold:
+            afforded_actions.append(affordance_predictors.index(predictor))
+
+    return afforded_actions
+
+
+def goal_achievable_check(afforded_actions, where_effect_predictors,
+                          what_effect_predictors, goal_state, current_state,
+                          where_success_threshold, what_success_threshold):
     """Check if goal is achievable by any action
 
     Keyword arguments:
+    - afforded_actions -- integer index numbers of afforded actions in
+      current state
     - where_effect_predictors -- Where effect predictors (list of
       Perceptron objects)
     - what_effect_predictors -- What effect predictors (list of
@@ -77,9 +104,9 @@ def goal_achievable_check(where_effect_predictors, what_effect_predictors,
     Output:
     - int or None
 
-    Uses forward model to check effects of actions on current state
-    (external_focus_image). Compares (perception.check_images()) the
-    predicted effects to the goal state (internal_focus_image) and
+    Uses forward model to check effects of afforded actions on current
+    state (external_focus_image). Compares (perception.check_images())
+    the predicted effects to the goal state (internal_focus_image) and
     returns action index number if there is a match. Returns None if no
     predicted effect matches the goal state.
 
@@ -106,7 +133,7 @@ def goal_achievable_check(where_effect_predictors, what_effect_predictors,
 
         return None
     """
-    for i in range(len(where_effect_predictors)):
+    for i in afforded_actions:
         where_predictor = where_effect_predictors[i]
         what_predictor = what_effect_predictors[i]
 
@@ -351,12 +378,12 @@ def main():
     fovea_size = 0.14
     object_size = 0.10
     number_of_steps = 100
-    max_search_steps = 10
+    max_search_steps = 5
     THINKING_STEPS = 10
     ACTION_ATTEMPTS = 1
     accomplished_threshold = 0.01
     where_success_threshold = 0.01
-    what_success_threshold = 0.0035
+    what_success_threshold = 0.00375
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
     model_type = 'IMP'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
     where_weights_file = './Data/s0where_{action_number}_{file_suffix}.npy'
@@ -378,6 +405,7 @@ def main():
     sub_goal_achievable = False
     graphics_on = True
     utility_reasoning_on = False
+    restricted_search_on = True  # Toggle restriced forward model search
 
     # INITIALIZE INTERNAL ENVIRONMENT
     int_s1 = Square([0.2, 0.2], object_size, [1, 0, 0], unit, 10)
@@ -534,7 +562,15 @@ def main():
                 )]
                 ).T
 
+            if restricted_search_on:
+                afforded_actions = afforded_actions_check(
+                    current_state, affordance_predictors, threshold=0.5
+                    )
+            else:
+                afforded_actions = [i for i in range(len(action_list))]
+
             successful_action = goal_achievable_check(
+                afforded_actions,
                 where_effect_predictors,
                 what_effect_predictors,
                 goal_state,
