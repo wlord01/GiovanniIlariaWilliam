@@ -308,6 +308,34 @@ def plot(file_name):
                      )
 
 
+def plot_affordance(file_name):
+    """Plot affordance predictions
+
+    Keyword arguments:
+    - file_name -- Name of the data file (string)
+
+    Plots affordance predictions for each action.
+    """
+    data_array = np.load(file_name)
+    for i in range(len(data_array[0, 0, 0, :])):
+        plt.figure()
+        plt.grid()
+        plt.ylim(0, 1)
+        plt.xlabel('Step')
+        plt.ylabel('Affordance prediction')
+        plt.tight_layout()
+        for j in range(len(data_array[0, 0, :])):
+            line_color, marker, marker_points, label = get_details(data_array,
+                                                                   i, j
+                                                                   )
+            plt.plot(np.arange(data_array.shape[0]), data_array[:, 3, j, i],
+                     line_color
+                     )
+            plt.plot(marker_points, data_array[marker_points, 3, j, i],
+                     marker, label=label
+                     )
+
+
 if __name__ == '__main__':
     """Main"""
     # TESTS
@@ -316,5 +344,6 @@ if __name__ == '__main__':
 #    get_end_predictions(10, model_type='IGN')
 #    get_end_predictions(10, model_type='FIX')
 #    get_end_predictions(10, model_type='IMP')
-    plot_bar_charts(10)
+#    plot_bar_charts(10)
 #    get_average_weights(10, 'IGN')
+    plot_affordance('Data/10sim_average_data_IGN.npy')
