@@ -207,6 +207,45 @@ def get_average_data(number_of_simulations, model_type='IMP'):
     np.save(average_data_file_name, average_data)
 
 
+def get_details(data_array, i, j):
+    """Get details for plots
+
+    Keyword arguments:
+    - data_array -- array of data from simulation
+    - i -- action number (integer)
+    - j -- object number (integer)
+
+    Takes information from data array. Returns strings for line color,
+    marker, label and points for markers.
+    """
+    if data_array[0, 0, j, i] == 0:
+        object_type = 's'
+        label = 'Square, '
+    elif data_array[0, 0, j, i] == 1:
+        object_type = 'o'
+        label = 'Circle, '
+    elif data_array[0, 0, j, i] == 2:
+        object_type = '*'
+        label = 'Rectangle, '
+
+    if data_array[0, 1, j, i] == 0:
+        object_color = 'r'
+        label += 'red'
+    elif data_array[0, 1, j, i] == 1:
+        object_color = 'g'
+        label += 'green'
+    elif data_array[0, 1, j, i] == 2:
+        object_color = 'b'
+        label += 'blue'
+
+    line_color = object_color
+    marker = object_color+object_type
+    marker_points = np.arange(0, len(data_array),
+                              int(len(data_array)/3)
+                              )
+    return line_color, marker, marker_points, label
+
+
 def plot(file_name):
     """Plot data
 
@@ -216,44 +255,6 @@ def plot(file_name):
     Reads data from file and plots ignorance and perceptron output for
     all objects in the phase 1 simulation.
     """
-    def get_details(data_array, i, j):
-        """Get details for plots
-
-        Keyword arguments:
-        - data_array -- array of data from simulation
-        - i -- action number (integer)
-        - j -- object number (integer)
-
-        Takes information from data array. Returns strings for line color,
-        marker, label and points for markers.
-        """
-        if data_array[0, 0, j, i] == 0:
-            object_type = 's'
-            label = 'Square, '
-        elif data_array[0, 0, j, i] == 1:
-            object_type = 'o'
-            label = 'Circle, '
-        elif data_array[0, 0, j, i] == 2:
-            object_type = '*'
-            label = 'Rectangle, '
-
-        if data_array[0, 1, j, i] == 0:
-            object_color = 'r'
-            label += 'red'
-        elif data_array[0, 1, j, i] == 1:
-            object_color = 'g'
-            label += 'green'
-        elif data_array[0, 1, j, i] == 2:
-            object_color = 'b'
-            label += 'blue'
-
-        line_color = object_color
-        marker = object_color+object_type
-        marker_points = np.arange(0, len(data_array),
-                                  int(len(data_array)/3)
-                                  )
-        return line_color, marker, marker_points, label
-
     data_array = np.load(file_name)
 
     # PLOT DATA FOR ALL ACTIONS
@@ -307,6 +308,34 @@ def plot(file_name):
                      )
 
 
+def plot_affordance(file_name):
+    """Plot affordance predictions
+
+    Keyword arguments:
+    - file_name -- Name of the data file (string)
+
+    Plots affordance predictions for each action.
+    """
+    data_array = np.load(file_name)
+    for i in range(len(data_array[0, 0, 0, :])):
+        plt.figure()
+        plt.grid()
+        plt.ylim(0, 1)
+        plt.xlabel('Step')
+        plt.ylabel('Affordance prediction')
+        plt.tight_layout()
+        for j in range(len(data_array[0, 0, :])):
+            line_color, marker, marker_points, label = get_details(data_array,
+                                                                   i, j
+                                                                   )
+            plt.plot(np.arange(data_array.shape[0]), data_array[:, 3, j, i],
+                     line_color
+                     )
+            plt.plot(marker_points, data_array[marker_points, 3, j, i],
+                     marker, label=label
+                     )
+
+
 if __name__ == '__main__':
     """Main"""
     # TESTS
@@ -315,5 +344,6 @@ if __name__ == '__main__':
 #    get_end_predictions(10, model_type='IGN')
 #    get_end_predictions(10, model_type='FIX')
 #    get_end_predictions(10, model_type='IMP')
-    plot_bar_charts(10)
+#    plot_bar_charts(10)
 #    get_average_weights(10, 'IGN')
+    plot_affordance('Data/10sim_average_data_IGN.npy')
