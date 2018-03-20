@@ -127,14 +127,14 @@ def plot_bar_charts(number_of_simulations=10):
     number_of_objects = 9
     number_of_actions = 4
 
-    names = ['O{}'.format(i) for i in range(1, number_of_objects + 1)]
+    names = ['{}'.format(i) for i in range(1, number_of_objects + 1)]
     w = 0.3
 
     for action in range(number_of_actions):
         plt.figure()
-        plt.title('Action {} average affordance prediction'.format(action + 1))
-        plt.xlabel('Objects')
-        plt.ylabel('Prediction')
+        plt.xlabel('Object')
+        plt.ylabel('Affordance prediction')
+        plt.tight_layout()
 
         model_type = 'IGN'
         file_name = 'Data/{}sim_average_end_prediction_{}.npy'.format(
@@ -329,21 +329,22 @@ def plot_affordance(file_name):
                                                                    i, j
                                                                    )
             plt.plot(np.arange(data_array.shape[0]), data_array[:, 3, j, i],
-                     line_color
+                     line_color, lw=2
                      )
             plt.plot(marker_points, data_array[marker_points, 3, j, i],
-                     marker, label=label
+                     marker, ms=10, label=label
                      )
 
 
 if __name__ == '__main__':
     """Main"""
     # TESTS
+    matplotlib.rcParams.update({'font.size': 22})
 #    plot('Data/s0data_array_IGN.npy')
 #    get_average_data(10)
 #    get_end_predictions(10, model_type='IGN')
 #    get_end_predictions(10, model_type='FIX')
 #    get_end_predictions(10, model_type='IMP')
-#    plot_bar_charts(10)
+    plot_bar_charts(10)
 #    get_average_weights(10, 'IGN')
-    plot_affordance('Data/10sim_average_data_IGN.npy')
+#    plot_affordance('Data/10sim_average_data_IMP.npy')
