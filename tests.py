@@ -5,6 +5,75 @@ Created on Mon Jan 22 19:02:22 2018
 @author: William
 """
 
+import numpy as np
+
+
+def initialize_predictors(action_list, affordance_weights_file,
+                          where_weights_file, what_weights_file, model_type,
+                          unit=150, fovea_size=0.14):
+    """Initialize predictors for testing"""
+    from perceptron import Perceptron
+    focus_image_side = int(unit * fovea_size)
+
+    affordance_predictors = []
+
+    affordance_predictor_input_shape = (focus_image_side**2 * 3, 1)
+    affordance_predictor_output_shape = (1, 1)
+
+    where_effect_predictors = []
+    what_effect_predictors = []
+    where_effect_predictor_output_shape = (2, 1)
+    what_effect_predictor_input_shape = (focus_image_side**2 * 3, 1)
+    what_effect_predictor_output_shape = (focus_image_side**2 * 3, 1)
+    for action in action_list:
+        if action == actions.parameterised_skill:
+            where_effect_predictor_input_shape = np.array([4, 0])
+        else:
+            where_effect_predictor_input_shape = np.array([2, 0])
+
+        where_effect_predictor = Perceptron(
+            where_effect_predictor_input_shape,
+            where_effect_predictor_output_shape,
+            0,
+            linear=True
+            )
+        what_effect_predictor = Perceptron(
+            what_effect_predictor_input_shape,
+            what_effect_predictor_output_shape,
+            0,
+#            binary=True
+            )
+
+        affordance_predictor = Perceptron(
+            affordance_predictor_input_shape,
+            affordance_predictor_output_shape,
+            0
+            )
+
+        action_number = action_list.index(action)
+        where_effect_predictor.read_weights_from_file(where_weights_file
+            .format(action_number=str(action_number),
+                    file_suffix=str(model_type)
+                    )
+            )
+        what_effect_predictor.read_weights_from_file(what_weights_file
+            .format(action_number=str(action_number),
+                    file_suffix=str(model_type)
+                    )
+            )
+        affordance_predictor.read_weights_from_file(affordance_weights_file
+            .format(action_number=str(action_number),
+                    file_suffix=str(model_type)
+                    )
+            )
+
+        where_effect_predictors.append(where_effect_predictor)
+        what_effect_predictors.append(what_effect_predictor)
+        affordance_predictors.append(affordance_predictor)
+
+    return (affordance_predictors, where_effect_predictors,
+            what_effect_predictors)
+
 
 def effect_predictors(where_effect_predictors, what_effect_predictors, unit,
                       fovea_size, object_size):
@@ -35,11 +104,13 @@ def effect_predictors(where_effect_predictors, what_effect_predictors, unit,
             what_out = what_effect_predictor.get_output()
             plt.figure()
             plt.subplot(121)
-            plt.title(str(where_input))
+            plt.title(str(where_input[:, 0]))
+            plt.axis('off')
             pixels = int(fovea_size * unit)
             plt.imshow(np.reshape(what_input, (pixels, pixels, 3), 'F'))
             plt.subplot(122)
-            plt.title(str(where_out))
+            plt.title(str(where_out[:, 0]))
+            plt.axis('off')
             plt.imshow(np.reshape(what_out, (pixels, pixels, 3), 'F'))
 
 
@@ -61,3 +132,27 @@ def effect_predictors(where_effect_predictors, what_effect_predictors, unit,
 #                )
 #        print(s)
 
+if __name__ == '__main__':
+    # TESTS
+    import actions
+    model_type = 'IGN'
+    where_weights_file = './Data/s0where_{action_number}_{file_suffix}.npy'
+    what_weights_file = './Data/s0what_{action_number}_{file_suffix}.npy'
+    affordance_weights_file = ('./Data/s0affordance_{action_number}_'
+                               '{file_suffix}.npy'
+                               )
+
+    action_list = [actions.parameterised_skill, actions.activate,
+                   actions.deactivate, actions.neutralize
+                   ]
+    (affordance_predictors,
+     where_effect_predictors,
+     what_effect_predictors
+     ) = initialize_predictors(action_list, affordance_weights_file,
+                               where_weights_file, what_weights_file,
+                               model_type
+                               )
+
+    effect_predictors(where_effect_predictors, what_effect_predictors, 150,
+                      0.14, 0.10
+                      )
