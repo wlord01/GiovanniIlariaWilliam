@@ -104,11 +104,13 @@ def effect_predictors(where_effect_predictors, what_effect_predictors, unit,
             what_out = what_effect_predictor.get_output()
             plt.figure()
             plt.subplot(121)
-            plt.title(str(where_input))
+            plt.title(str(where_input[:, 0]))
+            plt.axis('off')
             pixels = int(fovea_size * unit)
             plt.imshow(np.reshape(what_input, (pixels, pixels, 3), 'F'))
             plt.subplot(122)
-            plt.title(str(where_out))
+            plt.title(str(where_out[:, 0]))
+            plt.axis('off')
             plt.imshow(np.reshape(what_out, (pixels, pixels, 3), 'F'))
 
 
@@ -151,6 +153,6 @@ if __name__ == '__main__':
                                model_type
                                )
 
-#    effect_predictors(where_effect_predictors, what_effect_predictors, 150,
-#                      0.14, 0.10
-#                      )
+    effect_predictors(where_effect_predictors, what_effect_predictors, 150,
+                      0.14, 0.10
+                      )
