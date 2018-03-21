@@ -383,12 +383,12 @@ def main():
     ACTION_ATTEMPTS = 1
     accomplished_threshold = 0.01
     where_success_threshold = 0.01
-    what_success_threshold = 0.00375
+    what_success_threshold = 0.0035
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    model_type = 'IMP'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
-    where_weights_file = './Data/s0where_{action_number}_{file_suffix}.npy'
-    what_weights_file = './Data/s0what_{action_number}_{file_suffix}.npy'
-    affordance_weights_file = ('./Data/s0affordance_{action_number}_'
+    model_type = 'IGN'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
+    where_weights_file = './Data/s10where_{action_number}_{file_suffix}.npy'
+    what_weights_file = './Data/s10what_{action_number}_{file_suffix}.npy'
+    affordance_weights_file = ('./Data/s10affordance_{action_number}_'
                                '{file_suffix}.npy'
                                )
 

@@ -330,11 +330,11 @@ def main(simulation_number=0):
     # FLAGS
     action_performed = False
     save_data = True
-    plot_data = True
+    plot_data = False
     print_statements_on = False
     graphics_on = False
     save_weights_on = True
-    ignorance_signal = False
+    ignorance_signal = True
     fix_threshold_on = False
 
     # SET CONSTANTS
@@ -344,15 +344,15 @@ def main(simulation_number=0):
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 5000
+    number_of_steps = 6000
     leak_rate = 0.3  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.01
     improvement_learning_rate = 0.005
     where_effect_learning_rate = 0.5
-    what_effect_learning_rate = 0.05
+    what_effect_learning_rate = 0.04
     improvement_predictor_weights = 0.00005
     rand_weights_init = 0.00075
-    fix_threshold = 0.45
+    fix_threshold = 0.3
 
     # SET VARIABLES
     fovea_center = [0.5, 0.5]
@@ -378,6 +378,19 @@ def main(simulation_number=0):
                                                  fovea_size, objects
                                                  )
 
+#    plt.figure()
+#    plt.title('Training environment')
+#    plt.xlim(0, unit)
+#    plt.ylim(0, unit)
+#    plt.axis('off')
+#    plt.imshow(env, origin='lower')
+#
+#    # PLOT DESK EDGES
+#    plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
+#             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit], 'w-'
+#             )
+#
+#    plt.figure()
     fov_img_shape = np.array([fovea.get_focus_image(env).flatten('F')]).T.shape
 
     # ACTIONS
@@ -715,7 +728,7 @@ def main(simulation_number=0):
 
 if __name__ == '__main__':
     """Main"""
-    main()
-#    for simulation_number in range(1, 11):
-#        main(simulation_number)
-#        print('End of simulation {}'.format(str(simulation_number)))
+#    main()
+    for simulation_number in range(1, 11):
+        main(simulation_number)
+        print('End of simulation {}'.format(str(simulation_number)))
