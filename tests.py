@@ -136,9 +136,9 @@ if __name__ == '__main__':
     # TESTS
     import actions
     model_type = 'IGN'
-    where_weights_file = './Data/s0where_{action_number}_{file_suffix}.npy'
-    what_weights_file = './Data/s0what_{action_number}_{file_suffix}.npy'
-    affordance_weights_file = ('./Data/s0affordance_{action_number}_'
+    where_weights_file = './Data/s10where_{action_number}_{file_suffix}.npy'
+    what_weights_file = './Data/s10what_{action_number}_{file_suffix}.npy'
+    affordance_weights_file = ('./Data/s10affordance_{action_number}_'
                                '{file_suffix}.npy'
                                )
 
