@@ -339,9 +339,10 @@ def plot_affordance(file_name):
 if __name__ == '__main__':
     """Main"""
     # TESTS
+    import matplotlib
     matplotlib.rcParams.update({'font.size': 22})
-#    plot('Data/s0data_array_IGN.npy')
-#    get_average_data(10)
+#    plot('Data/s1data_array_IGN.npy')
+#    get_average_data(10, 'IMP')
 #    get_end_predictions(10, model_type='IGN')
 #    get_end_predictions(10, model_type='FIX')
 #    get_end_predictions(10, model_type='IMP')
