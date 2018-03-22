@@ -412,8 +412,8 @@ def main(model_type, trial_number):
     sub_goal = None
     sub_goal_accomplished = False
     sub_goal_achievable = False
-    graphics_on = False
-    utility_reasoning_on = True
+    graphics_on = True
+    utility_reasoning_on = False
     restricted_search_on = True  # Toggle restriced forward model search
 
     # INITIALIZE INTERNAL ENVIRONMENT
@@ -662,7 +662,7 @@ def main(model_type, trial_number):
             return (1, step)
         elif utility_reasoning_on and actions_made >= ACTION_ATTEMPTS:
             print('Reward: ', reward)
-            break
+            return (reward)
 
     return (0, step)
 
