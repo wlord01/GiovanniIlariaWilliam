@@ -385,7 +385,7 @@ def main():
     where_success_threshold = 0.01
     what_success_threshold = 0.0035
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    model_type = 'IGN'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
+    model_type = 'FIX'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
     where_weights_file = './Data/s10where_{action_number}_{file_suffix}.npy'
     what_weights_file = './Data/s10what_{action_number}_{file_suffix}.npy'
     affordance_weights_file = ('./Data/s10affordance_{action_number}_'
@@ -647,10 +647,12 @@ def main():
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
         if perception.check_images(int_env, ext_env, 1e-4):
             print('Goal accomplished at step {}!'.format(str(step)))
-            break
+            return (1, step)
         elif utility_reasoning_on and actions_made >= ACTION_ATTEMPTS:
             print('Reward: ', reward)
             break
+
+    return (0, step)
 
 
 if __name__ == '__main__':
