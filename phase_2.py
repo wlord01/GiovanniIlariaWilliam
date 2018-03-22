@@ -250,13 +250,15 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.pause(0.2)
 
 
-def main(model_type):
+def main(model_type, trial_number):
     """
     Main simulation
 
     Keyword arguments:
     - model_type -- String object, IGN/FIX/IMP as file suffix in weight
       file names.
+    - trial_number -- String object used for defining which weight
+      files to load from saved phase 1 simulations.
 
     # FLAGS
     sub_goal = geometricshapes Object/None
@@ -389,10 +391,14 @@ def main(model_type):
     where_success_threshold = 0.01
     what_success_threshold = 0.0035
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    where_weights_file = './Data/s10where_{action_number}_{file_suffix}.npy'
-    what_weights_file = './Data/s10what_{action_number}_{file_suffix}.npy'
-    affordance_weights_file = ('./Data/s10affordance_{action_number}_'
-                               '{file_suffix}.npy'
+    where_weights_file = ('./Data/s{trial_number}where_{action_number}_'
+                          '{file_suffix}.npy'
+                          )
+    what_weights_file = ('./Data/s{trial_number}what_{action_number}_'
+                         '{file_suffix}.npy'
+                         )
+    affordance_weights_file = ('./Data/s{trial_number}affordance_'
+                               '{action_number}_{file_suffix}.npy'
                                )
 
     # SET VARIABLES
@@ -406,8 +412,8 @@ def main(model_type):
     sub_goal = None
     sub_goal_accomplished = False
     sub_goal_achievable = False
-    graphics_on = True
-    utility_reasoning_on = False
+    graphics_on = False
+    utility_reasoning_on = True
     restricted_search_on = True  # Toggle restriced forward model search
 
     # INITIALIZE INTERNAL ENVIRONMENT
@@ -482,17 +488,20 @@ def main(model_type):
 
         action_number = action_list.index(action)
         where_effect_predictor.read_weights_from_file(where_weights_file
-            .format(action_number=str(action_number),
+            .format(trial_number=str(trial_number),
+                    action_number=str(action_number),
                     file_suffix=str(model_type)
                     )
             )
-        what_effect_predictor.read_weights_from_file(what_weights_file\
-            .format(action_number=str(action_number),
+        what_effect_predictor.read_weights_from_file(what_weights_file
+            .format(trial_number=str(trial_number),
+                    action_number=str(action_number),
                     file_suffix=str(model_type)
                     )
             )
-        affordance_predictor.read_weights_from_file(affordance_weights_file\
-            .format(action_number=str(action_number),
+        affordance_predictor.read_weights_from_file(affordance_weights_file
+            .format(trial_number=str(trial_number),
+                    action_number=str(action_number),
                     file_suffix=str(model_type)
                     )
             )
@@ -668,7 +677,8 @@ if __name__ == '__main__':
     graphics!
     """
     model_type = 'IGN'
-    main(model_type)
+    trial_number = '1'
+    data = main(model_type, trial_number)
     # Run tests
 
 #    plt.clf()
