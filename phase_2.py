@@ -250,9 +250,13 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.pause(0.2)
 
 
-def main():
+def main(model_type):
     """
     Main simulation
+
+    Keyword arguments:
+    - model_type -- String object, IGN/FIX/IMP as file suffix in weight
+      file names.
 
     # FLAGS
     sub_goal = geometricshapes Object/None
@@ -385,7 +389,6 @@ def main():
     where_success_threshold = 0.01
     what_success_threshold = 0.0035
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    model_type = 'FIX'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
     where_weights_file = './Data/s10where_{action_number}_{file_suffix}.npy'
     what_weights_file = './Data/s10what_{action_number}_{file_suffix}.npy'
     affordance_weights_file = ('./Data/s10affordance_{action_number}_'
@@ -664,7 +667,8 @@ if __name__ == '__main__':
     Make sure to put plots in separate window (%matplotlib qt) to see
     graphics!
     """
-    main()
+    model_type = 'IGN'
+    main(model_type)
     # Run tests
 
 #    plt.clf()
