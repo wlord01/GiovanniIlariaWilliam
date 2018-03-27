@@ -383,7 +383,7 @@ def main(model_type, trial_number):
     unit = 150  # SIZE OF SIDES OF ENVIRONMENT
     fovea_size = 0.14
     object_size = 0.10
-    number_of_steps = 100
+    number_of_steps = 75
     max_search_steps = 5
     THINKING_STEPS = 10
     ACTION_ATTEMPTS = 1
@@ -412,7 +412,7 @@ def main(model_type, trial_number):
     sub_goal = None
     sub_goal_accomplished = False
     sub_goal_achievable = False
-    graphics_on = True
+    graphics_on = False
     utility_reasoning_on = False
     restricted_search_on = True  # Toggle restriced forward model search
 
@@ -658,10 +658,10 @@ def main(model_type, trial_number):
 
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
         if perception.check_images(int_env, ext_env, 1e-4):
-            print('Goal accomplished at step {}!'.format(str(step)))
+#            print('Goal accomplished at step {}!'.format(str(step)))
             return (1, step)
         elif utility_reasoning_on and actions_made >= ACTION_ATTEMPTS:
-            print('Reward: ', reward)
+#            print('Reward: ', reward)
             return (reward)
 
     return (0, step)
