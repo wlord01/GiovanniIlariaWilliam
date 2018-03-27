@@ -260,6 +260,10 @@ def main(model_type, trial_number):
     - trial_number -- String object used for defining which weight
       files to load from saved phase 1 simulations.
 
+    Returns tuple of binary goal accomplished variable, completion step
+    and mean number of explored actions per step. If utility reasoning
+    is on, the acquired utility/reward is returned instead.
+
     # FLAGS
     sub_goal = geometricshapes Object/None
     sub_goal_accomplished = True/False
@@ -662,12 +666,12 @@ def main(model_type, trial_number):
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
         if perception.check_images(int_env, ext_env, 1e-4):
 #            print('Goal accomplished at step {}!'.format(str(step)))
-            return (1, step)
+            return (1, step, explored_actions / step)
         elif utility_reasoning_on and actions_made >= ACTION_ATTEMPTS:
 #            print('Reward: ', reward)
             return (reward)
 
-    return (0, step)
+    return (0, step, explored_actions / step)
 
 
 if __name__ == '__main__':
