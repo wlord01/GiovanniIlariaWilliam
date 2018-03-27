@@ -250,9 +250,19 @@ def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
     plt.pause(0.2)
 
 
-def main():
+def main(model_type, trial_number):
     """
     Main simulation
+
+    Keyword arguments:
+    - model_type -- String object, IGN/FIX/IMP as file suffix in weight
+      file names.
+    - trial_number -- String object used for defining which weight
+      files to load from saved phase 1 simulations.
+
+    Returns tuple of binary goal accomplished variable, completion step
+    and mean number of explored actions per step. If utility reasoning
+    is on, the acquired utility/reward is returned instead.
 
     # FLAGS
     sub_goal = geometricshapes Object/None
@@ -377,7 +387,7 @@ def main():
     unit = 150  # SIZE OF SIDES OF ENVIRONMENT
     fovea_size = 0.14
     object_size = 0.10
-    number_of_steps = 100
+    number_of_steps = 75
     max_search_steps = 5
     THINKING_STEPS = 10
     ACTION_ATTEMPTS = 1
@@ -385,11 +395,14 @@ def main():
     where_success_threshold = 0.01
     what_success_threshold = 0.0035
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    model_type = 'IGN'  # IGN/FIX/IMP AS file_suffix IN WEIGHT FILE NAMES
-    where_weights_file = './Data/s10where_{action_number}_{file_suffix}.npy'
-    what_weights_file = './Data/s10what_{action_number}_{file_suffix}.npy'
-    affordance_weights_file = ('./Data/s10affordance_{action_number}_'
-                               '{file_suffix}.npy'
+    where_weights_file = ('./Data/s{trial_number}where_{action_number}_'
+                          '{file_suffix}.npy'
+                          )
+    what_weights_file = ('./Data/s{trial_number}what_{action_number}_'
+                         '{file_suffix}.npy'
+                         )
+    affordance_weights_file = ('./Data/s{trial_number}affordance_'
+                               '{action_number}_{file_suffix}.npy'
                                )
 
     # SET VARIABLES
@@ -398,12 +411,13 @@ def main():
     overall_utility = 0
     actions_made = 0
     reward = 0
+    explored_actions = 0
 
     # FLAGS
     sub_goal = None
     sub_goal_accomplished = False
     sub_goal_achievable = False
-    graphics_on = True
+    graphics_on = False
     utility_reasoning_on = False
     restricted_search_on = True  # Toggle restriced forward model search
 
@@ -479,17 +493,20 @@ def main():
 
         action_number = action_list.index(action)
         where_effect_predictor.read_weights_from_file(where_weights_file
-            .format(action_number=str(action_number),
+            .format(trial_number=str(trial_number),
+                    action_number=str(action_number),
                     file_suffix=str(model_type)
                     )
             )
-        what_effect_predictor.read_weights_from_file(what_weights_file\
-            .format(action_number=str(action_number),
+        what_effect_predictor.read_weights_from_file(what_weights_file
+            .format(trial_number=str(trial_number),
+                    action_number=str(action_number),
                     file_suffix=str(model_type)
                     )
             )
-        affordance_predictor.read_weights_from_file(affordance_weights_file\
-            .format(action_number=str(action_number),
+        affordance_predictor.read_weights_from_file(affordance_weights_file
+            .format(trial_number=str(trial_number),
+                    action_number=str(action_number),
                     file_suffix=str(model_type)
                     )
             )
@@ -569,6 +586,8 @@ def main():
             else:
                 afforded_actions = [i for i in range(len(action_list))]
 
+            explored_actions += len(afforded_actions)
+
             successful_action = goal_achievable_check(
                 afforded_actions,
                 where_effect_predictors,
@@ -646,11 +665,13 @@ def main():
 
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
         if perception.check_images(int_env, ext_env, 1e-4):
-            print('Goal accomplished at step {}!'.format(str(step)))
-            break
+#            print('Goal accomplished at step {}!'.format(str(step)))
+            return (1, step, explored_actions / step)
         elif utility_reasoning_on and actions_made >= ACTION_ATTEMPTS:
-            print('Reward: ', reward)
-            break
+#            print('Reward: ', reward)
+            return (reward)
+
+    return (0, step, explored_actions / step)
 
 
 if __name__ == '__main__':
@@ -662,7 +683,9 @@ if __name__ == '__main__':
     Make sure to put plots in separate window (%matplotlib qt) to see
     graphics!
     """
-    main()
+    model_type = 'IGN'
+    trial_number = '1'
+    data = main(model_type, trial_number)
     # Run tests
 
 #    plt.clf()
