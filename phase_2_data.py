@@ -20,6 +20,7 @@ Functions:
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 import phase_2
 
@@ -132,12 +133,36 @@ def check_completion_time(successful_trials_data):
     return (mean_runtime, runtime_std)
 
 
-def plot_completion_times(number_of_experiments):
+def plot_completion_times(data_list, line_style):
     """Plot completion times
 
-    Loads data files for each system version and plots the completion
-    times in the different experiments.
+    Keyword arguments:
+    data_list -- list of data arrays from different scenarios (set-ups
+                 of environment and goal)
+    line_style (string) -- Definition for line style in matplotlib
+                           plotting standard
+
+    Plots average completion times for different scenarios (set-ups of
+    environment and goal). Shows the dependency of completion time on
+    the number of sub-goals if the scenarios have increasing number of
+    sub-goals.
     """
+    plt.xlabel('Scenario')
+    plt.ylabel('Completion time (steps)')
+
+    x = np.arange(1, len(data_list) + 1)
+    y = np.zeros(len(data_list))
+    plt.xticks(range(1, len(data_list) + 1))
+    plt.xlim(0.5, x[-1] + 0.5)
+    for i in range(len(data_list)):
+        experiment_data = data_list[i]
+        complete_trials_data = get_successful_trials(experiment_data)
+        (completion_time, standard_deviation) = check_completion_time(
+            complete_trials_data
+            )
+        y[i] = completion_time
+
+    plt.plot(x, y, line_style)
     return
 
 
@@ -147,7 +172,7 @@ if __name__ == '__main__':
     import time
     import scipy.stats as st
     start = time.time()
-    data = test_multiple_trials('FIX', range(1, 11), 100)
+    data = test_multiple_trials('IGN', range(1, 11), 100)
     (complete_trials, completion_ratio) = check_completion_ratio(data)
     complete_trials_data = get_successful_trials(data)
     (completion_time, standard_deviation) = check_completion_time(
