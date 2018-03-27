@@ -407,6 +407,7 @@ def main(model_type, trial_number):
     overall_utility = 0
     actions_made = 0
     reward = 0
+    explored_actions = 0
 
     # FLAGS
     sub_goal = None
@@ -580,6 +581,8 @@ def main(model_type, trial_number):
                     )
             else:
                 afforded_actions = [i for i in range(len(action_list))]
+
+            explored_actions += len(afforded_actions)
 
             successful_action = goal_achievable_check(
                 afforded_actions,
