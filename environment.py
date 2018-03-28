@@ -110,11 +110,63 @@ def get_object_images(unit, fovea_size, object_size):
 if __name__ == '__main__':
     """Main"""
     import matplotlib.pyplot as plt
-    object_images = get_object_images(150, 0.14, 0.1)
-    focus_image_pixels = int(0.14*150)
-    for image in object_images:
-        plt.figure()
-        image = np.reshape(image[2:], (focus_image_pixels, focus_image_pixels,
-                           3), 'F'
-                           )
-        plt.imshow(image)
+#    object_images = get_object_images(150, 0.14, 0.1)
+#    focus_image_pixels = int(0.14*150)
+#    for image in object_images:
+#        plt.figure()
+#        image = np.reshape(image[2:], (focus_image_pixels, focus_image_pixels,
+#                           3), 'F'
+#                           )
+#        plt.imshow(image)
+
+#   #### PLOT ENVIRONMENT AND GOAL IMAGE ####
+    unit = 150
+    object_size = 0.1
+    fovea_center = [0.5, 0.5]
+    fovea_size = 0.14
+
+    # INITIALIZE INTERNAL ENVIRONMENT
+    int_s1 = Square([0.2, 0.5], object_size, [0, 1, 0], unit, 3)
+    int_r1 = Rectangle([0.8, 0.2], object_size, [1, 0, 0], unit, 0, 5)
+    int_s2 = Square([0.2, 0.2], object_size, [1, 0, 0], unit, 10)
+    int_c1 = Circle([0.5, 0.8], object_size, [0, 0, 1], unit, 3)
+    int_c2 = Circle([0.5, 0.2], object_size, [1, 0, 0], unit, 8)
+    int_objects = [int_s1, int_r1, int_s2, int_c1, int_c2]
+
+    int_env, int_fov, int_objects = initialize(unit, fovea_center, fovea_size,
+                                               int_objects
+                                               )
+
+    # INITIALIZE EXTERNAL ENVIRONMENT
+    ext_s1 = Square([0.2, 0.5], object_size, [0, 0, 1], unit)
+    ext_r1 = Rectangle([0.8, 0.2], object_size, [0, 1, 0], unit, 0)
+    ext_s2 = Square([0.2, 0.8], object_size, [1, 0, 0], unit)
+    ext_c1 = Circle([0.5, 0.8], object_size, [0, 1, 0], unit)
+    ext_c2 = Circle([0.5, 0.5], object_size, [1, 0, 0], unit)
+    ext_objects = [ext_s1, ext_r1, ext_s2, ext_c1, ext_c2]
+
+    ext_env, ext_fov, ext_objects = initialize(unit, fovea_center, fovea_size,
+                                               ext_objects
+                                               )
+
+    plt.figure()
+    plt.subplot(121)
+    plt.title('Goal image')
+    plt.xlim(0, unit)
+    plt.ylim(0, unit)
+    plt.axis('off')
+    plt.imshow(int_env, origin='lower')
+    # PLOT DESK EDGES
+    plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
+             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit], 'w-'
+             )
+    plt.subplot(122)
+    plt.title('Environment')
+    plt.xlim(0, unit)
+    plt.ylim(0, unit)
+    plt.axis('off')
+    plt.imshow(ext_env, origin='lower')
+    # PLOT DESK EDGES
+    plt.plot([0.2*unit, 0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit],
+             [0.2*unit, 0.8*unit, 0.8*unit, 0.2*unit, 0.2*unit], 'w-'
+             )
