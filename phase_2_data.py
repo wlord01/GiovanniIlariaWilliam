@@ -127,10 +127,11 @@ def check_completion_time(successful_trials_data):
     average number of steps and standard deviation.
     """
     runtime_data = successful_trials_data[:, :, 1]
-    mean_runtime = np.mean(runtime_data)
-    runtime_std = np.std(runtime_data)
+    trial_mean_runtime = np.mean(runtime_data, 1)
+    mean_runtime = np.mean(trial_mean_runtime)
+    runtime_sem = (np.std(trial_mean_runtime) / np.sqrt(len(runtime_data)))
 
-    return (mean_runtime, runtime_std)
+    return (trial_mean_runtime, mean_runtime, runtime_sem)
 
 
 def plot_completion_times(data_list, line_style):
@@ -172,14 +173,40 @@ if __name__ == '__main__':
     import time
     import scipy.stats as st
     start = time.time()
-    data = test_multiple_trials('IGN', range(1, 11), 100)
+#    scenario = 5
+#    for model_type in ['IGN', 'FIX', 'IMP']:
+#        data = test_multiple_trials(model_type, range(1, 11), 100)
+#        file_name = 'Data/Det10trial_ExtE{}_{}'.format(str(scenario),
+#                                                       str(model_type)
+#                                                       )
+#        np.save(file_name, data)
+    data = test_multiple_trials('IGN', range(1, 11), 10)
     (complete_trials, completion_ratio) = check_completion_ratio(data)
     complete_trials_data = get_successful_trials(data)
-    (completion_time, standard_deviation) = check_completion_time(
-        complete_trials_data
-        )
+    (trial_mean_runtime,
+     mean_runtime,
+     runtime_sem
+     ) = check_completion_time(complete_trials_data)
     print((time.time() - start) / 60)
-    runtime_data = complete_trials_data[:, :, 1]
-    a = runtime_data.mean(1)
-    conf_int = st.t.interval(0.95, len(a)-1, loc=np.mean(a), scale=st.sem(a))
-    a_std = np.std(a)
+    conf_int = st.t.interval(0.95, len(trial_mean_runtime)-1,
+                             loc=np.mean(trial_mean_runtime),
+                             scale=st.sem(trial_mean_runtime)
+                             )
+#    data1 = np.load('Data/Det10trial_ExtE1_IMP.npy')
+#    data2 = np.load('Data/Det10trial_ExtE2_IMP.npy')
+#    data3 = np.load('Data/Det10trial_ExtE3_IMP.npy')
+#    data4 = np.load('Data/Det10trial_ExtE4_IMP.npy')
+#    data5 = np.load('Data/Det10trial_ExtE5_IMP.npy')
+#    successful_trials1 = get_successful_trials(data1)
+#    successful_trials2 = get_successful_trials(data2)
+#    successful_trials3 = get_successful_trials(data3)
+#    successful_trials4 = get_successful_trials(data4)
+#    successful_trials5 = get_successful_trials(data5)
+#    plt.boxplot([successful_trials1[:, :, 1].mean(1),
+#                 successful_trials2[:, :, 1].mean(1),
+#                 successful_trials3[:, :, 1].mean(1),
+#                 successful_trials4[:, :, 1].mean(1),
+#                 successful_trials5[:, :, 1].mean(1)
+#                 ]
+#                )
+#    plot_completion_times([data1, data2, data3, data4, data5], '-o')
