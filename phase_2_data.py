@@ -127,14 +127,14 @@ def check_completion_time(successful_trials_data):
     average number of steps and standard deviation.
     """
     runtime_data = successful_trials_data[:, :, 1]
-    trial_mean_runtime = np.mean(runtime_data, 1)
-    mean_runtime = np.mean(trial_mean_runtime)
-    runtime_sem = (np.std(trial_mean_runtime) / np.sqrt(len(runtime_data)))
+    trial_mean_runtimes = np.mean(runtime_data, 1)
+    mean_runtime = np.mean(trial_mean_runtimes)
+    runtime_sem = (np.std(trial_mean_runtimes) / np.sqrt(len(runtime_data)))
 
-    return (trial_mean_runtime, mean_runtime, runtime_sem)
+    return (trial_mean_runtimes, mean_runtime, runtime_sem)
 
 
-def plot_completion_times(data_list, line_style):
+def plot_completion_times(data_list):
     """Plot completion times
 
     Keyword arguments:
@@ -144,32 +144,43 @@ def plot_completion_times(data_list, line_style):
                            plotting standard
 
     Plots average completion times for different scenarios (set-ups of
-    environment and goal). Shows the dependency of completion time on
-    the number of sub-goals if the scenarios have increasing number of
-    sub-goals.
+    environment and goal) and fitted polynomial, defined within the
+    function. Shows the dependency of completion time on number of
+    sub-goals if the scenarios have increasing number of sub-goals.
     """
+    from scipy.optimize import curve_fit
+
+    def func(x, a, b):  # POLYNOMIAL CURVE-FIT
+        return a*x**2 + b*x
+
+    plt.figure()
     plt.xlabel('Scenario')
     plt.ylabel('Completion time (steps)')
+    box_plot_data = []
+    regression_data = []
+    for experiment_data in data_list:
+        successful_trials_data = get_successful_trials(experiment_data)
+        (trial_mean_runtimes,
+         mean_runtime,
+         runtime_sem
+         ) = check_completion_time(successful_trials_data)
+        box_plot_data.append(trial_mean_runtimes)
+        regression_data.append(np.median(trial_mean_runtimes))
 
+    plt.boxplot(box_plot_data)
+
+    # CURVE-FIT
     x = np.arange(1, len(data_list) + 1)
-    y = np.zeros(len(data_list))
-    plt.xticks(range(1, len(data_list) + 1))
-    plt.xlim(0.5, x[-1] + 0.5)
-    for i in range(len(data_list)):
-        experiment_data = data_list[i]
-        complete_trials_data = get_successful_trials(experiment_data)
-        (completion_time, standard_deviation) = check_completion_time(
-            complete_trials_data
-            )
-        y[i] = completion_time
+    popt, pcov = curve_fit(func, x, regression_data)
+    xx = np.arange(0, len(data_list) + 2, 0.1)
+    plt.xlim(0.5, 5.5)
+    plt.plot(xx, func(xx, *popt), '--')
 
-    plt.plot(x, y, line_style)
-    return
+    return popt
 
 
 if __name__ == '__main__':
     # TESTS
-#    data = test_trial('IGN', '6', 100)
     import time
     import scipy.stats as st
     start = time.time()
@@ -180,23 +191,24 @@ if __name__ == '__main__':
 #                                                       str(model_type)
 #                                                       )
 #        np.save(file_name, data)
-    data = test_multiple_trials('IGN', range(1, 11), 10)
-    (complete_trials, completion_ratio) = check_completion_ratio(data)
-    complete_trials_data = get_successful_trials(data)
-    (trial_mean_runtime,
-     mean_runtime,
-     runtime_sem
-     ) = check_completion_time(complete_trials_data)
-    print((time.time() - start) / 60)
-    conf_int = st.t.interval(0.95, len(trial_mean_runtime)-1,
-                             loc=np.mean(trial_mean_runtime),
-                             scale=st.sem(trial_mean_runtime)
-                             )
-#    data1 = np.load('Data/Det10trial_ExtE1_IMP.npy')
-#    data2 = np.load('Data/Det10trial_ExtE2_IMP.npy')
-#    data3 = np.load('Data/Det10trial_ExtE3_IMP.npy')
-#    data4 = np.load('Data/Det10trial_ExtE4_IMP.npy')
-#    data5 = np.load('Data/Det10trial_ExtE5_IMP.npy')
+#    data = test_multiple_trials('IGN', range(1, 5), 100)
+#    (complete_trials, completion_ratio) = check_completion_ratio(data)
+#    complete_trials_data = get_successful_trials(data)
+#    (trial_mean_runtimes,
+#     mean_runtime,
+#     runtime_sem
+#     ) = check_completion_time(complete_trials_data)
+#    print((time.time() - start) / 60)
+#    conf_int = st.t.interval(0.95, len(trial_mean_runtimes)-1,
+#                             loc=np.mean(trial_mean_runtimes),
+#                             scale=st.sem(trial_mean_runtimes)
+#                             )
+    suffix = 'IMP'
+    data1 = np.load('Data/Det10trial_ExtE1_{}.npy'.format(suffix))
+    data2 = np.load('Data/Det10trial_ExtE2_{}.npy'.format(suffix))
+    data3 = np.load('Data/Det10trial_ExtE3_{}.npy'.format(suffix))
+    data4 = np.load('Data/Det10trial_ExtE4_{}.npy'.format(suffix))
+    data5 = np.load('Data/Det10trial_ExtE5_{}.npy'.format(suffix))
 #    successful_trials1 = get_successful_trials(data1)
 #    successful_trials2 = get_successful_trials(data2)
 #    successful_trials3 = get_successful_trials(data3)
@@ -209,4 +221,4 @@ if __name__ == '__main__':
 #                 successful_trials5[:, :, 1].mean(1)
 #                 ]
 #                )
-#    plot_completion_times([data1, data2, data3, data4, data5], '-o')
+    z = plot_completion_times([data1, data2, data3, data4, data5])
