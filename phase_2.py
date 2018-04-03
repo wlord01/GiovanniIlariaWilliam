@@ -11,7 +11,7 @@ experiments to test the system on what it has learned in phase 1.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from geometricshapes import Square, Circle
+from geometricshapes import Square, Circle, Rectangle
 from perceptron import Perceptron
 import actions
 import environment
@@ -388,7 +388,7 @@ def main(model_type, trial_number):
     fovea_size = 0.14
     object_size = 0.10
     number_of_steps = 75
-    max_search_steps = 5
+    max_search_steps = 8
     THINKING_STEPS = 10
     ACTION_ATTEMPTS = 1
     accomplished_threshold = 0.01
@@ -422,11 +422,12 @@ def main(model_type, trial_number):
     restricted_search_on = True  # Toggle restriced forward model search
 
     # INITIALIZE INTERNAL ENVIRONMENT
-    int_s1 = Square([0.2, 0.2], object_size, [1, 0, 0], unit, 10)
-    int_c1 = Circle([0.8, 0.8], object_size, [0, 0, 1], unit, 3)
-    int_s2 = Square([0.8, 0.2], object_size, [0, 1, 0], unit, 3)
-    int_c2 = Circle([0.5, 0.5], object_size, [1, 0, 0], unit, 8)
-    int_objects = [int_s1, int_c1, int_s2, int_c2]
+    int_s1 = Square([0.2, 0.5], object_size, [0, 1, 0], unit, 3)
+    int_r1 = Rectangle([0.8, 0.2], object_size, [1, 0, 0], unit, 0, 5)
+    int_s2 = Square([0.2, 0.2], object_size, [1, 0, 0], unit, 10)
+    int_c1 = Circle([0.5, 0.8], object_size, [0, 0, 1], unit, 3)
+    int_c2 = Circle([0.5, 0.2], object_size, [1, 0, 0], unit, 8)
+    int_objects = [int_s1, int_r1, int_s2, int_c1, int_c2]
 
     int_env, int_fov, int_objects = environment.initialize(unit, fovea_center,
                                                            fovea_size,
@@ -434,11 +435,12 @@ def main(model_type, trial_number):
                                                            )
 
     # INITIALIZE EXTERNAL ENVIRONMENT
-    ext_s1 = Square([0.2, 0.8], object_size, [1, 0, 0], unit)
-    ext_c1 = Circle([0.8, 0.8], object_size, [0, 1, 0], unit)
-    ext_s2 = Square([0.8, 0.2], object_size, [0, 0, 1], unit)
-    ext_c2 = Circle([0.4, 0.5], object_size, [1, 0, 0], unit)
-    ext_objects = [ext_s1, ext_c1, ext_s2, ext_c2]
+    ext_s1 = Square([0.2, 0.5], object_size, [0, 0, 1], unit)
+    ext_r1 = Rectangle([0.8, 0.2], object_size, [0, 1, 0], unit, 0)
+    ext_s2 = Square([0.2, 0.8], object_size, [1, 0, 0], unit)
+    ext_c1 = Circle([0.5, 0.8], object_size, [0, 1, 0], unit)
+    ext_c2 = Circle([0.5, 0.5], object_size, [1, 0, 0], unit)
+    ext_objects = [ext_s1, ext_r1, ext_s2, ext_c1, ext_c2]
 
     ext_env, ext_fov, ext_objects = environment.initialize(unit, fovea_center,
                                                            fovea_size,
