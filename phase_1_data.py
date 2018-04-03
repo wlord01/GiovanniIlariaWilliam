@@ -144,7 +144,7 @@ def plot_bar_charts(number_of_simulations=10):
         mean_predictions = np.mean(final_predictions, 0)
         stdev = np.std(final_predictions, 0)
         plt.bar(np.arange(0, number_of_objects) - w,
-                mean_predictions[:, action], width=w, color='r',
+                mean_predictions[:, action], width=w, color='black',
                 yerr=stdev[:, action], ecolor='black', capsize=5,
                 align='center', tick_label=names
                 )
@@ -157,7 +157,7 @@ def plot_bar_charts(number_of_simulations=10):
         mean_predictions = np.mean(final_predictions, 0)
         stdev = np.std(final_predictions, 0)
         plt.bar(np.arange(0, number_of_objects), mean_predictions[:, action],
-                width=w, color='g', yerr=stdev[:, action], ecolor='black',
+                width=w, color='grey', yerr=stdev[:, action], ecolor='black',
                 capsize=5, align='center', tick_label=names
                 )
 
@@ -170,7 +170,7 @@ def plot_bar_charts(number_of_simulations=10):
         stdev = np.std(final_predictions, 0)
         plt.bar(np.arange(0, number_of_objects) + w,
                 mean_predictions[:, action], width=w, yerr=stdev[:, action],
-                ecolor='black', capsize=5, align='center'
+                ecolor='black', capsize=5, align='center', color='w'
                 )
 
 
@@ -229,21 +229,24 @@ def get_details(data_array, i, j):
         label = 'Rectangle, '
 
     if data_array[0, 1, j, i] == 0:
-        object_color = 'r'
+        color = 'r'
+        style = '-'
         label += 'red'
     elif data_array[0, 1, j, i] == 1:
-        object_color = 'g'
+        color = 'g'
+        style = '--'
         label += 'green'
     elif data_array[0, 1, j, i] == 2:
-        object_color = 'b'
+        color = 'b'
+        style = ':'
         label += 'blue'
 
-    line_color = object_color
-    marker = object_color+object_type
+    line_style = '{}{}'.format(style, color)
+    marker_style = '{}{}'.format(color, object_type)
     marker_points = np.arange(0, len(data_array),
                               int(len(data_array)/3)
                               )
-    return line_color, marker, marker_points, label
+    return line_style, marker_style, marker_points, label
 
 
 def plot(file_name):
@@ -264,14 +267,14 @@ def plot(file_name):
         plt.subplot(311)
         plt.title('Action ' + str(i) + ' ignorance')
         for j in range(len(data_array[0, 0, :])):
-            line_color, marker, marker_points, label = get_details(data_array,
-                                                                   i, j
-                                                                   )
+            line_style, marker_style, marker_points, label = get_details(
+                data_array, i, j
+                )
             plt.plot(np.arange(data_array.shape[0]), data_array[:, 2, j, i],
-                     line_color
+                     line_style
                      )
             plt.plot(marker_points, data_array[marker_points, 2, j, i],
-                     marker, label=label
+                     marker_style, label=label
                      )
 
 #        plt.legend()
@@ -325,14 +328,14 @@ def plot_affordance(file_name):
         plt.ylabel('Affordance prediction')
         plt.tight_layout()
         for j in range(len(data_array[0, 0, :])):
-            line_color, marker, marker_points, label = get_details(data_array,
-                                                                   i, j
-                                                                   )
+            line_style, marker_style, marker_points, label = get_details(
+                data_array, i, j
+                )
             plt.plot(np.arange(data_array.shape[0]), data_array[:, 3, j, i],
-                     line_color, lw=2
+                     line_style, lw=2
                      )
             plt.plot(marker_points, data_array[marker_points, 3, j, i],
-                     marker, ms=10, label=label
+                     marker_style, ms=10, label=label
                      )
 
 
@@ -341,11 +344,11 @@ if __name__ == '__main__':
     # TESTS
     import matplotlib
     matplotlib.rcParams.update({'font.size': 22})
-#    plot('Data/s1data_array_IGN.npy')
-#    get_average_data(10, 'IMP')
+#    plot('Data/s2data_array_FIX.npy')
+#    get_average_data(10, 'FIX')
 #    get_end_predictions(10, model_type='IGN')
 #    get_end_predictions(10, model_type='FIX')
 #    get_end_predictions(10, model_type='IMP')
-    plot_bar_charts(10)
+#    plot_bar_charts(10)
 #    get_average_weights(10, 'IGN')
-#    plot_affordance('Data/10sim_average_data_IMP.npy')
+    plot_affordance('Data/10sim_average_data_FIX.npy')
