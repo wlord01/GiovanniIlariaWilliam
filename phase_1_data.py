@@ -144,7 +144,7 @@ def plot_bar_charts(number_of_simulations=10):
         mean_predictions = np.mean(final_predictions, 0)
         stdev = np.std(final_predictions, 0)
         plt.bar(np.arange(0, number_of_objects) - w,
-                mean_predictions[:, action], width=w, color='r',
+                mean_predictions[:, action], width=w, color='black',
                 yerr=stdev[:, action], ecolor='black', capsize=5,
                 align='center', tick_label=names
                 )
@@ -157,7 +157,7 @@ def plot_bar_charts(number_of_simulations=10):
         mean_predictions = np.mean(final_predictions, 0)
         stdev = np.std(final_predictions, 0)
         plt.bar(np.arange(0, number_of_objects), mean_predictions[:, action],
-                width=w, color='g', yerr=stdev[:, action], ecolor='black',
+                width=w, color='grey', yerr=stdev[:, action], ecolor='black',
                 capsize=5, align='center', tick_label=names
                 )
 
@@ -170,7 +170,7 @@ def plot_bar_charts(number_of_simulations=10):
         stdev = np.std(final_predictions, 0)
         plt.bar(np.arange(0, number_of_objects) + w,
                 mean_predictions[:, action], width=w, yerr=stdev[:, action],
-                ecolor='black', capsize=5, align='center'
+                ecolor='black', capsize=5, align='center', color='w'
                 )
 
 
@@ -351,4 +351,4 @@ if __name__ == '__main__':
 #    get_end_predictions(10, model_type='IMP')
 #    plot_bar_charts(10)
 #    get_average_weights(10, 'IGN')
-    plot_affordance('Data/10sim_average_data_IMP.npy')
+    plot_affordance('Data/10sim_average_data_FIX.npy')
