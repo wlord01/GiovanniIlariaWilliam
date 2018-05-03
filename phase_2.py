@@ -164,17 +164,26 @@ def goal_achievable_check(afforded_actions, where_effect_predictors,
     return None
 
 
-def goal_achievable_classifier(successful_action):
+def goal_achievable_classifier(successful_action, free_space):
     """
     Check if goal is achievable from current state
 
     Keyword arguments:
     - successful_action -- index of successful action (int)
+
+    Goal is achievable if there is a successful action and, in case the
+    successful action is the move action, if the target position is
+    free.
     """
     if isinstance(successful_action, int):
-        return True
-
-    return False
+        if successful_action == 0 and free_space:
+            return True
+        elif successful_action == 0 and not free_space:
+            return False
+        else:
+            return True
+    else:
+        return False
 
 
 def graphics(int_env, int_objects, int_fov, ext_env, ext_objects, ext_fov,
@@ -387,10 +396,10 @@ def main(model_type, trial_number):
     unit = 150  # SIZE OF SIDES OF ENVIRONMENT
     fovea_size = 0.14
     object_size = 0.10
-    number_of_steps = 75
+    number_of_steps = 125
     max_search_steps = 8
     THINKING_STEPS = 10
-    ACTION_ATTEMPTS = 1
+    ACTION_ATTEMPTS = 2
     accomplished_threshold = 0.01
     where_success_threshold = 0.01
     what_success_threshold = 0.0035
@@ -417,17 +426,17 @@ def main(model_type, trial_number):
     sub_goal = None
     sub_goal_accomplished = False
     sub_goal_achievable = False
-    graphics_on = False
+    graphics_on = True
     utility_reasoning_on = False
     restricted_search_on = True  # Toggle restriced forward model search
 
     # INITIALIZE INTERNAL ENVIRONMENT
-    int_s1 = Square([0.2, 0.5], object_size, [0, 1, 0], unit, 3)
-    int_r1 = Rectangle([0.8, 0.2], object_size, [1, 0, 0], unit, 0, 5)
-    int_s2 = Square([0.2, 0.2], object_size, [1, 0, 0], unit, 10)
-    int_c1 = Circle([0.5, 0.8], object_size, [0, 0, 1], unit, 3)
-    int_c2 = Circle([0.5, 0.2], object_size, [1, 0, 0], unit, 8)
-    int_objects = [int_s1, int_r1, int_s2, int_c1, int_c2]
+    int_s1 = Square([0.2, 0.5], object_size, [0, 1, 0], unit, 1)
+    int_r1 = Rectangle([0.8, 0.2], object_size, [1, 0, 0], unit, 0, 2)
+    int_s2 = Square([0.2, 0.2], object_size, [1, 0, 0], unit, 4)
+    int_c1 = Circle([0.5, 0.8], object_size, [0, 0, 1], unit, 1)
+    int_c2 = Circle([0.5, 0.2], object_size, [1, 0, 0], unit, 10)
+    int_objects = [int_s1, int_r1, int_s2, int_c1]  # , int_c2]
 
     int_env, int_fov, int_objects = environment.initialize(unit, fovea_center,
                                                            fovea_size,
@@ -440,7 +449,7 @@ def main(model_type, trial_number):
     ext_s2 = Square([0.2, 0.8], object_size, [1, 0, 0], unit)
     ext_c1 = Circle([0.5, 0.8], object_size, [0, 1, 0], unit)
     ext_c2 = Circle([0.5, 0.5], object_size, [1, 0, 0], unit)
-    ext_objects = [ext_s1, ext_r1, ext_s2, ext_c1, ext_c2]
+    ext_objects = [ext_s1, ext_r1, ext_s2, ext_c1]  # , ext_c2]
 
     ext_env, ext_fov, ext_objects = environment.initialize(unit, fovea_center,
                                                            fovea_size,
@@ -600,7 +609,12 @@ def main(model_type, trial_number):
                 what_success_threshold
                 )
 
-            sub_goal_achievable = goal_achievable_classifier(successful_action)
+            free_space = perception.check_free_space(ext_env, goal_state[0:2],
+                                                     ext_fov
+                                                     )
+            sub_goal_achievable = goal_achievable_classifier(successful_action,
+                                                             free_space
+                                                             )
 
             if sub_goal_achievable:
                 if utility_reasoning_on:
@@ -614,11 +628,13 @@ def main(model_type, trial_number):
                     success_prediction = affordance_predictor.get_output()
                     current_utility = success_prediction * sub_goal.value
 
+#                print(current_utility, overall_utility)
+
                 if utility_reasoning_on and step <= THINKING_STEPS:
                     if current_utility >= overall_utility:
                         overall_utility = leaky_average(overall_utility,
                                                         current_utility,
-                                                        leak_rate=0.8
+                                                        leak_rate=1.0
                                                         )
                     sub_goal = None
                     sub_goal_accomplished = False
@@ -668,12 +684,11 @@ def main(model_type, trial_number):
         # BREAK IF GOAL IMAGE IS ACCOMPLISHED
         if perception.check_images(int_env, ext_env, 1e-4):
 #            print('Goal accomplished at step {}!'.format(str(step)))
-            return (1, step, explored_actions / step)
-        elif utility_reasoning_on and actions_made >= ACTION_ATTEMPTS:
-#            print('Reward: ', reward)
-            return (reward)
+            return (1, step, explored_actions / step, reward)
+        elif actions_made >= ACTION_ATTEMPTS:
+            return (0, step, explored_actions / step, reward)
 
-    return (0, step, explored_actions / step)
+    return (0, step, explored_actions / step, reward)
 
 
 if __name__ == '__main__':
@@ -685,9 +700,34 @@ if __name__ == '__main__':
     Make sure to put plots in separate window (%matplotlib qt) to see
     graphics!
     """
-    model_type = 'IGN'
+    model_type = 'IMPs'
     trial_number = '1'
-    data = main(model_type, trial_number)
+    runs = 100
+    trials = 10
+#    np.random.seed(12)
+
+    # TEST UTILITY ACCUMULATION
+    utility = np.zeros((trials, runs))
+    for trial_number in range(trials):
+        for i in range(runs):
+            data = main(model_type, '1')  # str(trial_number+1))
+            utility[trial_number, i] = data[3]
+    trial_means = np.mean(utility, axis=0)
+    system_mean = np.mean(trial_means)
+
+    # TEST GOAL ACCOMPLISHING
+#    total_complete_runs = 0
+#    for trial_number in ['1','2','3','4','5','6','7','8','9','10']:        
+#        complete_runs = 0
+#        for i in range(runs):
+#            data = main(model_type, '1')
+#            if data[0] == 1:
+#                complete_runs += 1
+#        print('Completion ratio: {}/{}'.format(str(complete_runs), str(runs)))
+#        total_complete_runs += complete_runs
+#    print('Total completion ratio: {}/{}'.format(str(total_complete_runs), str(1000)))
+#
+#    print('Average complete runs: ', str(total_complete_runs/10))
     # Run tests
 
 #    plt.clf()

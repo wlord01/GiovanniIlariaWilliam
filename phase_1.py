@@ -88,43 +88,6 @@ def leaky_average(average, current_value, leak_rate=0.05):
     return (1-leak_rate) * average + leak_rate * current_value
 
 
-def check_target_position(environment, target_xy, fovea):
-    """Return focus image at target positon
-
-    Keyword arguments:
-    - environment -- image array of environment
-    - target_xy -- array of target position coordinates
-    - fovea -- fovea object
-
-    The function creates and returns a temporary focus image using the
-    attributes of the real focus image and the target position.
-    """
-    temp_fovea = Fovea(target_xy, fovea.size, [0, 0, 0], fovea.unit)
-    temp_image = temp_fovea.get_focus_image(environment)
-    return temp_image
-
-
-def check_free_space(environment, target_xy, fovea):
-    """Check if target area is free
-
-    Keyword arguments:
-    - env_image -- image array of the environment
-    - target_xy -- the xy coordinates of the target position
-    - fovea -- fovea object
-
-    Check if the focus area around the target position enx_xy is free
-    space. The method creates a temporary fovea image at the target
-    position and checks if it contains only zeros.
-
-    Returns True/False.
-    """
-    temp_image = check_target_position(environment, target_xy, fovea)
-    if np.array_equal(temp_image, np.zeros(temp_image.shape)):
-        return True
-    else:
-        return False
-
-
 def get_random_position(limits):
     """Generate random xy coordinates within limits
 
@@ -334,7 +297,7 @@ def main(simulation_number=0):
     print_statements_on = False
     graphics_on = False
     save_weights_on = True
-    ignorance_signal = True
+    ignorance_signal = False
     fix_threshold_on = False
 
     # SET CONSTANTS
@@ -344,10 +307,10 @@ def main(simulation_number=0):
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 6000
-    leak_rate = 0.3  # LEAKY INTEGRATOR
-    affordance_learning_rate = 0.01
-    improvement_learning_rate = 0.005
+    number_of_steps = 10000
+    leak_rate = 0.1  # LEAKY INTEGRATOR
+    affordance_learning_rate = 0.001
+    improvement_learning_rate = 0.0005
     where_effect_learning_rate = 0.5
     what_effect_learning_rate = 0.04
     improvement_predictor_weights = 0.00005
@@ -370,7 +333,9 @@ def main(simulation_number=0):
     r3 = Rectangle([0.8, 0.8], object_size, [0, 0, 1], unit, 0)
 
     objects = [s1, s2, s3, c1, c2, c3, r1, r2, r3]
-    late_objects = np.array([  # [6000, r1],
+    late_objects = np.array([  # [2000, c1],
+#                             [2000, c2],
+#                             [2000, c3]
                              ]
                             )
 
@@ -402,11 +367,11 @@ def main(simulation_number=0):
 
     if save_data:
         if ignorance_signal:
-            file_name_suffix = 'IGN'
+            file_name_suffix = 'IGNs'
             if fix_threshold_on:
-                file_name_suffix = 'FIX'
+                file_name_suffix = 'FIXs'
         else:
-            file_name_suffix = 'IMP'
+            file_name_suffix = 'IMPs'
 
         file_name = './Data/s{}data_array_{}.npy'.format(
             str(simulation_number),
@@ -496,7 +461,7 @@ def main(simulation_number=0):
                 print('Introduce new object!')
                 late_object = late_objects[i, 1]
                 position = get_random_position(limits)
-                while not check_free_space(env, position, fovea):
+                while not perception.check_free_space(env, position, fovea):
                     position = get_random_position(limits)
                 late_object.center += position
             env = environment.redraw(env, unit, objects)
@@ -552,7 +517,9 @@ def main(simulation_number=0):
                 if graphics_on:
                     graphics(env, fovea, objects, unit)
 
-                while not check_free_space(env, new_position, fovea):
+                while not perception.check_free_space(env, new_position,
+                                                      fovea
+                                                      ):
                     new_position = get_random_position(limits)
                     fovea.move(new_position - fovea.center)
 
@@ -576,10 +543,7 @@ def main(simulation_number=0):
 
                 action_input = ()
 
-            p = np.random.rand()
-            p = 1
-            if p >= 0.3:
-                action(current_object, *action_input)
+            action(current_object, *action_input)
             where_effect_predictor.set_input(where_effect_predictor_input)
             what_effect_predictor.set_input(what_effect_predictor_input)
             env = environment.redraw(env, unit, objects)
@@ -722,13 +686,13 @@ def main(simulation_number=0):
             p.write_weights_to_file(file_name)
 
     # CHECK EFFECT PREDICTORS
-    import tests
-    tests.effect_predictors(where_effect_predictors, what_effect_predictors,
-                            unit, fovea_size, object_size)
+#    import tests
+#    tests.effect_predictors(where_effect_predictors, what_effect_predictors,
+#                            unit, fovea_size, object_size)
 
 if __name__ == '__main__':
     """Main"""
-#    main()
-    for simulation_number in range(1, 11):
-        main(simulation_number)
-        print('End of simulation {}'.format(str(simulation_number)))
+    main()
+#    for simulation_number in range(1, 11):
+#        main(simulation_number)
+#        print('End of simulation {}'.format(str(simulation_number)))

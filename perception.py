@@ -13,6 +13,44 @@ Functions:
 
 import numpy as np
 import scipy.ndimage as ndimage
+from geometricshapes import Fovea
+
+
+def check_target_position(environment, target_xy, fovea):
+    """Return focus image at target positon
+
+    Keyword arguments:
+    - environment -- image array of environment
+    - target_xy -- array of target position coordinates
+    - fovea -- fovea object
+
+    The function creates and returns a temporary focus image using the
+    attributes of the real focus image and the target position.
+    """
+    temp_fovea = Fovea(target_xy, fovea.size, [0, 0, 0], fovea.unit)
+    temp_image = temp_fovea.get_focus_image(environment)
+    return temp_image
+
+
+def check_free_space(environment, target_xy, fovea):
+    """Check if target area is free
+
+    Keyword arguments:
+    - env_image -- image array of the environment
+    - target_xy -- the xy coordinates of the target position
+    - fovea -- fovea object
+
+    Check if the focus area around the target position enx_xy is free
+    space. The method creates a temporary fovea image at the target
+    position and checks if it contains only zeros.
+
+    Returns True/False.
+    """
+    temp_image = check_target_position(environment, target_xy, fovea)
+    if np.array_equal(temp_image, np.zeros(temp_image.shape)):
+        return True
+    else:
+        return False
 
 
 def check_images(image_array_1, image_array_2, threshold=0.01):
