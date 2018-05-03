@@ -147,9 +147,19 @@ def parameterised_skill(object_, end_position, limits):
     - start_position -- array of float coordinates of start position
     - object_ -- the object that the function should move
     """
-    start_position = np.copy(object_.center)
-    vector = end_position - start_position
-    move_object(object_, vector, limits)
+    # STOCHASTICITY
+    if np.all(object_.color == [1, 0, 0]):
+        p = 0.6
+#    elif object_.type_ == 'Rectangle':
+#        p = 0.3
+    else:
+        p = 1.0
+#    p = 1  # FOR DETERMINISTIC ENVIRONMENT
+
+    if np.random.rand() <= p:
+        start_position = np.copy(object_.center)
+        vector = end_position - start_position
+        move_object(object_, vector, limits)
 
 
 def activate(object_):
@@ -159,7 +169,10 @@ def activate(object_):
     - object_ -- The object (class instance) to activate
 
     Turn object green if object color is red"""
-    object_.color = np.array([0, 1, 0])
+    p = 0.7  # STOCHASTICITY
+#    p = 1  # FOR DETERMINISTIC ENVIRONMENT
+    if np.random.rand() <= p:
+        object_.color = np.array([0, 1, 0])
 
 
 def deactivate(object_):
@@ -168,7 +181,10 @@ def deactivate(object_):
     Keyword arguments:
     - object_ -- The object (class instance) to deactivate
     """
-    object_.color = np.array([1, 0, 0])
+#    p = 0.6  # STOCHASTICITY
+    p = 1  # FOR DETERMINISTIC ENVIRONMENT
+    if np.random.rand() <= p:
+        object_.color = np.array([1, 0, 0])
 
 
 def neutralize(object_):
@@ -177,7 +193,10 @@ def neutralize(object_):
     Keyword arguments:
     - object_ -- The object (class instance) to neutralize
     """
-    object_.color = np.array([0, 0, 1])
+    p = 0.8  # STOCHASTICITY
+#    p = 1  # FOR DETERMINISTIC ENVIRONMENT
+    if np.random.rand() <= p:
+        object_.color = np.array([0, 0, 1])
 
 
 if __name__ == '__main__':
