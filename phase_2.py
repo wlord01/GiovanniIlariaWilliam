@@ -399,7 +399,7 @@ def main(model_type, trial_number):
     number_of_steps = 125
     max_search_steps = 8
     THINKING_STEPS = 10
-    ACTION_ATTEMPTS = 2
+    ACTION_ATTEMPTS = 3
     accomplished_threshold = 0.01
     where_success_threshold = 0.01
     what_success_threshold = 0.0035
@@ -426,9 +426,9 @@ def main(model_type, trial_number):
     sub_goal = None
     sub_goal_accomplished = False
     sub_goal_achievable = False
-    graphics_on = True
-    utility_reasoning_on = False
-    restricted_search_on = True  # Toggle restriced forward model search
+    graphics_on = False
+    utility_reasoning_on = True
+    restricted_search_on = True  # Toggle restricted forward model search
 
     # INITIALIZE INTERNAL ENVIRONMENT
     int_s1 = Square([0.2, 0.5], object_size, [0, 1, 0], unit, 1)
@@ -628,8 +628,6 @@ def main(model_type, trial_number):
                     success_prediction = affordance_predictor.get_output()
                     current_utility = success_prediction * sub_goal.value
 
-#                print(current_utility, overall_utility)
-
                 if utility_reasoning_on and step <= THINKING_STEPS:
                     if current_utility >= overall_utility:
                         overall_utility = leaky_average(overall_utility,
@@ -661,7 +659,8 @@ def main(model_type, trial_number):
                             )
 
                         actions_made += 1
-                        reward += sub_goal.value
+                        if sub_goal_accomplished:
+                            reward += sub_goal.value
                     else:
                         sub_goal = None
                         sub_goal_accomplished = False
@@ -702,18 +701,19 @@ if __name__ == '__main__':
     """
     model_type = 'IMPs'
     trial_number = '1'
-    runs = 100
-    trials = 10
+    runs = 20
+    trials = ['1', '2', '3', '4', '5', '8', '9']
 #    np.random.seed(12)
 
     # TEST UTILITY ACCUMULATION
-    utility = np.zeros((trials, runs))
-    for trial_number in range(trials):
+    utility = np.zeros((len(trials), runs))
+    for trial_number in range(len(trials)):
         for i in range(runs):
-            data = main(model_type, '1')  # str(trial_number+1))
+            data = main(model_type, trials[trial_number])
             utility[trial_number, i] = data[3]
-    trial_means = np.mean(utility, axis=0)
+    trial_means = np.mean(utility, axis=1)
     system_mean = np.mean(trial_means)
+    system_SEM = np.std(trial_means) / np.sqrt(len(trials))
 
     # TEST GOAL ACCOMPLISHING
 #    total_complete_runs = 0
