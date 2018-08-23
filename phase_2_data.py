@@ -179,18 +179,115 @@ def plot_completion_times(data_list):
     return popt
 
 
+def plot_utility_bars(data1, data2):
+    """
+    Plot bar chart for utility data
+
+    Keyword arguments:
+    - data1: array containing first data set
+    - data2: array containing second data set
+
+    The function plots the mean accumulated utility for different number of
+    allowed action attempts, for the two models.
+    """
+#    data1_means = (5, 15, 30)  # , 40)
+#    data2_means = (6, 13, 32)  # , 38)
+#    data1_std = (2, 3, 4)  # , 5)
+#    data2_std = (2, 3, 3)  # , 6)
+    data1_means = np.mean(data1, axis=1)
+    data2_means = np.mean(data2, axis=1)
+    data1_error = np.std(data1, axis=1) / np.sqrt(len(data1[0]))
+    data2_error = np.std(data2, axis=1) / np.sqrt(len(data2[0]))
+    n = len(data1_means)
+    ind = np.arange(n)    # the x locations for the groups
+    w = 0.4
+    labels = [str(i + 1) for i in range(n)]
+
+    # Pull the formatting out here
+    bar_kwargs = {'width': w, 'color': 'black', 'yerr': data1_error,
+                  'ecolor': 'grey', 'capsize': 5, 'tick_label': labels
+                  }
+
+    fig, ax = plt.subplots()
+    ax.bar(ind, data1_means, **bar_kwargs)
+
+    bar_kwargs = {'width': w, 'color': 'white', 'yerr': data2_error,
+                  'ecolor': 'black', 'capsize': 5, 'tick_label': labels
+                  }
+    ax.bar(ind + w, data2_means, **bar_kwargs)
+
+    def plot_significance(i, text, data1_means, data2_means):
+        # TEST OF P-VALUE ARROWS
+        (y_bottom, y_top) = ax.get_ylim()
+        y_height = y_top - y_bottom
+        x = ind[i] + w / 2
+        y = max(data1_means[i], data2_means[i]) + (y_height * 0.03)
+        props = {'connectionstyle': 'bar', 'arrowstyle': '-', 'shrinkA': 6,
+                 'shrinkB': 0
+                 }
+
+        ax.text(x + w / 2, y + (y_height * 0.02), text, ha='center',
+                va='bottom', size='small'
+                )
+        ax.annotate('', xy=(x, y), xytext=(x + w, y), arrowprops=props)
+
+    for i in range(n):
+        (t, p) = st.ttest_ind(data1[i], data2[i], equal_var=False)
+        if p <= 0.001:
+            plot_significance(i, '***', data1_means, data2_means)
+        elif p <= 0.01:
+            plot_significance(i, '**', data1_means, data2_means)
+        elif p <= 0.05:
+            plot_significance(i, '*', data1_means, data2_means)
+#        elif p <= 0.1:
+#            plot_significance(i, '****', data1_means, data2_means)
+
+    (y_bottom, y_top) = ax.get_ylim()
+    y_height = y_top - y_bottom
+    ax.text(0.2, y_height - 0.1*y_height,
+            '*) p < 0.05, **) p < 0.01, ***) p < 0.001', ha='left',
+            va='bottom', size='x-small'
+            )
+
+    plt.ylabel('Utility')
+    plt.xlabel('Action attempts')
+
+    # FOR CHECKED ACTIONS BAR CHART
+#    props = {'arrowstyle': '-', 'connectionstyle': 'bar', 'shrinkA': 60,
+#             'shrinkB': 0
+#             }
+#    ax.set_xlim(-0.05, 0.85)
+#    ax.set_ylim(0, 4.5)
+#    ax.set_ylabel('Checked actions')
+#    ax.set_xticks((w / 2, 3*w / 2))
+#    ax.set_xticklabels(('Restricted search', 'Nonrestricted search'))
+#    ax.annotate('', xy=(0.2, 2.8), xytext=(0.6, 2.8), arrowprops=props)
+#    (t, p) = st.stats.ttest_ind(data1[0], data2[0], equal_var=False)
+#    ax.text(0.4, 3.8, 'p={}'.format(str(round(p, 8))), ha='center',
+#            va='bottom', size='small'
+#            )
+
+    plt.tight_layout()
+
+    plt.show()
+
+
 if __name__ == '__main__':
     # TESTS
     import time
     import scipy.stats as st
-    start = time.time()
+    import matplotlib
+    matplotlib.rcParams.update({'font.size': 18})
+#    start = time.time()
+
 #    scenario = 5
-#    for model_type in ['IGN', 'FIX', 'IMP']:
+#    for model_type in ['IMPs']:
 #        data = test_multiple_trials(model_type, range(1, 11), 100)
-#        file_name = 'Data/Det10trial_ExtE{}_{}'.format(str(scenario),
-#                                                       str(model_type)
-#                                                       )
+#        file_name = 'Data/10trial_ExtE{}_{}'.format(str(scenario),
+#                                                    str(model_type)
+#                                                    )
 #        np.save(file_name, data)
+
 #    data = test_multiple_trials('IGN', range(1, 5), 100)
 #    (complete_trials, completion_ratio) = check_completion_ratio(data)
 #    complete_trials_data = get_successful_trials(data)
@@ -203,22 +300,25 @@ if __name__ == '__main__':
 #                             loc=np.mean(trial_mean_runtimes),
 #                             scale=st.sem(trial_mean_runtimes)
 #                             )
-    suffix = 'IMP'
-    data1 = np.load('Data/Det10trial_ExtE1_{}.npy'.format(suffix))
-    data2 = np.load('Data/Det10trial_ExtE2_{}.npy'.format(suffix))
-    data3 = np.load('Data/Det10trial_ExtE3_{}.npy'.format(suffix))
-    data4 = np.load('Data/Det10trial_ExtE4_{}.npy'.format(suffix))
-    data5 = np.load('Data/Det10trial_ExtE5_{}.npy'.format(suffix))
-#    successful_trials1 = get_successful_trials(data1)
-#    successful_trials2 = get_successful_trials(data2)
-#    successful_trials3 = get_successful_trials(data3)
-#    successful_trials4 = get_successful_trials(data4)
-#    successful_trials5 = get_successful_trials(data5)
-#    plt.boxplot([successful_trials1[:, :, 1].mean(1),
-#                 successful_trials2[:, :, 1].mean(1),
-#                 successful_trials3[:, :, 1].mean(1),
-#                 successful_trials4[:, :, 1].mean(1),
-#                 successful_trials5[:, :, 1].mean(1)
-#                 ]
-#                )
-    z = plot_completion_times([data1, data2, data3, data4, data5])
+
+#    suffix = 'IMP'
+#    data1 = np.load('Data/10trial_ExtE1_{}.npy'.format(suffix))
+#    data2 = np.load('Data/10trial_ExtE2_{}.npy'.format(suffix))
+#    data3 = np.load('Data/10trial_ExtE3_{}.npy'.format(suffix))
+#    data4 = np.load('Data/10trial_ExtE4_{}.npy'.format(suffix))
+#    data5 = np.load('Data/10trial_ExtE5_{}.npy'.format(suffix))
+#    (complete_trials1, completion_ratio1) = check_completion_ratio(data1)
+#    (complete_trials2, completion_ratio2) = check_completion_ratio(data2)
+#    (complete_trials3, completion_ratio3) = check_completion_ratio(data3)
+#    (complete_trials4, completion_ratio4) = check_completion_ratio(data4)
+#    (complete_trials5, completion_ratio5) = check_completion_ratio(data5)
+
+#    z = plot_completion_times([data1, data2, data3, data4, data5])
+
+# UTILITY REASONING
+utility_planner_data = np.load('Data/UtilityPlannerDataIMPs.npy')
+simple_planner_data = np.load('Data/SimplePlannerDataIMPs.npy')
+plot_utility_bars(simple_planner_data, utility_planner_data)
+#plot_utility_bars(np.array([restricted_search_data]),
+#                  np.array([nonrestricted_search_data])
+#                  )
