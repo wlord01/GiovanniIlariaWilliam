@@ -85,8 +85,8 @@ def effect_predictors(where_effect_predictors, what_effect_predictors, unit,
     object_images = environment.get_object_images(unit, fovea_size,
                                                   object_size
                                                   )
-    what_effect_predictor = what_effect_predictors[1]
-    where_effect_predictor = where_effect_predictors[1]
+#    what_effect_predictor = what_effect_predictors[1]
+#    where_effect_predictor = where_effect_predictors[1]
     for k in range(len(where_effect_predictors)):
         where_effect_predictor = where_effect_predictors[k]
         what_effect_predictor = what_effect_predictors[k]
@@ -135,10 +135,10 @@ def effect_predictors(where_effect_predictors, what_effect_predictors, unit,
 if __name__ == '__main__':
     # TESTS
     import actions
-    model_type = 'IGN'
-    where_weights_file = './Data/s0where_{action_number}_{file_suffix}.npy'
-    what_weights_file = './Data/s0what_{action_number}_{file_suffix}.npy'
-    affordance_weights_file = ('./Data/s0affordance_{action_number}_'
+    model_type = 'IMPs'
+    where_weights_file = './Data/s2where_{action_number}_{file_suffix}.npy'
+    what_weights_file = './Data/s2what_{action_number}_{file_suffix}.npy'
+    affordance_weights_file = ('./Data/s2affordance_{action_number}_'
                                '{file_suffix}.npy'
                                )
 

@@ -171,7 +171,7 @@ def graphics(env, fovea, objects, unit):
     fovea_im = fovea.get_focus_image(env)
 
     plt.subplot(121)
-    plt.title('Training environment')
+    plt.title('Environment')
     plt.xlim(0, unit)
     plt.ylim(0, unit)
     plt.axis('off')
@@ -292,11 +292,11 @@ def main(simulation_number=0):
     """
     # FLAGS
     action_performed = False
-    save_data = True
+    save_data = False
     plot_data = False
     print_statements_on = False
-    graphics_on = False
-    save_weights_on = True
+    graphics_on = True
+    save_weights_on = False
     ignorance_signal = False
     fix_threshold_on = False
 
@@ -307,7 +307,7 @@ def main(simulation_number=0):
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 10000
+    number_of_steps = 2000
     leak_rate = 0.1  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.001
     improvement_learning_rate = 0.0005
@@ -543,6 +543,7 @@ def main(simulation_number=0):
 
                 action_input = ()
 
+#            if not current_object.type_ == 'Circle':
             action(current_object, *action_input)
             where_effect_predictor.set_input(where_effect_predictor_input)
             what_effect_predictor.set_input(what_effect_predictor_input)

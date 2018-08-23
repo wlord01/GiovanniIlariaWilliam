@@ -154,7 +154,7 @@ def parameterised_skill(object_, end_position, limits):
 #        p = 0.3
     else:
         p = 1.0
-#    p = 1  # FOR DETERMINISTIC ENVIRONMENT
+    p = 1  # FOR DETERMINISTIC ENVIRONMENT
 
     if np.random.rand() <= p:
         start_position = np.copy(object_.center)
@@ -170,7 +170,7 @@ def activate(object_):
 
     Turn object green if object color is red"""
     p = 0.7  # STOCHASTICITY
-#    p = 1  # FOR DETERMINISTIC ENVIRONMENT
+    p = 1  # FOR DETERMINISTIC ENVIRONMENT
     if np.random.rand() <= p:
         object_.color = np.array([0, 1, 0])
 
@@ -194,7 +194,7 @@ def neutralize(object_):
     - object_ -- The object (class instance) to neutralize
     """
     p = 0.8  # STOCHASTICITY
-#    p = 1  # FOR DETERMINISTIC ENVIRONMENT
+    p = 1  # FOR DETERMINISTIC ENVIRONMENT
     if np.random.rand() <= p:
         object_.color = np.array([0, 0, 1])
 
