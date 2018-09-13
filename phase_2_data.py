@@ -279,18 +279,18 @@ if __name__ == '__main__':
     import matplotlib
     matplotlib.rcParams.update({'font.size': 18})
 #    start = time.time()
-
-#    scenario = 5
-#    for model_type in ['IMPs']:
+#
+#    scenario = 's'
+#    for model_type in ['IMPst']:
 #        data = test_multiple_trials(model_type, range(1, 11), 100)
 #        file_name = 'Data/10trial_ExtE{}_{}'.format(str(scenario),
 #                                                    str(model_type)
 #                                                    )
 #        np.save(file_name, data)
 
-#    data = test_multiple_trials('IGN', range(1, 5), 100)
-#    (complete_trials, completion_ratio) = check_completion_ratio(data)
-#    complete_trials_data = get_successful_trials(data)
+    data = test_multiple_trials('FIXst', range(1, 11), 100)
+    (complete_trials, completion_ratio) = check_completion_ratio(data)
+    complete_trials_data = get_successful_trials(data)
 #    (trial_mean_runtimes,
 #     mean_runtime,
 #     runtime_sem
@@ -316,9 +316,9 @@ if __name__ == '__main__':
 #    z = plot_completion_times([data1, data2, data3, data4, data5])
 
 # UTILITY REASONING
-utility_planner_data = np.load('Data/UtilityPlannerDataIMPs.npy')
-simple_planner_data = np.load('Data/SimplePlannerDataIMPs.npy')
-plot_utility_bars(simple_planner_data, utility_planner_data)
+#utility_planner_data = np.load('Data/UtilityPlannerDataIMPs.npy')
+#simple_planner_data = np.load('Data/SimplePlannerDataIMPs.npy')
+#plot_utility_bars(simple_planner_data, utility_planner_data)
 #plot_utility_bars(np.array([restricted_search_data]),
 #                  np.array([nonrestricted_search_data])
 #                  )

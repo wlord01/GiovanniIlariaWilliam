@@ -292,13 +292,13 @@ def main(simulation_number=0):
     """
     # FLAGS
     action_performed = False
-    save_data = False
+    save_data = True
     plot_data = False
     print_statements_on = False
     graphics_on = True
-    save_weights_on = False
-    ignorance_signal = False
-    fix_threshold_on = False
+    save_weights_on = True
+    ignorance_signal = True
+    fix_threshold_on = True
 
     # SET CONSTANTS
     unit = 150
@@ -307,7 +307,7 @@ def main(simulation_number=0):
     selection_bias = 0.00001
     # TABLE X AND Y LIMITS IN ENVIRONMENT
     limits = np.array([[0.2, 0.8], [0.2, 0.8]])
-    number_of_steps = 2000
+    number_of_steps = 10000
     leak_rate = 0.1  # LEAKY INTEGRATOR
     affordance_learning_rate = 0.001
     improvement_learning_rate = 0.0005
@@ -367,11 +367,11 @@ def main(simulation_number=0):
 
     if save_data:
         if ignorance_signal:
-            file_name_suffix = 'IGNs'
+            file_name_suffix = 'IGNst'
             if fix_threshold_on:
-                file_name_suffix = 'FIXs'
+                file_name_suffix = 'FIXst'
         else:
-            file_name_suffix = 'IMPs'
+            file_name_suffix = 'IMPst'
 
         file_name = './Data/s{}data_array_{}.npy'.format(
             str(simulation_number),
@@ -694,6 +694,6 @@ def main(simulation_number=0):
 if __name__ == '__main__':
     """Main"""
     main()
-#    for simulation_number in range(1, 11):
-#        main(simulation_number)
-#        print('End of simulation {}'.format(str(simulation_number)))
+    for simulation_number in range(10, 11):
+        main(simulation_number)
+        print('End of simulation {}'.format(str(simulation_number)))

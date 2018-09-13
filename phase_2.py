@@ -399,7 +399,7 @@ def main(model_type, trial_number):
     number_of_steps = 125
     max_search_steps = 8
     THINKING_STEPS = 10
-    ACTION_ATTEMPTS = 3
+    ACTION_ATTEMPTS = 20
     accomplished_threshold = 0.01
     where_success_threshold = 0.01
     what_success_threshold = 0.0035
@@ -426,7 +426,7 @@ def main(model_type, trial_number):
     sub_goal = None
     sub_goal_accomplished = False
     sub_goal_achievable = False
-    graphics_on = True
+    graphics_on = False
     utility_reasoning_on = False
     restricted_search_on = True  # Toggle restricted forward model search
 
@@ -436,7 +436,7 @@ def main(model_type, trial_number):
     int_s2 = Square([0.2, 0.2], object_size, [1, 0, 0], unit, 4)
     int_c1 = Circle([0.5, 0.8], object_size, [0, 0, 1], unit, 1)
     int_c2 = Circle([0.5, 0.2], object_size, [1, 0, 0], unit, 10)
-    int_objects = [int_s1, int_r1, int_s2]  # , int_c1, int_c2]
+    int_objects = [int_s1, int_r1, int_s2, int_c1]  # , int_c2]
 
     int_env, int_fov, int_objects = environment.initialize(unit, fovea_center,
                                                            fovea_size,
@@ -449,7 +449,7 @@ def main(model_type, trial_number):
     ext_s2 = Square([0.2, 0.8], object_size, [1, 0, 0], unit)
     ext_c1 = Circle([0.5, 0.8], object_size, [0, 1, 0], unit)
     ext_c2 = Circle([0.5, 0.5], object_size, [1, 0, 0], unit)
-    ext_objects = [ext_s1, ext_r1, ext_s2]  # FF, ext_c1, ext_c2]
+    ext_objects = [ext_s1, ext_r1, ext_s2, ext_c1]   # , ext_c2]
 
     ext_env, ext_fov, ext_objects = environment.initialize(unit, fovea_center,
                                                            fovea_size,
@@ -699,23 +699,23 @@ if __name__ == '__main__':
     Make sure to put plots in separate window (%matplotlib qt) to see
     graphics!
     """
-    main('IMP', 1)
+#    main('IMPst', 1)
 #
-#    model_type = 'IMP'
+    model_type = 'IMPst'
 #    trial_number = '1'
-#    runs = 20
-#    trials = ['1', '2', '3', '4', '5', '8', '9']
+    runs = 100
+    trials = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 #    np.random.seed(12)
 
     # TEST UTILITY ACCUMULATION
-#    utility = np.zeros((len(trials), runs))
-#    for trial_number in range(len(trials)):
-#        for i in range(runs):
-#            data = main(model_type, trials[trial_number])
-#            utility[trial_number, i] = data[3]
-#    trial_means = np.mean(utility, axis=1)
-#    system_mean = np.mean(trial_means)
-#    system_SEM = np.std(trial_means) / np.sqrt(len(trials))
+    utility = np.zeros((len(trials), runs))
+    for trial_number in range(len(trials)):
+        for i in range(runs):
+            data = main(model_type, trials[trial_number])
+            utility[trial_number, i] = data[3]
+    trial_means = np.mean(utility, axis=1)
+    system_mean = np.mean(trial_means)
+    system_SEM = np.std(trial_means) / np.sqrt(len(trials))
 
     # TEST RESTRICTED SEARCH
 #    explored_actions_data = np.zeros((len(trials), runs))
